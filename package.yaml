@@ -42,6 +42,16 @@ dependencies:
 - case-insensitive
 - wai
 - foreign-store
+- regex-posix==0.96.*
+- regex-compat==0.95.*
+- process==1.6.*
+- mime-mail == 0.5.*
+- smtp-mail == 0.3.*
+- blaze-html== 0.9.*
+- extra==1.7.*
+- yesod-auth-oauth2==0.7.*
+- filepath==1.4.*
+
 
 # The library contains all of our application code. The executable
 # defined below is just a thin wrapper.

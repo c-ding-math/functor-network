@@ -38,3 +38,13 @@ database:
 
 copyright: Insert copyright statement here
 #analytics: UA-YOURCODE
+
+#Google
+google-client-id: "_env:YESOD_GOOGLE_CLIENT_ID:clientId"
+google-client-secret: "_env:YESOD_GOOGLE_CLIENT_SECRET:clientSecret"
+
+#Email config
+email-password: "_env:YESOD_EMAIL_PASSWORD:password"
+email-host: "_env:YESOD_EMAIL_HOST:domian.com"
+email-user: "_env:YESOD_EMAIL_USER:yourname@domian.com"
+administrator-email: "_env:YESOD_ADMINISTRATOR_EMAIL:yourname@domian.com"

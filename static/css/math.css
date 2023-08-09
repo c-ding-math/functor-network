@@ -1,0 +1,47 @@
+.navbar{
+  min-width: 15cm;
+}
+.wrap {
+  width: 100%;
+  min-width: 14.2cm;
+  max-width:22cm;
+  margin:auto;
+}
+.entry-content article, .comment-content article, .markItUpFooter article{
+  width:13.78cm;
+  margin:auto;
+  color:black;
+}
+.entry-content, .comment-content{
+  border: 1px solid #dce4ec;
+  padding-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+.display.math{
+  display:inline-block;
+  width: 100%;
+  text-align: center;
+}
+
+div.mark{
+  padding: 1em 2em 0.5em;
+}
+.theorem-like, .proof-like{
+  position: relative;
+}
+.theorem-like::before, .proof-like::before {
+  content: attr(data-label)'.\00a0';
+  font-weight: bold;
+  float: left;
+}
+.proof-like>*:last-child::after{ 
+  content: "";
+  border: 1px solid black;
+  padding: 0.4em;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+}
+blockquote{
+  font-size:inherit!important;
+}

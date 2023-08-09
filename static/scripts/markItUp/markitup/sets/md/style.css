@@ -1,0 +1,21 @@
+/*.markItUpButton1::before{
+    content:"Markdown";
+}
+.markItUpButton2::before{
+    content:"Math";
+}
+.markItUpButton3::before{
+    content:"Bibliography";
+}
+.markItUpButton4::before{
+    content:"Help";
+}
+.markItUpButton5::before{
+    content:"Preview";
+}
+.markItUpHeader>ul>li:before{
+    display:block;
+    padding: 0.5em 0.5em;
+}
+*/
+

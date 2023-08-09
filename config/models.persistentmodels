@@ -1,18 +1,66 @@
 -- By default this file is used by `persistFileWith` in Model.hs (which is imported by Foundation.hs)
 -- Syntax for this file here: https://github.com/yesodweb/persistent/blob/master/docs/Persistent-entity-syntax.md
 
-User
-    ident Text
+User json
+    ident Text 
     password Text Maybe
+    name Text
+    inserted UTCTime default=CURRENT_TIME
+    --modified UTCTime -- change the ident
+    --avatar Text Maybe -- url
+    defaultPreamble Textarea Maybe
+    defaultCitation Textarea Maybe   
     UniqueUser ident
-    deriving Typeable
-Email
-    email Text
+    deriving Typeable Show
+
+Email json
     userId UserId Maybe
+    address Text
     verkey Text Maybe
-    UniqueEmail email
-Comment json -- Adding "json" causes ToJSON and FromJSON instances to be derived.
-    message Text
+    verified Bool
+    inserted UTCTime default=CURRENT_TIME
+    UniqueEmail address
+    deriving Show Read Eq
+
+Login --via third parties
     userId UserId Maybe
-    deriving Eq
+    ident Text
+    plugin Text
+    token Text Maybe
+    verified Bool
+    inserted UTCTime default=CURRENT_TIME
+    UniqueLogin plugin ident
+
+Entry
+    parentId EntryId Maybe
+    userId UserId 
+    type EntryType
+    inputFormat Format 
+    inputTitle Text
+    inputBody Textarea 
+    inputPreamble Textarea Maybe
+    inputCitation Textarea Maybe
+    outputFormat Format
+    outputTitle Text
+    outputBody Text
+    inserted UTCTime default=CURRENT_TIME
+    updated UTCTime default=CURRENT_TIME
+    --stuck UTCTime Maybe
+    status EntryStatus
+    locked Bool -- if locked, comments are not allowed
+    inputTags [Text]
+    outputTags [Text]
+
+File 
+    filename String
+    directory String
+    userId UserId
+    inserted UTCTime
+    description Text Maybe
+    UniqueFile directory filename
+
+Notification
+    type SubscriptionType
+    emailId EmailId
+    inserted UTCTime
     deriving Show

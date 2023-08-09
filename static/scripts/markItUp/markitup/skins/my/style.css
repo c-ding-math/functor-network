@@ -1,0 +1,87 @@
+
+.markItUpContainer{
+	display:flex;
+	width:100%;
+	border: 1px solid #dce4ec;
+	flex-direction: column;
+}
+.markItUpContainer>*{
+	flex-grow: 100%;
+}
+.markItUpHeader li{
+	list-style: none;	
+}
+
+.markItUpHeader>ul{
+	display: flex;
+	margin:0;
+	padding:0;
+}
+.markItUpHeader>ul>li{
+	position: relative;
+	padding: 0;
+	margin: 0;
+}
+.markItUpHeader>ul>li>a{
+	display:inline-block;
+	padding:1em;
+	margin:0;
+	text-decoration: none;
+}
+
+.markItUpHeader>ul>li>ul{
+	display: none;
+	position: absolute;
+	padding: 0;
+	background-color: white;
+	border: #dce4ec solid 1px;
+}
+.markItUpHeader>ul>li>ul>li{
+	padding: 0;
+	white-space: nowrap;
+}
+.markItUpHeader>ul>li>ul>li>a{
+	width:100%;
+	display: inline-block;
+	padding: 0.25em 1em;	
+	text-align: center;
+}
+
+.markItUpEditor {
+	min-height:20em;
+	overflow:auto;
+}
+.markItUpEditor,.markItUpFooter{
+	padding: 1em;
+}
+
+.markItUpFooter{
+	overflow-x: auto;
+}
+
+.full-screen.markItUpContainer{
+    position: fixed;
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+    top: 0;
+    left: 0;
+    z-index: 10000;
+    background-color: #fff;
+    flex-direction: column;
+}
+.full-screen .markItUpWrapper{
+    display: flex;
+    flex: 1; 
+    overflow: hidden; 
+}
+.full-screen textarea{
+    flex: 1;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+.full-screen .markItUpFooter{
+    flex: 1;
+    overflow-y: auto;  
+    border: 1px solid #dce4ec;
+}

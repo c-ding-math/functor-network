@@ -9,6 +9,27 @@
 
 / HomeR GET POST
 
-/comments CommentR POST
+/users UsersR GET
+/user/#UserId UserHomeR GET !user
+/user/#UserId/about UserAboutR GET !user
+/user/#UserId/entries EntriesR GET !user
+/entry NewEntryR GET POST !user !login
+/user/#UserId/entry/#EntryId EntryR GET POST !user
+/entry/#EntryId/edit EditEntryR GET POST !user !admin
+/user/#UserId/tag/#Text TagR GET !user
 
-/profile ProfileR GET
+/files FilesR GET POST !user !login
+/file/#FileId FileR DELETE !admin
+
+/settings SettingsR GET POST !user !login
+/setting/email/#EmailId EmailSettingR GET POST !user !admin
+/setting/login/#LoginId LoginSettingR GET POST !user !admin
+
+/parser/input/#Text/output/#Text ParserR POST !login
+
+/comments CommentR POST
+/comment/#EntryId/edit EditCommentR POST !login 
+/page/#Text/edit EditPageR GET POST !user !admin
+
+/user/#UserId/comments CommentsR GET !user
+!/#Text PageR GET

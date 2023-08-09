@@ -1,0 +1,21 @@
+.ui-dialog{
+    background-color:white;
+    border-radius: 0 0 0 0;
+    border:solid 1px #ccc;
+    padding:1em;
+    z-index: 10001!important;
+}
+.ui-dialog-titlebar{
+    border-bottom: 1px solid #ccc;
+    background-color: #333;
+    color: #fff;
+}
+.ui-dialog-title{
+    font-weight:bold;
+}
+.ui-dialog-titlebar-close{
+    display: none!important;
+}
+.ui-widget-overlay{
+    background-color: rgba(0, 0, 0, 0.5);
+}

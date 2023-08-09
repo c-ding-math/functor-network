@@ -1,0 +1,28 @@
+$(document).ready(function() {
+
+    /*$('.new-entry').click(function() {
+        $('.new-entry-form').dialog({
+            title: 'New entry options',
+            modal: true,
+            buttons:[ 
+                {   
+                    class: 'btn btn-primary',
+                    html: 'Continue',
+                    click: function() {
+                        $('.new-entry-form').submit();
+                        $(this).dialog("close");
+                    },
+                },
+                {
+                    class: 'btn btn-default',
+                    html: 'Cancel',
+                    click: function() {
+                        $(this).dialog("close");
+                    }
+                },
+                
+            ]
+        });
+        return false;
+    });*/
+});

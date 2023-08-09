@@ -61,6 +61,16 @@ data AppSettings = AppSettings
 
     , appAuthDummyLogin         :: Bool
     -- ^ Indicate if auth dummy login should be enabled.
+
+    , appEmailPassword          :: Text
+    -- ^ email login password
+    , appEmailHost              :: Text
+    -- ^ email login password
+    , appEmailUser              :: Text
+    -- ^ email login password
+    , appGoogleClientId         :: Text
+    , appGoogleClientSecret     :: Text
+    , appAdministratorEmail      :: Text
     }
 
 instance FromJSON AppSettings where
@@ -90,6 +100,12 @@ instance FromJSON AppSettings where
         appAnalytics              <- o .:? "analytics"
 
         appAuthDummyLogin         <- o .:? "auth-dummy-login"      .!= dev
+        appEmailPassword          <- o .: "email-password"
+        appEmailHost              <- o .: "email-host"
+        appEmailUser              <- o .: "email-user"
+        appGoogleClientId         <- o .: "google-client-id"
+        appGoogleClientSecret     <- o .: "google-client-secret"
+        appAdministratorEmail      <- o .: "administrator-email"
 
         return AppSettings {..}
 

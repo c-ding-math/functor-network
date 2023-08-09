@@ -3,15 +3,6 @@
     background-color: rgb(27, 28, 29);
 }
 
-.navbar-default .navbar-nav > .active > a {
-    background-color: transparent;
-    border-bottom: 2px solid white;
-}
-
-.navbar-nav {
-    padding-bottom: 1em;
-}
-
 .masthead {
     margin-top: -21px;
     color: white;
@@ -70,4 +61,44 @@
 
 #message {
     margin-bottom: 40px;
+}
+
+textarea{
+  min-height: 13em;
+}
+
+.breadcrumb{
+  display: none;
+}
+
+nav>.container{
+  display:flex;
+}
+nav>.container .navbar-menu{
+  flex:1;
+  display:flex;
+  justify-content:space-between;
+}
+
+@media (max-width: 768px) {
+  #navbar{
+    position: absolute;
+    top:4em;
+    left:0em;
+    background-color: #333;
+  }
+  .navbar-default .navbar-nav > .active > a {
+      
+  }
+}
+
+@media (min-width: 768px) {
+  .navbar-default .navbar-middle > .active > a {
+      background-color: transparent;
+      border-bottom: 2px solid #fff;
+  }
+}
+
+.draft {
+    opacity: 0.5;
 }

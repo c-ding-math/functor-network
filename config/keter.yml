@@ -3,7 +3,7 @@
 #
 # Also, please make sure that `port` value on `config/settings.yaml` is set to
 # use `PORT` env variable.
-user-edited: false
+#user-edited: false
 
 # A Keter app is composed of 1 or more stanzas. The main stanza will define our
 # web application. See the Keter documentation for more information on
