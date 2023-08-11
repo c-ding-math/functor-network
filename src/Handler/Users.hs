@@ -21,6 +21,6 @@ $else
         <ul>
             $forall Entity uid u<-users
                 <li>
-                    <a href=@{UserAboutR uid}>#{userName u}
+                    <a href=@{UserHomeR uid}>#{userName u}
         |]
 

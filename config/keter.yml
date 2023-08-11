@@ -38,6 +38,7 @@ stanzas:
   - type: static-files
     hosts:
       - static.functor.network
+        secure: true
     root: ../static
 
     # Uncomment to turn on directory listings.

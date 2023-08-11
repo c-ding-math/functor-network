@@ -102,3 +102,4 @@ nav>.container .navbar-menu{
 .draft {
     opacity: 0.5;
 }
+

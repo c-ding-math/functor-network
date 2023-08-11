@@ -9,7 +9,7 @@ getUserAboutR :: UserId -> Handler Html
 getUserAboutR userId = do
     _<-runDB $ get404 userId
     mCurrentUserId<-maybeAuthId
-    mEntry<-runDB $ selectFirst [EntryInputTitle==."About",EntryType==.Page,EntryUserId==.userId] [Desc EntryInserted]
+    mEntry<-runDB $ selectFirst [EntryInputTitle==."About",EntryType==.Page,EntryUserId==.userId,EntryStatus==.Publish] [Desc EntryInserted]
 
     case mEntry of
         Nothing->
@@ -31,9 +31,10 @@ $if mCurrentUserId == Just userId
                 [whamlet|
 <h1>_{MsgAbout}
 #{preEscapedToMarkup (entryOutputBody entry)}
-<ul .entry-menu>
-    <li>
-        <a href=@{EditPageR "About"}>_{MsgEdit}
+$if mCurrentUserId == Just userId
+    <ul .entry-menu>
+        <li>
+            <a href=@{EditPageR "About"}>_{MsgEdit}
                 |]
                 menuWidget
                 
