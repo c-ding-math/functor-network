@@ -42,7 +42,7 @@ View: View
 Save: Save
 Update: Update
 Reset: Reset
-PublishEntry: Publish post
+PublishPost: Publish post
 SaveDraft: Save draft
 ChangeSaved: Changes Saved
 UpdateSite: Update site
@@ -73,15 +73,15 @@ EmailDeleted: Email deleted
 InputFormat: Which format do you want to write you post in?
 OutputFormat: Which format do you want to publish your post in?
 Format: format
-Entry: Post
+Post: Post
 Entries: Posts
-NewEntry: New post
-FirstEntry: Write your first post. 
+NewPost: New post
+FirstPost: Write your first post. 
 CommentsOn: Comments on
 RecentEntries: Recent posts
 RecentComments: Recent comments
 RecentCommentsOn: Recent comments on
-NoEntry: No post found.
+NoPost: No post found.
 Tag: Keyword
 Tags: Keywords
 ViewAll: View all
@@ -101,5 +101,12 @@ LoginToComment: You must be logged in to comment
 CommentDeleted: Comment deleted
 
 AboutPageReset: Your about page has been reset.
-PageReset: Page reset.
+PageDeleted: Page deleted
+PageSaved: Page saved
+PageNotFound: Page not found
+Pages: Pages
+NoPage: No page found.
+
 Users: Members
+
+InvalidAction: Invalid action

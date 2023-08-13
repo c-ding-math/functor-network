@@ -6,7 +6,7 @@
             <h2>
                 a blogging community for mathematicians
             $maybe uid <- maybeUserId
-                <a href=@{UserHomeR uid} .btn.btn-info.btn-lg>
+                <a href=@{HomeR uid} .btn.btn-info.btn-lg>
                     My Homepage
             $nothing
                 <a href=@{AuthR LoginR} .btn.btn-info.btn-lg>
@@ -31,7 +31,7 @@
             $nothing
                 <p>
                     Comming soon...
-
+    <hr>
     <div .bs-docs-section>      
         <div .page-header>
             <h1>Screenshots

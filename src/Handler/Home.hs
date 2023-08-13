@@ -1,42 +1,93 @@
-{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE TypeFamilies #-}
+
 module Handler.Home where
 
 import Import
---import Yesod.Form.Bootstrap3 (BootstrapFormLayout (..), renderBootstrap3)
---import Text.Julius (RawJS (..))
+import Handler.Parser (tagsWidget)
+import Parse.Parser (scaleHeader)
 
--- Define our data that will be used for creating the form.
-data FileForm = FileForm
-    { fileInfo :: FileInfo
-    , fileDescription :: Text
-    }
-
--- This is a handler function for the GET request method on the HomeR
--- resource pattern. All of your resource patterns are defined in
--- config/routes.yesodroutes
---
--- The majority of the code you will write in Yesod lives in these handler
--- functions. You can spread them across multiple files if you are so
--- inclined, or create a single monolithic file.
-getHomeR :: Handler Html
-getHomeR = do
-    maybeUserId<-maybeAuthId
-    maybeFeatures<-runDB $ selectFirst [EntryInputTitle==."Features",EntryType==.Page,EntryStatus==.Draft] [Desc EntryInserted]
-    maybeScreenshots<-runDB $ selectFirst [EntryInputTitle==."Screenshots",EntryType==.Page,EntryStatus==.Draft] [Desc EntryInserted]
-
-    defaultLayout $ do  
-        --aDomId <- newIdent
-        setTitle $ toHtml $ "Welcome To " <> appName <> "!"
-        $(widgetFile "homepage")
-
-postHomeR :: Handler Html
-postHomeR = do
-    --maybeUserId<-maybeAuthId
+getHomeR :: Path -> Handler Html
+getHomeR piece = do    
+    mCurrentUserId<-maybeAuthId
+    (recentEntryList, recentCommentEntryList)<-runDB $ do
+        _<-get404 piece      
+        entries<- selectList [EntryUserId==.piece,EntryType==.Standard] [Desc EntryInserted]
+        let entryList =[x | x<-entries, entryStatus (entityVal x) == Publish||isAdministrator mCurrentUserId (entityVal x)]          
+            
+        comments <- selectList [EntryUserId==.piece,EntryType==.Comment] [Desc EntryInserted]
+        commentEntryList'' <- mapM getCommentEntry comments
+        let commentEntryList'=catMaybes commentEntryList''
+        let commentEntryList =[x | x<- commentEntryList', (entryStatus . entityVal . fst) x == Publish||isAdministrator mCurrentUserId ((entityVal . fst) x)]               
+        return $ (take 5 entryList, take 5 commentEntryList)
+    --search  entries comments tags
     defaultLayout $ do
-        --aDomId <- newIdent
-        setTitle $ toHtml $ "Welcome To " <> appName <> "!"
-        -- $(widgetFile "homepage")
+        setTitleI MsgHome
+        [whamlet|
+        
+        <div .search>
+        <section .recent-entries>
+            $if null recentEntryList
+                <h2>_{MsgRecentEntries}
+                    $if mCurrentUserId == Just piece
+                        <a .navbar-right .btn.btn-default href=@{NewEntryR}>_{MsgNewPost} 
+                <div> _{MsgNoPost} 
+                    $if mCurrentUserId == Just piece                      
+                        <a href=@{NewEntryR}>_{MsgFirstPost}
+            $else
+                <h2>_{MsgRecentEntries}
+                    <a .navbar-right .btn.btn-default href=@{EntriesR piece}>_{MsgViewAll}
+                    $if mCurrentUserId == Just piece
+                        <span .navbar-right style="visibility: hidden;">|</span>
+                        <a .navbar-right .btn.btn-default href=@{NewEntryR}>_{MsgNewPost}
+                        
+                    
+
+                <div .entries>
+                    <ul>
+                        $forall Entity entryId entry<-recentEntryList
+                            <li :entryStatus entry == Draft:.draft>
+                                <a href=@{EntryR piece entryId}>
+                                    <h3>#{preEscapedToMarkup (scaleHeader 3 (entryOutputTitle entry))}
+                                <div .tags>
+                                    ^{tagsWidget piece (zip (entryInputTags entry) (entryOutputTags entry))}
+
+        <section .recent-comments>
+            
+                
+            $if null recentCommentEntryList
+                <h2>_{MsgRecentComments}
+                <div> _{MsgNoComment}
+            $else
+                <h2>_{MsgRecentCommentsOn}
+                    <a .navbar-right .btn.btn-default href=@{CommentsR piece}>_{MsgViewAll} 
+                <div .entries>
+                    <ul>
+                        $forall  (Entity entryId entry, Entity commentId comment) <- recentCommentEntryList
+                            <li :entryStatus entry == Draft:.draft>
+                                <a href=@{EntryR piece entryId}#comment-#{toPathPiece commentId}>
+                                    <h3>#{preEscapedToMarkup (scaleHeader 3 (entryOutputTitle entry))}
+                                <div .tags>
+                                    ^{tagsWidget piece (zip (entryInputTags entry) (entryOutputTags entry))}
+                                         
+        |]
+        $(widgetFile "entry-list")
+
+getCommentEntry :: (BaseBackend backend ~ SqlBackend,PersistStoreRead backend, MonadHandler m) => Entity Entry -> ReaderT backend m (Maybe (Entity Entry, Entity Entry))
+getCommentEntry commentEntity = do
+    case (entryParentId  (entityVal commentEntity)) of
+        Nothing -> return Nothing
+        Just entryId -> do
+            mEntry <- get $ entryId
+            case mEntry of
+                Nothing -> return Nothing
+                Just entry -> return $ Just (Entity entryId entry, commentEntity)
+
+removeDuplicates :: Eq a => [a] -> [a]
+removeDuplicates [] = []
+removeDuplicates (x:xs)
+  | x `elem` xs = removeDuplicates xs
+  | otherwise = x : removeDuplicates xs

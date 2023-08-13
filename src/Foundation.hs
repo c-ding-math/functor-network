@@ -140,8 +140,8 @@ instance Yesod App where
         (homeTitle, homeRoute)<- case mUserRoutePath of
             Just userId -> do
                 user <- runDB $ get404 userId
-                return (userName user, UserHomeR userId)
-            Nothing -> return (appName, HomeR)
+                return (userName user, HomeR userId)
+            Nothing -> return (appName, Home0R)
 
         -- Define the menu items of the header.
         let menuItems =
@@ -186,7 +186,7 @@ instance Yesod App where
                     Just uid | otherwise ->
                         [ NavbarMiddle $ MenuItem
                             { menuItemLabel = "My Homepage"
-                            , menuItemRoute = UserHomeR uid
+                            , menuItemRoute = HomeR uid
                             , menuItemAccessCallback = True
                             }
                         ]
@@ -226,18 +226,18 @@ instance Yesod App where
     -- Routes not requiring authentication.
     isAuthorized (AuthR _) _ = return Authorized
     isAuthorized CommentR _ = return Authorized
-    isAuthorized HomeR _ = return Authorized
+    isAuthorized Home0R _ = return Authorized
     isAuthorized FaviconR _ = return Authorized
     isAuthorized RobotsR _ = return Authorized
     isAuthorized (StaticR _) _ = return Authorized
     isAuthorized UsersR _ = return Authorized
-    isAuthorized (UserHomeR _) _ = return Authorized
-    isAuthorized (UserAboutR _) _ = return Authorized
+    isAuthorized (HomeR _) _ = return Authorized
+    isAuthorized (PageR _ _) _ = return Authorized
     isAuthorized (EntriesR _) _ = return Authorized
     isAuthorized (EntryR _ _) _ = return Authorized
     isAuthorized (TagR _ _)_ = return Authorized
     isAuthorized (CommentsR _) _ = return Authorized
-    isAuthorized (PageR _) _ = return Authorized
+    isAuthorized (Page0R _) _ = return Authorized
 
     -- Routes requiring authentication.
     isAuthorized (EditPageR _) _ = isAuthenticated
@@ -252,6 +252,10 @@ instance Yesod App where
     isAuthorized (LoginSettingR x) _ = isAdmin x
     isAuthorized (EmailSettingR x) _ = isAdmin x
     isAuthorized (FileR x) _ = isAdmin x
+
+    -- app administrator routes
+    isAuthorized (EditPage0R _ ) _ = isAppAdministrator
+    isAuthorized (Pages0R) _ = isAppAdministrator
     
     -- This function creates static content files in the static folder
     -- and names them based on a hash of their content. This allows
@@ -299,17 +303,17 @@ instance YesodBreadcrumbs App where
         -> Handler (Text, Maybe (Route App))
     
     breadcrumb route = case route of
-        UserHomeR pathPiece -> do
+        HomeR pathPiece -> do
             maybeUser <- runDB $ get pathPiece
             let siteName = case maybeUser of
                     Just user -> userName user
                     _ -> "Unknown"
-            return (siteName, Just HomeR)
-        UserAboutR pathPiece -> parentLink pathPiece
+            return (siteName, Just Home0R)
+        PageR pathPiece _-> parentLink pathPiece
         EntriesR pathPiece -> parentLink pathPiece
         TagR pathPiece _-> parentLink pathPiece
-        HomeR -> return ("Home", Nothing)
-        AuthR _ -> return ("Home", Just HomeR)
+        Home0R -> return ("Home", Nothing)
+        AuthR _ -> return ("Home", Just Home0R)
         _ -> return ("home", Nothing)
 
       where
@@ -317,8 +321,8 @@ instance YesodBreadcrumbs App where
         parentLink pathPiece = do
             maybeUser <- runDB $ get pathPiece
             return $ case maybeUser of
-                Just user -> (userName user, Just (UserHomeR pathPiece))
-                _ -> ("Unknown", Just (UserHomeR pathPiece))
+                Just user -> (userName user, Just (HomeR pathPiece))
+                _ -> ("Unknown", Just (HomeR pathPiece))
             
 
 -- How to run database actions.
@@ -341,7 +345,7 @@ instance YesodAuth App where
     loginDest _ = SettingsR
     -- Where to send a user after logout
     logoutDest :: App -> Route App
-    logoutDest _ = HomeR
+    logoutDest _ = Home0R
     -- Override the above two destinations when a Referer: header is present
     redirectToReferer :: App -> Bool
     redirectToReferer _ = True
@@ -415,7 +419,7 @@ instance YesodAuth App where
 instance YesodAuthEmail App where
     type AuthEmailId App = EmailId
 
-    afterPasswordRoute _ = HomeR
+    afterPasswordRoute _ = Home0R
 
     addUnverified email verkey = liftHandler $ runDB $ do
         maybeUserId<-maybeAuthId -- update email if current user is logged in 
@@ -867,8 +871,8 @@ routeUser :: Maybe (Route App) -> Handler (Maybe UserId)
 routeUser Nothing= return Nothing
 routeUser (Just route) 
     | "user" `member` routeAttrs route = case route of 
-        UserHomeR userId -> return $ Just userId
-        UserAboutR userId -> return $ Just userId
+        HomeR userId -> return $ Just userId
+        PageR userId _ -> return $ Just userId
         CommentsR userId -> return $ Just userId
         EntriesR userId -> return $ Just userId
         EntryR userId _ -> return $ Just userId
@@ -894,6 +898,14 @@ requireAppAdministratorId = do
     case muid of
         Just uid -> return uid
         Nothing -> notFound
+
+isAppAdministrator :: Handler AuthResult
+isAppAdministrator = do
+    currentUserId<-requireAuthId
+    muid<-mAppAdministratorId
+    if muid == Just currentUserId 
+        then return Authorized
+        else permissionDeniedI MsgPermissionDenied
 
 {-requireAdminId :: Path -> Handler (UserId, SiteId)
 requireAdminId piece = do

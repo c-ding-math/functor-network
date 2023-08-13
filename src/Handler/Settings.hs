@@ -153,7 +153,7 @@ getSettingsR = do
                 <div>
                     <label>_{MsgAbout}
                     <div>
-                        <a .btn .btn-default href=@{UserAboutR userId}>_{MsgView}
+                        <a .btn .btn-default href=@{PageR userId "About"}>_{MsgView}
                         <a .btn .btn-default href=@{EditPageR "About"}>_{MsgEdit}
                     <p>
             <!--<section .notification-setting>

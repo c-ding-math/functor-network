@@ -28,7 +28,7 @@ getEntryR _ entryId = do
     (commentWidget, commentEnctype) <-  generateFormPost $ newCommentForm $ Just format
 
     defaultLayout $ do
-        setTitleI MsgEntry
+        setTitleI MsgPost
         [whamlet|
 <div .entry :entryStatus entry == Draft:.draft>
   <h1>#{preEscapedToMarkup(scaleHeader 1 (entryOutputTitle entry))}
@@ -36,7 +36,7 @@ getEntryR _ entryId = do
       <span .by>
           $maybe author<-mEntryAuthor    
               
-              <a href=@{UserAboutR (entryUserId entry)}>#{userName author}
+              <a href=@{PageR (entryUserId entry) "About"}>#{userName author}
           $nothing 
               _{MsgUnknownUser}
       <span .at>#{formatDateStr (entryInserted entry)}
@@ -48,25 +48,24 @@ getEntryR _ entryId = do
         $if isAdministrator maybeUserId entry
             <li .edit><a href=@{EditEntryR entryId}>edit</a>
 
-<!--<div .entry-comment-separator>-->
-<section #comments .comments>    
+<section #comments .comments  :entryStatus entry == Draft:.draft>    
     $if null comments
         <p style="display:none">_{MsgNoComment}
     $else
         <h3>_{MsgComments}
         $forall  (Entity commentId comment,mCommentAuthor)<-zip comments mCommentAuthors
             <div .comment id=comment-#{toPathPiece commentId}> 
-              <div .comment-meta>
+              <div .entry-meta>
                   <span .by>
                       $maybe author<-mCommentAuthor    
                           
-                          <a href=@{UserAboutR (entryUserId comment)}>#{userName author}
+                          <a href=@{PageR (entryUserId comment) "About"}>#{userName author}
                       $nothing 
                           _{MsgUnknownUser}
                   <span .at>#{formatDateStr (entryInserted comment)}
-              <div .comment-content>
+              <div .entry-content>
                   <article>#{preEscapedToMarkup (entryOutputBody comment)}  
-              <ul .comment-menu>                
+              <ul .entry-menu>                
                   <!--<li .reply><a href=#comment>reply</a>-->
                   $if isAdministrator maybeUserId entry || isAdministrator maybeUserId comment
                       <li .delete>
@@ -118,7 +117,7 @@ menuWidget=do
                 });
                 return false;
             });       
-            $(".comment-menu .delete a").click(function(event){  
+            $(".entry-menu .delete a").click(function(event){  
                 if (confirm("Are you sure that you want to delete the comment?")) {
             
                     var that =$(this);
@@ -147,40 +146,30 @@ menuWidget=do
   display: inline-block;
 }
 
-.entry-meta>span.at:before,.comment-meta>span.at:before{
+.entry-meta>span.at:before{
   content:" - ";
 }
 .entry-meta>span.by:after{
   content:" ";
 }
-.comment-meta>span.by:after{
-  content:" ";
-}
-.entry-meta>span,.comment-meta>span{
+.entry-meta>span{
   color:#b4bcc2;
 }
-.entry-meta,.comment-meta{
+.entry-meta{
   margin-bottom:1em;
 }
-.entry-menu .favorite>a:after,.comment-menu .vote>a:after{
-  content:"("attr(data-like)")";
-}
-.entry-menu,.comment-menu{
+.entry-menu{
   list-style-type: none;
   padding-left:0;
   text-transform:lowercase;
 }
-.entry-menu>li,.comment-menu>li{
+.entry-menu>li{
   display: inline-block;
   margin-right:1em;
   margin-bottom:2em;
 }
-.entry-menu a,.comment-menu a{
+.entry-menu a{
     color:#b4bcc2;
-}
-.entry-comment-separator{
-  border-bottom:1px #b4bcc2 dashed;
-  margin:2em 0 4em;
 }
     |]
 

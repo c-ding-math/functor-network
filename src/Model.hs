@@ -32,7 +32,7 @@ data SubscriptionType
     deriving (Show, Read, Eq)
 derivePersistField "SubscriptionType"
 
-data EntryType =  Standard | Page | Comment
+data EntryType =  Standard | Page | Comment | Page0
     deriving (Show, Read, Eq)
 derivePersistField "EntryType"
 

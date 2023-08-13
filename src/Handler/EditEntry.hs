@@ -73,7 +73,7 @@ getNewEntryR =  do
         [whamlet|
 <form  method=post enctype=#{entryEnctype}>
     ^{entryWidget}
-    <button .btn .btn-primary type=submit name=action value=publish>_{MsgPublishEntry}
+    <button .btn .btn-primary type=submit name=action value=publish>_{MsgPublishPost}
     <button .btn .btn-default type=submit name=action value=draft>_{MsgSaveDraft}
         |]
         markItUpWidget format (Format "html")
@@ -96,7 +96,7 @@ getEditEntryR entryId = do
         [whamlet|
 <form  method=post enctype=#{entryEnctype}>
     ^{entryWidget}
-    <button .btn .btn-primary type=submit name=action value=publish>_{MsgPublishEntry}
+    <button .btn .btn-primary type=submit name=action value=publish>_{MsgPublishPost}
     <button .btn .btn-default type=submit name=action value=draft>_{MsgSaveDraft}
     <button .btn .btn-default .delete type=submit name=action value=delete>_{MsgDelete}
         |]

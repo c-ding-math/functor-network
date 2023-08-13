@@ -7,11 +7,11 @@
 /favicon.ico FaviconR GET
 /robots.txt RobotsR GET
 
-/ HomeR GET POST
+/ Home0R GET POST
 
 /users UsersR GET
-/user/#UserId UserHomeR GET !user
-/user/#UserId/about UserAboutR GET !user
+/user/#UserId HomeR GET !user
+
 /user/#UserId/entries EntriesR GET !user
 /entry NewEntryR GET POST !user !login
 /user/#UserId/entry/#EntryId EntryR GET POST !user
@@ -29,7 +29,11 @@
 
 /comments CommentR POST
 /comment/#EntryId/edit EditCommentR POST !login 
-/page/#Text/edit EditPageR GET POST !user !admin
-
 /user/#UserId/comments CommentsR GET !user
-!/#Text PageR GET
+
+/page0/#Text/edit EditPage0R GET POST
+/page/#Text/edit EditPageR GET POST !user
+/pages0 Pages0R GET
+!/#Text Page0R GET
+!/user/#UserId/#Text PageR GET !user
+

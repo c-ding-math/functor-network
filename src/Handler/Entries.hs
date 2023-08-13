@@ -37,9 +37,9 @@ getEntriesR piece = do
         [whamlet|        
             <h1>_{MsgEntries}
                 $if mCurrentUserId == Just piece
-                    <a .btn.btn-primary .new-entry.navbar-right href=@{NewEntryR}>_{MsgNewEntry}
+                    <a .btn.btn-primary .new-entry.navbar-right href=@{NewEntryR}>_{MsgNewPost}
             $if null entryList
-                <div> _{MsgNoEntry}
+                <div> _{MsgNoPost}
             $else
                 <div .entries>
                     <ul>
@@ -53,8 +53,5 @@ getEntriesR piece = do
         |]
             
         $(widgetFile "entry-list")
-        addScript $ StaticR scripts_jquery_ui_jquery_ui_min_js
-        addStylesheet $ StaticR scripts_jquery_ui_jquery_ui_min_css
-        addStylesheet $ StaticR scripts_jquery_ui_jquery_ui_additional_css
 
 
