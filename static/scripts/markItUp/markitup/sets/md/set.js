@@ -4,14 +4,14 @@
 // Copyright (C) 2008 Jay Salvat
 // http://markitup.jaysalvat.com/
 // ----------------------------------------------------------------------------
-myMarkdownSettings = {
+editorSttings = {
     nameSpace:          'markdown', // Useful to prevent multi-instances CSS conflict
 	onCtrlEnter:        {keepDefault:false, call:'preview'}, //not working
     markupSet: [
-        {name:'Markdown', className:'', dropMenu:[
+        {name:'Text', className:'', dropMenu:[
 			{name:'Italic', key:"I", openWith:'*', closeWith:'*',placeHolder:'emphasized text'},
             {name:'Bold', key:"B", openWith:'**', closeWith:'**',placeHolder:'strong text'},
-            {name:'Quotes', key:"Q", placeHolder:'Blockquote',
+            {name:'Quote', key:"Q", placeHolder:'Blockquote',
             openWith:'> ',
             openBlockWith:function(markItUp){return markIt.markdownQuote(markItUp).openBlockWith;},
             closeBlockWith:function(markItUp){return markIt.markdownQuote(markItUp).closeBlockWith;},
@@ -41,11 +41,11 @@ myMarkdownSettings = {
 			{name:'Image', key:"G",className:"fas fa-image necessary",
 			replaceWith:function(markItUp){markIt.markdownImage(markItUp);return false;},
 			},
-			{name:'Highlight block', key:"H",
+			/*{name:'Highlight block', key:"H",
 			openWith:':::{.mark}\n',closeWith:'\n:::',placeHolder:"Your content goes here...",
             openBlockWith:function(markItUp){return markIt.markdownQuote(markItUp).openBlockWith;},
             closeBlockWith:function(markItUp){return markIt.markdownQuote(markItUp).closeBlockWith;},
-			},
+			},*/
         ]},
         {name:'Math', className:'', dropMenu:[
 			{name:'Inline math', key:"1", openWith:'$', closeWith:'$',placeHolder:'latex codes'},
@@ -101,7 +101,7 @@ markIt = {
 		return false;
 	},
 	markdownEditorHelp: function(markItUp) {
-		window.open('https://functors.net/help/Editor%20Help');
+		window.open('https://www.functor.network/help/Editor%20Help');
 		return false;
 	},
 	markdownQuote: function(markItUp) {
@@ -148,7 +148,7 @@ markIt = {
 		var prompt = $('<div/>', {
 			title:'Hyperlink',
 			html:
-				'<form><label>URL</label>(<a href="https://functors.net/files" target="_blank">copy a link from file library</a>)<input name="url"  type="text" value="https://example.com" autofocus onfocus="this.select();" class="form-control"/></form>',
+				'<form><label>URL</label>(<a href="https://www.functor.network/files" target="_blank">copy a link from file library</a>)<input name="url"  type="text" value="https://example.com" autofocus onfocus="this.select();" class="form-control"/></form>',
 		});
 		prompt.dialog({
 			modal: true,
@@ -178,7 +178,7 @@ markIt = {
 		var imagePrompt = $('<div/>', {
 				title:'Image',
 				html:
-				'<form><label>Image URL</label>(<a href="https://functors.net/files" target="_blank">copy a link from file library</a>)<input name="image-url"  type="text" value="https://example.com/image.jpg" autofocus onfocus="this.select();" class="form-control"/><label>Image height</label><input name="image-height" class="form-control" placeholder="e.g., 20px, 2em, or 60%"/><label>Image width</label><input name="image-width" class="form-control" placeholder="e.g., 20px, 2em, or 60%"/></form>',
+				'<form><label>Image URL</label>(<a href="https://www.functor.network/files" target="_blank">copy a link from file library</a>)<input name="image-url"  type="text" value="https://example.com/image.jpg" autofocus onfocus="this.select();" class="form-control"/><label>Image height</label><input name="image-height" class="form-control" placeholder="e.g., 20px, 2em, or 60%"/><label>Image width</label><input name="image-width" class="form-control" placeholder="e.g., 20px, 2em, or 60%"/></form>',
 			});
 		imagePrompt.dialog({
 			modal:true,
@@ -339,7 +339,7 @@ markIt = {
 
 	markdownImageCallback: function (markItUp,data) {
 		if (data.imageWidth && data.imageHeight){
-			$.markItUp({openWith:'![', closeWith:']('+data.imageURL+'){height='+data.imageHeight+', width='+data.imageWidth+'}', placeHolder:'Your text to link here...',});
+			$.markItUp({openWith:'![', closeWith:']('+data.imageURL+'){width='+data.imageWidth+' height='+data.imageHeight+'}', placeHolder:'Your text to link here...',});
 		}else{
 			if(data.imageHeight){
 				$.markItUp({openWith:'![', closeWith:']('+data.imageURL+'){height='+data.imageHeight+'}', placeHolder:'Your text to link here...',});

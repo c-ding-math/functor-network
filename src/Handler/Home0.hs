@@ -18,7 +18,8 @@ getHome0R = do
 
     defaultLayout $ do  
         --aDomId <- newIdent
-        setTitle $ toHtml $ "Welcome To " <> appName <> "!"
+        setTitle $ toHtml $ appName<>"—a blogging community for mathematicians"
+        
         $(widgetFile "homepage")
 
 postHome0R :: Handler Html

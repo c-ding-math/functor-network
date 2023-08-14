@@ -67,7 +67,7 @@ $(document).ready(function(){
                 return (JSON.stringify(data));
             },                                    
     }
-    textarea.markItUp(myMarkdownSettings,extraSettings);              
+    textarea.markItUp(editorSttings,extraSettings);              
 
     //wrap textarea and preview area in a div
     var parent = textarea.closest('.markItUpContainer');
