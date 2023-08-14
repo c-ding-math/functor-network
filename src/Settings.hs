@@ -27,7 +27,9 @@ import Yesod.Default.Util          (WidgetFileSettings, widgetFileNoReload,
 -- loaded from various sources: defaults, environment variables, config files,
 -- theoretically even a database.
 data AppSettings = AppSettings
-    { appStaticDir              :: String
+    { appStaticRoot             :: Text
+    -- ^ Base for all static file URLs.
+    , appStaticDir              :: String
     -- ^ Directory from which to serve static files.
     , appDatabaseConf           :: SqliteConf
     -- ^ Configuration settings for accessing the database.
@@ -81,6 +83,7 @@ instance FromJSON AppSettings where
 #else
                 False
 #endif
+        appStaticRoot             <- o .: "static-root"
         appStaticDir              <- o .: "static-dir"
         appDatabaseConf           <- o .: "database"
         appRoot                   <- o .:? "approot"

@@ -217,3 +217,5 @@ postEditPageR title = do
                     setMessageI MsgFormMissing
                     redirect $ EditPageR title
 
+        _ -> notFound
+

@@ -27,7 +27,6 @@
 
 /parser/input/#Text/output/#Text ParserR POST !login
 
-/comments CommentR POST
 /comment/#EntryId/edit EditCommentR POST !login 
 /user/#UserId/comments CommentsR GET !user
 

@@ -19,18 +19,4 @@ getPage0R text = do
       <li>
           <a href=@{EditPage0R text}>_{MsgEdit}-->
                 |]
-                toWidget [lucius|
-.entry-menu,.comment-menu{
-  list-style-type: none;
-  padding-left:0;
-  text-transform:lowercase;
-}
-.entry-menu>li,.comment-menu>li{
-  display: inline-block;
-  margin-right:1em;
-  margin-bottom:2em;
-}
-.entry-menu a,.comment-menu a{
-    color:#b4bcc2;
-}
-                |]
+

@@ -73,6 +73,7 @@ textarea{
 
 nav>.container{
   display:flex;
+  justify-content: space-between;
 }
 nav>.container .navbar-menu{
   flex:1;
@@ -99,7 +100,35 @@ nav>.container .navbar-menu{
   }
 }
 
-.draft {
-    opacity: 0.5;
+
+footer{
+  margin-top: 2em;
+  padding: 2em 0;
+  border-top: 1px solid #dce4ec;
 }
+footer .container {
+  display: flex;
+  justify-content: space-around;
+}
+footer .container ul {
+  flex: 1;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+footer .container ul li {
+  display: inline-block;
+  margin-right: 1em;
+}
+.footer-left {
+  text-align: left;
+}
+.footer-right {
+  text-align: right;
+}
+
+footer .container a, footer .container a:hover, footer .container a:active, footer .container a:focus {
+    color: #b4bcc2;
+}
+
 

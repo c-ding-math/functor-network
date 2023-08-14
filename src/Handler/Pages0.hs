@@ -26,10 +26,12 @@ getPages0R = do
                             <li :entryStatus entry == Draft:.draft>
                                 <a href=@{Page0R (entryInputTitle entry)}>
                                     <h2>#{preEscapedToMarkup (scaleHeader 2 (entryOutputTitle entry))}
-                                <a .entry-menu href=@{EditPage0R (entryInputTitle entry)}>_{MsgEdit}
+                                <ul .entry-menu>
+                                    <li>
+                                        <a .entry-menu href=@{EditPage0R (entryInputTitle entry)}>_{MsgEdit}
                                 
         |]
             
-        $(widgetFile "entry-list")
+        addStylesheet $ StaticR css_entry_list_css
 
 

@@ -67,6 +67,9 @@ data MenuTypes
     = NavbarLeft MenuItem
     | NavbarRight MenuItem
     | NavbarMiddle MenuItem
+    | FooterLeft MenuItem
+    | FooterRight MenuItem
+    | FooterMiddle MenuItem
 
 appName ::Text
 appName = "Functor Network"
@@ -137,11 +140,11 @@ instance Yesod App where
         -- Get the breadcrumbs, as defined in the YesodBreadcrumbs instance.
         (title, parents) <- breadcrumbs
         mUserRoutePath <- routeUser mcurrentRoute
-        (homeTitle, homeRoute)<- case mUserRoutePath of
+        (homeTitle, homeRoute, aboutRoute)<- case mUserRoutePath of
             Just userId -> do
                 user <- runDB $ get404 userId
-                return (userName user, HomeR userId)
-            Nothing -> return (appName, Home0R)
+                return (userName user, HomeR userId, PageR userId "About")
+            Nothing -> return (appName, Home0R, Page0R "About")
 
         -- Define the menu items of the header.
         let menuItems =
@@ -191,14 +194,55 @@ instance Yesod App where
                             }
                         ]
                     _ -> []
+                ++ case isJust mUserRoutePath of
+                    True -> 
+                        [ FooterLeft $ MenuItem
+                            { menuItemLabel = "About Author"
+                            , menuItemRoute = aboutRoute
+                            , menuItemAccessCallback = True
+                            }
+                        , FooterRight $ MenuItem
+                            { menuItemLabel = "Functor Network"
+                            , menuItemRoute = Home0R
+                            , menuItemAccessCallback = True
+                            }
+                        ]
+                    False -> 
+                        [ FooterLeft $ MenuItem
+                            { menuItemLabel = "About"
+                            , menuItemRoute = Page0R "About"
+                            , menuItemAccessCallback = True
+                            }
+                        , FooterLeft $ MenuItem
+                            { menuItemLabel = "Privacy Policy"
+                            , menuItemRoute = Page0R "Privacy Policy"
+                            , menuItemAccessCallback = True
+                            }
+                        , FooterLeft $ MenuItem
+                            { menuItemLabel = "Feedback"
+                            , menuItemRoute = Page0R "Feedback"
+                            , menuItemAccessCallback = True
+                            }
+                        , FooterMiddle $ MenuItem
+                            { menuItemLabel = "Members"
+                            , menuItemRoute = Page0R "Users"
+                            , menuItemAccessCallback = True
+                            }
+                        ]
 
         let navbarLeftMenuItems = [x | NavbarLeft x <- menuItems]
         let navbarRightMenuItems = [x | NavbarRight x <- menuItems]
         let navbarMiddleMenuItems = [x | NavbarMiddle x <- menuItems]
+        let footerLeftMenuItems = [x | FooterLeft x <- menuItems]
+        let footerRightMenuItems = [x | FooterRight x <- menuItems]
+        let footerMiddleMenuItems = [x | FooterMiddle x <- menuItems]      
 
         let navbarLeftFilteredMenuItems = [x | x <- navbarLeftMenuItems, menuItemAccessCallback x]
         let navbarRightFilteredMenuItems = [x | x <- navbarRightMenuItems, menuItemAccessCallback x]
         let navbarMiddleFilteredMenuItems = [x | x <- navbarMiddleMenuItems, menuItemAccessCallback x]
+        let footerLeftFilteredMenuItems = [x | x <- footerLeftMenuItems, menuItemAccessCallback x]
+        let footerRightFilteredMenuItems = [x | x <- footerRightMenuItems, menuItemAccessCallback x]
+        let footerMiddleFilteredMenuItems = [x | x <- footerMiddleMenuItems, menuItemAccessCallback x]
 
         -- We break up the default layout into two components:
         -- default-layout is the contents of the body tag, and
@@ -207,8 +251,8 @@ instance Yesod App where
         -- you to use normal widget features in default-layout.
 
         pc <- widgetToPageContent $ do
-            addStylesheet $ StaticR css_math_css
             addStylesheet $ StaticR css_bootstrap_css
+            addStylesheet $ StaticR css_entry_css
                                     -- ^ generated from @Settings/StaticFiles.hs@
             $(widgetFile "default-layout")
         withUrlRenderer $(hamletFile "templates/default-layout-wrapper.hamlet")
@@ -225,7 +269,6 @@ instance Yesod App where
         -> Handler AuthResult
     -- Routes not requiring authentication.
     isAuthorized (AuthR _) _ = return Authorized
-    isAuthorized CommentR _ = return Authorized
     isAuthorized Home0R _ = return Authorized
     isAuthorized FaviconR _ = return Authorized
     isAuthorized RobotsR _ = return Authorized
@@ -280,6 +323,12 @@ instance Yesod App where
       where
         -- Generate a unique filename based on the content itself
         genFileName lbs = "autogen-" ++ base64md5 lbs
+
+    -- serve static files from a separate domain
+    -- reference: https://www.yesodweb.com/book/yesod-typeclass
+    urlParamRenderOverride site (StaticR s) _ =
+        Just $ uncurry (joinPath site (appStaticRoot $ appSettings site)) $ renderRoute s
+    urlParamRenderOverride _ _ _ = Nothing
 
     -- What messages should be logged. The following includes all messages when
     -- in development, and warnings and errors in production.

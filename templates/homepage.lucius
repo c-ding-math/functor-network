@@ -6,18 +6,3 @@ p, li {
     min-width: initial;
 }
 
-
-footer{
-  margin-top: 2em;
-  padding: 2em 0;
-  border-top: 1px solid #dce4ec;
-}
-footer .container a {
-    margin-right: 1em;
-}
-footer .container a:last-child {
-    margin-right: 0;
-}
-footer .container a:hover, footer .container a:active, footer .container a:focus {
-    color: #b4bcc2;
-}

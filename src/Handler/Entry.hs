@@ -21,11 +21,14 @@ getEntryR _ entryId = do
             mCommentAuthors<-mapM (getAuthor . entryUserId . entityVal) comments
             return $ (entry,mEntryAuthor,comments,mCommentAuthors)        
           else permissionDeniedI MsgPermissionDenied
+
     formatParam <- lookupGetParam "format"
     let format = case formatParam of
             Just "tex" -> Format "tex"
             _ -> Format "md"
-    (commentWidget, commentEnctype) <-  generateFormPost $ newCommentForm $ Just format
+    (commentWidget, commentEnctype) <- case maybeUser of
+        Nothing ->  generateFormPost $ newCommentForm Nothing
+        Just (Entity _ user) -> generateFormPost $ newCommentForm $ Just $ CommentInput (userDefaultPreamble user) format (Textarea "") (userDefaultCitation user)
 
     defaultLayout $ do
         setTitleI MsgPost
@@ -137,41 +140,6 @@ menuWidget=do
             });
         });    
     |]
-    toWidget [lucius|   
-.tags ul{
-  list-style-type: none;
-  padding-left:0;
-}
-.tags ul>li{
-  display: inline-block;
-}
-
-.entry-meta>span.at:before{
-  content:" - ";
-}
-.entry-meta>span.by:after{
-  content:" ";
-}
-.entry-meta>span{
-  color:#b4bcc2;
-}
-.entry-meta{
-  margin-bottom:1em;
-}
-.entry-menu{
-  list-style-type: none;
-  padding-left:0;
-  text-transform:lowercase;
-}
-.entry-menu>li{
-  display: inline-block;
-  margin-right:1em;
-  margin-bottom:2em;
-}
-.entry-menu a{
-    color:#b4bcc2;
-}
-    |]
 
 data CommentInput=CommentInput
     {preamble::Maybe Textarea
@@ -180,12 +148,12 @@ data CommentInput=CommentInput
     ,citation::Maybe Textarea
     }
 
-newCommentForm :: Maybe Format -> Form CommentInput
-newCommentForm mFormat =  renderBootstrap3 BootstrapBasicForm $ CommentInput
-    <$> aopt textareaField preambleSettings Nothing
-    <*> areq (selectFieldList inputFormats) "Comment" mFormat
-    <*> areq textareaField editorSettings Nothing
-    <*> aopt textareaField citationSettings Nothing
+newCommentForm :: Maybe CommentInput -> Form CommentInput
+newCommentForm mCommentData =  renderBootstrap3 BootstrapBasicForm $ CommentInput
+    <$> aopt textareaField preambleSettings (preamble <$> mCommentData)
+    <*> areq (selectFieldList inputFormats) "Comment" (inputFormat <$> mCommentData)
+    <*> areq textareaField editorSettings (content <$> mCommentData)
+    <*> aopt textareaField citationSettings (citation <$> mCommentData)
     where   inputFormats = [("Markdown", Format "md"), ("LaTeX", Format "tex")]::[(Text, Format)] 
             editorSettings = FieldSettings
                 { fsLabel = ""
@@ -214,10 +182,11 @@ newCommentForm mFormat =  renderBootstrap3 BootstrapBasicForm $ CommentInput
 
 postEntryR :: Path ->  EntryId -> Handler Html
 postEntryR _ entryId = do
-    userId<-requireAuthId
+    userId <- requireAuthId
     entry<-runDB $ get404 entryId
     urlRenderParams <- getUrlRenderParams
-    ((res, _), _) <- runFormPost $ newCommentForm Nothing
+    formatParam <- lookupGetParam "format"
+    ((res, _), _) <- runFormPost $ newCommentForm $ Nothing
     case res of
         FormSuccess newCommentFormData -> do
             let editorData=EditorData{

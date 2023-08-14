@@ -29,5 +29,5 @@ getTagR piece tag = do
                                 <div .tags>
                                     ^{tagsWidget piece (zip (entryInputTags entry) (entryOutputTags entry))}
         |]
-        $(widgetFile "entry-list")
+        addStylesheet $ StaticR css_entry_list_css
 

@@ -52,6 +52,6 @@ getEntriesR piece = do
 
         |]
             
-        $(widgetFile "entry-list")
+        addStylesheet $ StaticR css_entry_list_css
 
 

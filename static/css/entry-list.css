@@ -24,18 +24,3 @@ li h1{
     color:black;
     font-size:2em;
 }
-/*
-.entry-menu,.comment-menu{
-  margin-top:1em;
-  list-style-type: none;
-  padding-left:0;
-  text-transform:lowercase;
-}
-.entry-menu>li,.comment-menu>li{
-  display: inline-block;
-  margin-right:1em;
-  margin-bottom:2em;
-}
-.entry-menu>li>a,.comment-menu>li>a{
-    color:#b4bcc2;
-}*/

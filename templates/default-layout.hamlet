@@ -62,10 +62,21 @@ $else
 <!-- Footer -->
 <footer .footer>
     <div .container>
-        <p>
-            $if (Just Home0R == mcurrentRoute)
-                <a .text-muted href=@{Page0R "About"}>About
-                <a .hidden href=@{UsersR}>Members
-                <a .text-muted href=@{Page0R "Privacy Policy"}>Privacy Policy
-                <a .text-muted href="mailto:feedback@functor.network">Feedback
+        <ul .footer-left>
+            $forall MenuItem label route _ <- footerLeftFilteredMenuItems  
+                $if (label == "Feedback")
+                    <li>
+                        <a href="mailto:feedback@functor.network">#{label}
+                $else
+                    <li>
+                        <a href="@{route}">#{label}
+        <ul .footer-middle style="visibility:hidden">
+            $forall MenuItem label route _ <- footerMiddleFilteredMenuItems
+                <li>
+                    <a href="@{route}">#{label}
+        <ul .footer-right>
+            $forall MenuItem label route _ <- footerRightFilteredMenuItems
+                <li>
+                    <a href="@{route}">#{label}
+
             <!--#{appCopyright $ appSettings master}-->

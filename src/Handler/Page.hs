@@ -24,7 +24,6 @@ $if mCurrentUserId == Just userId
         <li>
             <a href=@{EditPageR "About"}>_{MsgEdit}
                 |]
-                menuWidget
                 
         Just (Entity _ entry) ->
             defaultLayout $ do 
@@ -37,24 +36,5 @@ $if mCurrentUserId == Just userId
         <li>
             <a href=@{EditPageR "About"}>_{MsgEdit}
                 |]
-                menuWidget
-                
-menuWidget:: Widget
-menuWidget= toWidget [lucius|
-.entry-menu,.comment-menu{
-  list-style-type: none;
-  padding-left:0;
-  text-transform:lowercase;
-}
-.entry-menu>li,.comment-menu>li{
-  display: inline-block;
-  margin-right:1em;
-  margin-bottom:2em;
-}
-.entry-menu a,.comment-menu a{
-    color:#b4bcc2;
-}
-                |]
 
-    
 

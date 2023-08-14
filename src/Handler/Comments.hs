@@ -16,8 +16,9 @@ getCommentsR piece = do
     commentEntryList<-runDB $ do
         _<-get404 piece      
         comments <- selectList [EntryUserId==.piece,EntryType==.Comment] [Desc EntryInserted]
-        commentEntryList' <- mapM getEntryCommentList comments
-        let commentEntryList =[x | x<- commentEntryList', (entryStatus . entityVal . fst) x == Publish||isAdministrator mCurrentUserId ((entityVal . fst) x)]               
+        commentEntryList'' <- mapM getCommentEntry comments
+        let commentEntryList'=catMaybes commentEntryList''
+            commentEntryList =[x | x<- commentEntryList', (entryStatus . entityVal . fst) x == Publish||isAdministrator mCurrentUserId ((entityVal . fst) x)] 
         return $ commentEntryList
     defaultLayout $ do
         setTitleI MsgCommentsOn
@@ -31,18 +32,19 @@ getCommentsR piece = do
                     <ul>
                         $forall  (Entity entryId entry, Entity commentId comment) <- commentEntryList
                             <li :entryStatus entry == Draft:.draft>
-                                <a href=@{EntryR piece entryId}#comment-{toPathPiece commentId}>
+                                <a href=@{EntryR piece entryId}#comment-#{toPathPiece commentId}>
                                     <h2>#{preEscapedToMarkup (scaleHeader 2 (entryOutputTitle entry))}
                                 <div .tags>
                                     ^{tagsWidget piece (zip (entryInputTags entry) (entryOutputTags entry))}
         |]
-        $(widgetFile "entry-list")
+        addStylesheet $ StaticR css_entry_list_css
 
-getEntryCommentList :: (BaseBackend backend ~ SqlBackend,PersistStoreRead backend, MonadHandler m) => Entity Entry -> ReaderT backend m (Entity Entry, Entity Entry)
-getEntryCommentList commentEntity = do
-    let mEntryId = entryParentId $ entityVal commentEntity
-    case mEntryId of
+getCommentEntry :: (BaseBackend backend ~ SqlBackend,PersistStoreRead backend, MonadHandler m) => Entity Entry -> ReaderT backend m (Maybe (Entity Entry, Entity Entry))
+getCommentEntry commentEntity = do
+    case (entryParentId  (entityVal commentEntity)) of
+        Nothing -> return Nothing
         Just entryId -> do
-            entry <- get404 $ entryId
-            return (Entity entryId entry, commentEntity)
-        Nothing -> notFound
+            mEntry <- get $ entryId
+            case mEntry of
+                Nothing -> return Nothing
+                Just entry -> return $ Just (Entity entryId entry, commentEntity)
