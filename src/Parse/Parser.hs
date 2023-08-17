@@ -85,7 +85,7 @@ textareaToString  _ = ""
 
 textareaToYaml:: Maybe Textarea -> String
 textareaToYaml (Just textarea)= unpack $ pack "preamble: |\n" <> (yamlBlock (unTextarea textarea)) where
-    yamlBlock text=Data.Text.unlines $ (\x-> pack " " <> x) <$> Data.Text.lines text
+    yamlBlock text=Data.Text.unlines $ (\x-> pack " " <> strip x) <$> Data.Text.lines text
 textareaToYaml _ =""
 
 removePTag::String->String

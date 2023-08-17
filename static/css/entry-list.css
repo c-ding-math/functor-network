@@ -7,7 +7,7 @@ section{
 }
 
 .entries>ul>li{
-    border-bottom:1px solid #dce4ec;
+    border-top:1px solid #dce4ec;
     padding-bottom:1em;
 }
 .entries>ul>li>a>h2, .entries>ul>li>a>h3, .tags ul>li>a {

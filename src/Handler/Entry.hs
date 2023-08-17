@@ -185,7 +185,7 @@ postEntryR _ entryId = do
     userId <- requireAuthId
     entry<-runDB $ get404 entryId
     urlRenderParams <- getUrlRenderParams
-    formatParam <- lookupGetParam "format"
+    
     ((res, _), _) <- runFormPost $ newCommentForm $ Nothing
     case res of
         FormSuccess newCommentFormData -> do
