@@ -38,7 +38,7 @@
 <!-- Page Contents -->
 
 <div .container>
-    $if not $ Just HomeR == mcurrentRoute
+    $if not $ Just Home0R == mcurrentRoute
         <ul .breadcrumb>
             $forall bc <- parents
                 <li>
@@ -50,7 +50,7 @@
       <div .alert.alert-info #message>#{msg}
 
 
-$if (Just HomeR == mcurrentRoute)
+$if (Just Home0R == mcurrentRoute)
     ^{widget}
 $else
     <div .container>
@@ -62,5 +62,21 @@ $else
 <!-- Footer -->
 <footer .footer>
     <div .container>
-        <p .text-muted>
+        <ul .footer-left>
+            $forall MenuItem label route _ <- footerLeftFilteredMenuItems  
+                $if (label == "Feedback")
+                    <li>
+                        <a href="mailto:feedback@functor.network">#{label}
+                $else
+                    <li>
+                        <a href="@{route}">#{label}
+        <ul .footer-middle>
+            $forall MenuItem label route _ <- footerMiddleFilteredMenuItems
+                <li>
+                    <a href="@{route}">#{label}
+        <ul .footer-right>
+            $forall MenuItem label route _ <- footerRightFilteredMenuItems
+                <li>
+                    <a href="@{route}">#{label}
+
             <!--#{appCopyright $ appSettings master}-->

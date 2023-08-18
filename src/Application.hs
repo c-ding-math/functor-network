@@ -41,13 +41,11 @@ import System.Log.FastLogger                (defaultBufSize, newStdoutLoggerSet,
 -- Import all relevant handler modules here.
 -- Don't forget to add new modules to your cabal file!
 import Handler.Common
-import Handler.Home
-import Handler.Comment
+import Handler.Home0
 import Handler.Users
 import Handler.EditEntry
-import Handler.UserHome
+import Handler.Home
 import Handler.Settings
-import Handler.UserAbout
 import Handler.EmailSetting
 import Handler.LoginSetting
 import Handler.Files
@@ -58,9 +56,12 @@ import Handler.Parser
 import Handler.NewEntry
 import Handler.EditComment
 import Handler.EditPage
+import Handler.EditPage0
 import Handler.Tag
 import Handler.Comments
 import Handler.Page
+import Handler.Page0
+import Handler.Pages0
 
 -- This line actually creates our YesodDispatch instance. It is the second half
 -- of the call to mkYesodData which occurs in Foundation.hs. Please see the

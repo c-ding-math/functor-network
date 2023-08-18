@@ -67,6 +67,9 @@ data MenuTypes
     = NavbarLeft MenuItem
     | NavbarRight MenuItem
     | NavbarMiddle MenuItem
+    | FooterLeft MenuItem
+    | FooterRight MenuItem
+    | FooterMiddle MenuItem
 
 appName ::Text
 appName = "Functor Network"
@@ -137,11 +140,11 @@ instance Yesod App where
         -- Get the breadcrumbs, as defined in the YesodBreadcrumbs instance.
         (title, parents) <- breadcrumbs
         mUserRoutePath <- routeUser mcurrentRoute
-        (homeTitle, homeRoute)<- case mUserRoutePath of
+        (homeTitle, homeRoute, aboutRoute)<- case mUserRoutePath of
             Just userId -> do
                 user <- runDB $ get404 userId
-                return (userName user, UserHomeR userId)
-            Nothing -> return (appName, HomeR)
+                return (userName user, HomeR userId, PageR userId "About")
+            Nothing -> return (appName, Home0R, Page0R "About")
 
         -- Define the menu items of the header.
         let menuItems =
@@ -186,19 +189,60 @@ instance Yesod App where
                     Just uid | otherwise ->
                         [ NavbarMiddle $ MenuItem
                             { menuItemLabel = "My Homepage"
-                            , menuItemRoute = UserHomeR uid
+                            , menuItemRoute = HomeR uid
                             , menuItemAccessCallback = True
                             }
                         ]
                     _ -> []
+                ++ case isJust mUserRoutePath of
+                    True -> 
+                        [ FooterLeft $ MenuItem
+                            { menuItemLabel = "About Author"
+                            , menuItemRoute = aboutRoute
+                            , menuItemAccessCallback = True
+                            }
+                        , FooterRight $ MenuItem
+                            { menuItemLabel = "Functor Network"
+                            , menuItemRoute = Home0R
+                            , menuItemAccessCallback = True
+                            }
+                        ]
+                    False -> 
+                        [ FooterLeft $ MenuItem
+                            { menuItemLabel = "About"
+                            , menuItemRoute = Page0R "About"
+                            , menuItemAccessCallback = True
+                            }
+                        , FooterLeft $ MenuItem
+                            { menuItemLabel = "Privacy Policy"
+                            , menuItemRoute = Page0R "Privacy Policy"
+                            , menuItemAccessCallback = True
+                            }
+                        , FooterLeft $ MenuItem
+                            { menuItemLabel = "Feedback"
+                            , menuItemRoute = Page0R "Feedback"
+                            , menuItemAccessCallback = True
+                            }
+                        , FooterMiddle $ MenuItem
+                            { menuItemLabel = "Members"
+                            , menuItemRoute = Page0R "Users"
+                            , menuItemAccessCallback = True
+                            }
+                        ]
 
         let navbarLeftMenuItems = [x | NavbarLeft x <- menuItems]
         let navbarRightMenuItems = [x | NavbarRight x <- menuItems]
         let navbarMiddleMenuItems = [x | NavbarMiddle x <- menuItems]
+        let footerLeftMenuItems = [x | FooterLeft x <- menuItems]
+        let footerRightMenuItems = [x | FooterRight x <- menuItems]
+        let footerMiddleMenuItems = [x | FooterMiddle x <- menuItems]      
 
         let navbarLeftFilteredMenuItems = [x | x <- navbarLeftMenuItems, menuItemAccessCallback x]
         let navbarRightFilteredMenuItems = [x | x <- navbarRightMenuItems, menuItemAccessCallback x]
         let navbarMiddleFilteredMenuItems = [x | x <- navbarMiddleMenuItems, menuItemAccessCallback x]
+        let footerLeftFilteredMenuItems = [x | x <- footerLeftMenuItems, menuItemAccessCallback x]
+        let footerRightFilteredMenuItems = [x | x <- footerRightMenuItems, menuItemAccessCallback x]
+        let footerMiddleFilteredMenuItems = [x | x <- footerMiddleMenuItems, menuItemAccessCallback x]
 
         -- We break up the default layout into two components:
         -- default-layout is the contents of the body tag, and
@@ -207,8 +251,8 @@ instance Yesod App where
         -- you to use normal widget features in default-layout.
 
         pc <- widgetToPageContent $ do
-            addStylesheet $ StaticR css_math_css
             addStylesheet $ StaticR css_bootstrap_css
+            addStylesheet $ StaticR css_entry_css
                                     -- ^ generated from @Settings/StaticFiles.hs@
             $(widgetFile "default-layout")
         withUrlRenderer $(hamletFile "templates/default-layout-wrapper.hamlet")
@@ -225,19 +269,18 @@ instance Yesod App where
         -> Handler AuthResult
     -- Routes not requiring authentication.
     isAuthorized (AuthR _) _ = return Authorized
-    isAuthorized CommentR _ = return Authorized
-    isAuthorized HomeR _ = return Authorized
+    isAuthorized Home0R _ = return Authorized
     isAuthorized FaviconR _ = return Authorized
     isAuthorized RobotsR _ = return Authorized
     isAuthorized (StaticR _) _ = return Authorized
     isAuthorized UsersR _ = return Authorized
-    isAuthorized (UserHomeR _) _ = return Authorized
-    isAuthorized (UserAboutR _) _ = return Authorized
+    isAuthorized (HomeR _) _ = return Authorized
+    isAuthorized (PageR _ _) _ = return Authorized
     isAuthorized (EntriesR _) _ = return Authorized
     isAuthorized (EntryR _ _) _ = return Authorized
     isAuthorized (TagR _ _)_ = return Authorized
     isAuthorized (CommentsR _) _ = return Authorized
-    isAuthorized (PageR _) _ = return Authorized
+    isAuthorized (Page0R _) _ = return Authorized
 
     -- Routes requiring authentication.
     isAuthorized (EditPageR _) _ = isAuthenticated
@@ -252,6 +295,10 @@ instance Yesod App where
     isAuthorized (LoginSettingR x) _ = isAdmin x
     isAuthorized (EmailSettingR x) _ = isAdmin x
     isAuthorized (FileR x) _ = isAdmin x
+
+    -- app administrator routes
+    isAuthorized (EditPage0R _ ) _ = isAppAdministrator
+    isAuthorized (Pages0R) _ = isAppAdministrator
     
     -- This function creates static content files in the static folder
     -- and names them based on a hash of their content. This allows
@@ -277,6 +324,12 @@ instance Yesod App where
         -- Generate a unique filename based on the content itself
         genFileName lbs = "autogen-" ++ base64md5 lbs
 
+    -- serve static files from a separate domain
+    -- reference: https://www.yesodweb.com/book/yesod-typeclass
+    urlParamRenderOverride site (StaticR s) _ =
+        Just $ uncurry (joinPath site (appStaticRoot $ appSettings site)) $ renderRoute s
+    urlParamRenderOverride _ _ _ = Nothing
+
     -- What messages should be logged. The following includes all messages when
     -- in development, and warnings and errors in production.
     shouldLogIO :: App -> LogSource -> LogLevel -> IO Bool
@@ -299,17 +352,17 @@ instance YesodBreadcrumbs App where
         -> Handler (Text, Maybe (Route App))
     
     breadcrumb route = case route of
-        UserHomeR pathPiece -> do
+        HomeR pathPiece -> do
             maybeUser <- runDB $ get pathPiece
             let siteName = case maybeUser of
                     Just user -> userName user
                     _ -> "Unknown"
-            return (siteName, Just HomeR)
-        UserAboutR pathPiece -> parentLink pathPiece
+            return (siteName, Just Home0R)
+        PageR pathPiece _-> parentLink pathPiece
         EntriesR pathPiece -> parentLink pathPiece
         TagR pathPiece _-> parentLink pathPiece
-        HomeR -> return ("Home", Nothing)
-        AuthR _ -> return ("Home", Just HomeR)
+        Home0R -> return ("Home", Nothing)
+        AuthR _ -> return ("Home", Just Home0R)
         _ -> return ("home", Nothing)
 
       where
@@ -317,8 +370,8 @@ instance YesodBreadcrumbs App where
         parentLink pathPiece = do
             maybeUser <- runDB $ get pathPiece
             return $ case maybeUser of
-                Just user -> (userName user, Just (UserHomeR pathPiece))
-                _ -> ("Unknown", Just (UserHomeR pathPiece))
+                Just user -> (userName user, Just (HomeR pathPiece))
+                _ -> ("Unknown", Just (HomeR pathPiece))
             
 
 -- How to run database actions.
@@ -341,7 +394,7 @@ instance YesodAuth App where
     loginDest _ = SettingsR
     -- Where to send a user after logout
     logoutDest :: App -> Route App
-    logoutDest _ = HomeR
+    logoutDest _ = Home0R
     -- Override the above two destinations when a Referer: header is present
     redirectToReferer :: App -> Bool
     redirectToReferer _ = True
@@ -380,18 +433,28 @@ instance YesodAuth App where
                                 _<-insert $ Login {loginIdent=ident,loginPlugin=plugin,loginUserId=Just uid,loginToken=Nothing,loginVerified=True,loginInserted=currentTime}
                                 return $ Authenticated uid
                             Nothing -> do 
-                                let uIdent = ident <> "@" <> plugin
-                                eUser<-insertBy $ User
-                                    {userIdent=uIdent
+                                --let uIdent = ident <> "@" <> plugin
+                                uid<-insert $ User
+                                    {userName=""
                                     ,userPassword=Nothing
-                                    ,userName=""
+                                    --,userIdent=uIdent
                                     ,userInserted=currentTime
                                     --,userModified=currentTime
                                     --,userAvatar=Nothing
-                                    ,userDefaultPreamble=Just (Textarea "\\usepackage{amsmath, amssymb, amsfonts}\n\\usepackage{tikz-cd}\n\\newcommand{\\NN}{\\mathbb{N}}")
+                                    ,userDefaultPreamble=Just (Textarea "\\usepackage{amsmath, amssymb, amsfonts}\n\\newcommand{\\NN}{\\mathbb{N}}")
                                     ,userDefaultCitation=Nothing
                                     }
-                                case eUser of
+                                let name = case plugin of
+                                        "google"->
+                                            case Yesod.Auth.Extra.googleUserName <$> Yesod.Auth.OAuth2.getUserResponseJSON creds of
+                                                Right n->n
+                                                _ -> (msgRender MsgUser) <>" " <> (toPathPiece uid)
+                                        _ -> (msgRender MsgUser) <>" " <> (toPathPiece uid)
+                                _<-insert $ Login {loginIdent=ident,loginPlugin=plugin,loginUserId=Just uid,loginToken=Nothing,loginVerified=True,loginInserted=currentTime}
+                                _<-update uid [UserName=.name]
+                                return $ Authenticated uid
+                                
+{-                                case eUser of
                                     Left (Entity uid _) -> do
                                         _<-insert $ Login {loginIdent=ident,loginPlugin=plugin,loginUserId=Just uid,loginToken=Nothing,loginVerified=True,loginInserted=currentTime}
                                         return $ Authenticated uid
@@ -405,7 +468,7 @@ instance YesodAuth App where
                                         _<-insert $ Login {loginIdent=ident,loginPlugin=plugin,loginUserId=Just uid,loginToken=Nothing,loginVerified=True,loginInserted=currentTime}
                                         _<-update uid [UserName=.name]
                                         return $ Authenticated uid
-
+-}
     -- You can add other plugins like Google Email, email or OAuth here
     authPlugins :: App -> [AuthPlugin App]
     authPlugins app = [authEmail] ++ [Yesod.Auth.OAuth2.Google.oauth2Google (appGoogleClientId (appSettings app)) (appGoogleClientSecret (appSettings app))] ++ extraAuthPlugins
@@ -415,7 +478,7 @@ instance YesodAuth App where
 instance YesodAuthEmail App where
     type AuthEmailId App = EmailId
 
-    afterPasswordRoute _ = HomeR
+    afterPasswordRoute _ = Home0R
 
     addUnverified email verkey = liftHandler $ runDB $ do
         maybeUserId<-maybeAuthId -- update email if current user is logged in 
@@ -500,22 +563,25 @@ instance YesodAuthEmail App where
         case maybeEmail of 
             Just email -> do
                 let insertNewUser = do
-                        newUser<-insertBy $ User 
-                                {userIdent=emailAddress email
+                        newUserId<-insert $ User 
+                                {userName=""
                                 ,userPassword=Nothing
-                                ,userName=""
+                                --,userIdent=emailAddress email
                                 ,userInserted=currentTime
                                 --,userModified=currentTime
                                 --,userAvatar=Nothing
-                                ,userDefaultPreamble=Just (Textarea "\\usepackage{amsmath, amssymb, amsfonts}\n\\usepackage{tikz-cd}\n\\newcommand{\\NN}{\\mathbb{N}}")
+                                ,userDefaultPreamble=Just (Textarea "\\usepackage{amsmath, amssymb, amsfonts}\n\\newcommand{\\NN}{\\mathbb{N}}")
                                 ,userDefaultCitation=Nothing
                                 }
-                        case newUser of
+                        let name = (msgRender MsgUser) <>" " <> (toPathPiece newUserId)
+                        _<-update newUserId [UserName=.name]
+                        return newUserId
+                        {-case newUser of
                             Left (Entity uid _) -> return uid -- existing user
                             Right uid -> do -- newly added user
                                 let name = (msgRender MsgUser) <>" " <> (toPathPiece uid)
                                 _<-update uid [UserName=.name]
-                                return uid
+                                return uid-}
 
                 uid <-  case emailUserId email of
                     Just uid-> do 
@@ -867,8 +933,8 @@ routeUser :: Maybe (Route App) -> Handler (Maybe UserId)
 routeUser Nothing= return Nothing
 routeUser (Just route) 
     | "user" `member` routeAttrs route = case route of 
-        UserHomeR userId -> return $ Just userId
-        UserAboutR userId -> return $ Just userId
+        HomeR userId -> return $ Just userId
+        PageR userId _ -> return $ Just userId
         CommentsR userId -> return $ Just userId
         EntriesR userId -> return $ Just userId
         EntryR userId _ -> return $ Just userId
@@ -894,6 +960,14 @@ requireAppAdministratorId = do
     case muid of
         Just uid -> return uid
         Nothing -> notFound
+
+isAppAdministrator :: Handler AuthResult
+isAppAdministrator = do
+    currentUserId<-requireAuthId
+    muid<-mAppAdministratorId
+    if muid == Just currentUserId 
+        then return Authorized
+        else permissionDeniedI MsgPermissionDenied
 
 {-requireAdminId :: Path -> Handler (UserId, SiteId)
 requireAdminId piece = do

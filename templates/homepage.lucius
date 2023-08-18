@@ -1,7 +1,15 @@
+.masthead h1.header p {
+    font-size: 0.5em;
+}
 p, li {
     line-height: 2em;
     font-size: 16px
 }
-.navbar {
-    min-width: initial;
+
+.navbar, .footer{
+    min-width:initial;
+}
+
+.footer-right{
+    display: none;
 }

@@ -21,14 +21,20 @@ getEntryR _ entryId = do
             mCommentAuthors<-mapM (getAuthor . entryUserId . entityVal) comments
             return $ (entry,mEntryAuthor,comments,mCommentAuthors)        
           else permissionDeniedI MsgPermissionDenied
+
     formatParam <- lookupGetParam "format"
     let format = case formatParam of
             Just "tex" -> Format "tex"
             _ -> Format "md"
-    (commentWidget, commentEnctype) <-  generateFormPost $ newCommentForm $ Just format
+    (commentWidget, commentEnctype) <- case maybeUser of
+        Nothing ->  generateFormPost $ newCommentForm Nothing
+        Just (Entity _ user) -> generateFormPost $ newCommentForm $ Just $ CommentInput (userDefaultPreamble user) format (Textarea "") (userDefaultCitation user)
 
     defaultLayout $ do
-        setTitleI MsgEntry
+        setTitle $ toHtml $ entryInputTitle entry
+        setDescriptionIdemp $ (intercalate ";" $ entryInputTags entry) <> case mEntryAuthor of
+            Just author -> "; by " <> userName author
+            Nothing -> ""
         [whamlet|
 <div .entry :entryStatus entry == Draft:.draft>
   <h1>#{preEscapedToMarkup(scaleHeader 1 (entryOutputTitle entry))}
@@ -36,7 +42,7 @@ getEntryR _ entryId = do
       <span .by>
           $maybe author<-mEntryAuthor    
               
-              <a href=@{UserAboutR (entryUserId entry)}>#{userName author}
+              <a href=@{PageR (entryUserId entry) "About"}>#{userName author}
           $nothing 
               _{MsgUnknownUser}
       <span .at>#{formatDateStr (entryInserted entry)}
@@ -48,25 +54,24 @@ getEntryR _ entryId = do
         $if isAdministrator maybeUserId entry
             <li .edit><a href=@{EditEntryR entryId}>edit</a>
 
-<!--<div .entry-comment-separator>-->
-<section #comments .comments>    
+<section #comments .comments  :entryStatus entry == Draft:.draft>    
     $if null comments
         <p style="display:none">_{MsgNoComment}
     $else
         <h3>_{MsgComments}
         $forall  (Entity commentId comment,mCommentAuthor)<-zip comments mCommentAuthors
             <div .comment id=comment-#{toPathPiece commentId}> 
-              <div .comment-meta>
+              <div .entry-meta>
                   <span .by>
                       $maybe author<-mCommentAuthor    
                           
-                          <a href=@{UserAboutR (entryUserId comment)}>#{userName author}
+                          <a href=@{PageR (entryUserId comment) "About"}>#{userName author}
                       $nothing 
                           _{MsgUnknownUser}
                   <span .at>#{formatDateStr (entryInserted comment)}
-              <div .comment-content>
+              <div .entry-content>
                   <article>#{preEscapedToMarkup (entryOutputBody comment)}  
-              <ul .comment-menu>                
+              <ul .entry-menu>                
                   <!--<li .reply><a href=#comment>reply</a>-->
                   $if isAdministrator maybeUserId entry || isAdministrator maybeUserId comment
                       <li .delete>
@@ -118,7 +123,7 @@ menuWidget=do
                 });
                 return false;
             });       
-            $(".comment-menu .delete a").click(function(event){  
+            $(".entry-menu .delete a").click(function(event){  
                 if (confirm("Are you sure that you want to delete the comment?")) {
             
                     var that =$(this);
@@ -138,51 +143,6 @@ menuWidget=do
             });
         });    
     |]
-    toWidget [lucius|   
-.tags ul{
-  list-style-type: none;
-  padding-left:0;
-}
-.tags ul>li{
-  display: inline-block;
-}
-
-.entry-meta>span.at:before,.comment-meta>span.at:before{
-  content:" - ";
-}
-.entry-meta>span.by:after{
-  content:" ";
-}
-.comment-meta>span.by:after{
-  content:" ";
-}
-.entry-meta>span,.comment-meta>span{
-  color:#b4bcc2;
-}
-.entry-meta,.comment-meta{
-  margin-bottom:1em;
-}
-.entry-menu .favorite>a:after,.comment-menu .vote>a:after{
-  content:"("attr(data-like)")";
-}
-.entry-menu,.comment-menu{
-  list-style-type: none;
-  padding-left:0;
-  text-transform:lowercase;
-}
-.entry-menu>li,.comment-menu>li{
-  display: inline-block;
-  margin-right:1em;
-  margin-bottom:2em;
-}
-.entry-menu a,.comment-menu a{
-    color:#b4bcc2;
-}
-.entry-comment-separator{
-  border-bottom:1px #b4bcc2 dashed;
-  margin:2em 0 4em;
-}
-    |]
 
 data CommentInput=CommentInput
     {preamble::Maybe Textarea
@@ -191,12 +151,12 @@ data CommentInput=CommentInput
     ,citation::Maybe Textarea
     }
 
-newCommentForm :: Maybe Format -> Form CommentInput
-newCommentForm mFormat =  renderBootstrap3 BootstrapBasicForm $ CommentInput
-    <$> aopt textareaField preambleSettings Nothing
-    <*> areq (selectFieldList inputFormats) "Comment" mFormat
-    <*> areq textareaField editorSettings Nothing
-    <*> aopt textareaField citationSettings Nothing
+newCommentForm :: Maybe CommentInput -> Form CommentInput
+newCommentForm mCommentData =  renderBootstrap3 BootstrapBasicForm $ CommentInput
+    <$> aopt textareaField preambleSettings (preamble <$> mCommentData)
+    <*> areq (selectFieldList inputFormats) "Comment" (inputFormat <$> mCommentData)
+    <*> areq textareaField editorSettings (content <$> mCommentData)
+    <*> aopt textareaField citationSettings (citation <$> mCommentData)
     where   inputFormats = [("Markdown", Format "md"), ("LaTeX", Format "tex")]::[(Text, Format)] 
             editorSettings = FieldSettings
                 { fsLabel = ""
@@ -225,10 +185,11 @@ newCommentForm mFormat =  renderBootstrap3 BootstrapBasicForm $ CommentInput
 
 postEntryR :: Path ->  EntryId -> Handler Html
 postEntryR _ entryId = do
-    userId<-requireAuthId
+    userId <- requireAuthId
     entry<-runDB $ get404 entryId
     urlRenderParams <- getUrlRenderParams
-    ((res, _), _) <- runFormPost $ newCommentForm Nothing
+    
+    ((res, _), _) <- runFormPost $ newCommentForm $ Nothing
     case res of
         FormSuccess newCommentFormData -> do
             let editorData=EditorData{

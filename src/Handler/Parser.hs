@@ -55,6 +55,7 @@ markItUpWidget inputFormat outputFormat=    do    --addScriptRemote "https://cod
 $(document).ready(function(){
     var textarea=$("textarea.editor");
     var extraSettings={
+        onCtrlEnter: {keepDefault:false,},
         previewInElement:'.markItUpFooter article', 
         previewParserPath: "@{parserPath}",
         previewAutoRefresh:false,     
@@ -67,7 +68,7 @@ $(document).ready(function(){
                 return (JSON.stringify(data));
             },                                    
     }
-    textarea.markItUp(myMarkdownSettings,extraSettings);              
+    textarea.markItUp(editorSettings,extraSettings);              
 
     //wrap textarea and preview area in a div
     var parent = textarea.closest('.markItUpContainer');
@@ -75,6 +76,16 @@ $(document).ready(function(){
     var wrapperDiv = $('<div>').attr('class', 'markItUpWrapper');
     childrenToWrap.wrapAll(wrapperDiv);       
     $('.markItUpFooter').append('<article></article>');
+
+    //update preview on Ctrl + Enter
+    textarea.attr("placeholder","Your content goes here. Press [Ctrl + Enter] to update preview");
+    textarea.keyup(function(e){
+		var updatePreviewButton = $(this).closest(".markItUp").find(".markItUpHeader .preview a[accesskey='0']").closest("li");
+		if ((e.keyCode == 10 || e.keyCode == 13) && (e.ctrlKey || e.metaKey)) {
+			updatePreviewButton.trigger("mouseup");	
+		}
+    })
+    
 });
 
 $(document).ready(function(){

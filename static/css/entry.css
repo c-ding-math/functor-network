@@ -1,0 +1,117 @@
+/* entry */
+.draft {
+    opacity: 0.5;
+}
+
+.tags ul{
+    list-style-type: none;
+    padding-left:0;
+}
+.tags ul>li{
+    display: inline-block;
+}
+
+.entry-meta>span.at:before{
+    content:" - ";
+}
+.entry-meta>span.by:after{
+    content:" ";
+}
+.entry-meta>span{
+    color:#b4bcc2;
+}
+.entry-meta{
+    margin-bottom:1em;
+}
+.entry-menu{
+    list-style-type: none;
+    padding-left:0;
+    text-transform:lowercase;
+}
+.entry-menu>li{
+    display: inline-block;
+    margin-right:1em;
+    margin-bottom:2em;
+}
+.entry-menu a{
+    color:#b4bcc2;
+}
+
+/* math */
+.navbar, .footer{
+    min-width: 15cm;
+}
+.wrap {
+    width: 100%;
+    min-width: 14.2cm;
+    max-width:22cm;
+    margin:auto;
+}
+.entry-content article, .markItUpFooter article{
+    width:13.78cm;
+    margin:auto;
+    color:black;
+}
+.entry-content {
+    border: 1px solid #dce4ec;
+    padding-top: 0.5em;
+    margin-bottom: 0.5em;
+}
+
+.display.math{
+    display: block; 
+    text-align: center; 
+    margin: 0.5rem auto;
+}
+
+div.mark{
+    padding: 1em 2em 0.5em;
+}
+.theorem-like, .proof-like{
+    position: relative;
+}
+.theorem-like::before, .proof-like::before {
+    content: attr(data-label)'.\00a0';
+    font-weight: bold;
+    float: left;
+}
+.proof-like>*:last-child::after{ 
+    content: "";
+    border: 1px solid black;
+    padding: 0.4em;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+}
+blockquote{
+    font-size:inherit;
+}
+  
+/* CSS for citations */
+div.csl-bib-body {
+    margin-bottom: 10.5px;
+}
+div.csl-entry {
+    clear: both;
+}
+.hanging-indent div.csl-entry {
+    margin-left:2em;
+    text-indent:-2em;
+}
+div.csl-left-margin {
+    min-width:2em;
+    float:left;
+}
+div.csl-right-inline {
+    margin-left:2em;
+    padding-left:1em;
+}
+div.csl-indent {
+    margin-left: 2em;
+}
+
+/* CSS for task lists */
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  margin-left:  -1.6em;
+}

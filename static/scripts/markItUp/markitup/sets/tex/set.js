@@ -4,28 +4,85 @@
 // Copyright (C) 2008 Jay Salvat
 // http://markitup.jaysalvat.com/
 // ----------------------------------------------------------------------------
-myMarkdownSettings = {
-    nameSpace:          'markdown', // Useful to prevent multi-instances CSS conflict
+
+editorSettings = {
+    nameSpace:          'latex', // Useful to prevent multi-instances CSS conflict
 	onCtrlEnter:        {keepDefault:false, call:'preview'}, //not working
     markupSet: [
-    
+		{name:'Text', className:'', dropMenu:[
+			{name:'Italic', key:"I", openWith:'\\emph{', closeWith:'}',placeHolder:'emphasized text'},
+            {name:'Bold', key:"B", openWith:'\\textbf{', closeWith:'}',placeHolder:'strong text'},
+            {name:'Quote', key:"Q", placeHolder:'Blockquote',
+            openWith:'\\begin{quotation}\n',closeWith:'\n\\end{quotation}',
+            openBlockWith:function(markItUp){return markIt.latexBlock(markItUp).openBlockWith;},
+            closeBlockWith:function(markItUp){return markIt.latexBlock(markItUp).closeBlockWith;},
+		    },
+			{
+				name: 'Heading', key: "H", className: 'Heading fas fa-heading', placeHolder: 'Your title here...',
+				openWith:'\\section{',closeWith:'}',multiline:true,
+				openBlockWith:function(markItUp){return markIt.latexBlock(markItUp).openBlockWith;},
+				closeBlockWith:function(markItUp){return markIt.latexBlock(markItUp).closeBlockWith;},
+			},
+			{name:'Bulleted list', key:'U', openWith:'  \\item ', className:'bulleted-list, fas fa-list-ul',placeHolder:'List item',
+				openBlockWith:function(markItUp){return markIt.latexBlock(markItUp).openBlockWith + '\\begin{itemize}\n';},
+				closeBlockWith:function(markItUp){return '\n\\end{itemize}'+ markIt.latexBlock(markItUp).closeBlockWith;},
+				multiline:true,
+			},
+			{name:'Numeric list',key:'O', className:'numeric-list fas fa-list-ol',placeHolder:'List item', openWith:'  \\item ',
+				openBlockWith:function(markItUp){return markIt.latexBlock(markItUp).openBlockWith + '\\begin{enumerate}\n';},
+				closeBlockWith:function(markItUp){return '\n\\end{enumerate}'+ markIt.latexBlock(markItUp).closeBlockWith;},
+				multiline:true,
+			},
+            {name:'Link', key:"L",className:"fas fa-link necessary",
+			replaceWith:function(markItUp){markIt.latexLink(markItUp);return false;},
+		    },
+			{name:'Image', key:"G",className:"fas fa-image necessary",
+			replaceWith:function(markItUp){markIt.latexImage(markItUp);return false;},
+			},
+			/*{name:'Highlight block', key:"H",
+			openWith:':::{.mark}\n',closeWith:'\n:::',placeHolder:"Your content goes here...",
+            openBlockWith:function(markItUp){return markIt.latexBlock(markItUp).openBlockWith;},
+            closeBlockWith:function(markItUp){return markIt.latexBlock(markItUp).closeBlockWith;},
+			},*/
+        ]},
         {name:'Math', className:'', dropMenu:[
-			{name:'Inline math', key:"1", openWith:'$', closeWith:'$',placeHolder:'latex codes'},
-            {name:'Display math', key:"2", openWith:'$$', closeWith:'$$',placeHolder:'latex codes'},
-			{name:'Numbered equation', key:"3", replaceWith:function(markItUp){markIt.markdownNumberedEquation(markItUp);return false;},},
-			{name:'Aligned equations', key:"4", openWith:'\\begin{align*}\n', closeWith:'\n\\end{align*}',placeHolder:'& first equation\\\\\n & second equation'},
+			{name:'Inline math', key:"1", openWith:'$', closeWith:'$',replaceWith: function(markItUp){return (markItUp.selection).trim();},placeHolder:'latex code'},
+            {name:'Display math', key:"2", openWith:'$$', closeWith:'$$',placeHolder:'latex code'},
+			{name:'Numbered equation', key:"3", 
+			replaceWith:function(markItUp){markIt.latexNumberedEquation(markItUp);return false;},
+			},
+			{name:'Aligned equations', key:"4", 
+			openBlockWith:function(markItUp){return markIt.latexBlock(markItUp).openBlockWith + '\\begin{align*}\n';},
+			closeBlockWith:function(markItUp){return '\n\\end{align*}'+ markIt.latexBlock(markItUp).closeBlockWith;},
+			replaceWith:function(markItUp){
+				if(markItUp.selection==""){	
+					return "";				
+				}else{
+					var lines=markItUp.selection.split(/\n/);
+					for (var i = 0; i < lines.length; i++) {			
+						if(i==lines.length-1){
+							lines[i]='& ' + lines[i]
+						}else{
+							lines[i]='& ' + lines[i] + '\\\\'
+						}
+					}
+					return lines.join('\n');
+				}
+			},
+			placeHolder:'& first line\\\\\n& second line\\\\\n& ...',
+			},
 			{name:'Equation reference', key:"5", openWith:'\\eqref{', closeWith:'}',placeHolder:'equation label'},
         ]},
 		{name:'Meta', dropMenu:[
 			{
-				name:'Latex preamble', key:"8", replaceWith:function(markItUp){markIt.markdownPreamble(markItUp);return false;},
+				name:'Latex preamble', key:"8", replaceWith:function(markItUp){markIt.latexPreamble(markItUp);return false;},
 			},
-			{name:'Bibliography', key: "9", className:'',replaceWith:function(markItUp){markIt.markdownCitation(markItUp);return false;},},
+			{name:'Bibliography', key: "9", className:'',replaceWith:function(markItUp){markIt.latexCitation(markItUp);return false;},},
 		]},
         
         {name:'Help', className:'', dropMenu:[
-			{name:'Syntax help',replaceWith:function(markItUp){markIt.markdownSyntaxHelp(markItUp);return false;},},	
-			{name:'Editor help',replaceWith:function(markItUp){markIt.markdownEditorHelp(markItUp);return false;},},
+			{name:'Syntax help',replaceWith:function(markItUp){markIt.latexSyntaxHelp(markItUp);return false;},},	
+			{name:'Editor help',replaceWith:function(markItUp){markIt.latexEditorHelp(markItUp);return false;},},
         ]},
 
         {name:'Preview', className:"preview", dropMenu:[
@@ -37,6 +94,8 @@ myMarkdownSettings = {
     ]
 }
 markIt = {
+	counter:0,
+	
 	editorToggle: function(markItUp) {
 		$(".markItUpContainer").toggleClass("full-screen");
 		if($(".markItUpContainer").hasClass("full-screen")) {
@@ -46,20 +105,20 @@ markIt = {
 		}
 		return false;
 	},
-	markdownSyntaxHelp: function(markItUp) {
+	latexSyntaxHelp: function(markItUp) {
 		window.open('https://www.functor.network/LaTeX%20Help');
 		return false;
 	},
-	markdownEditorHelp: function(markItUp) {
-		window.open('https://functors.net/help/Edit%20Help');
+	latexEditorHelp: function(markItUp) {
+		window.open('https://www.functor.network/help/Edit%20Help');
 		return false;
 	},
-	markdownQuote: function(markItUp) {
+	latexBlock: function(markItUp) {
 		var textarea=$(markItUp.textarea);
 		var lines=markItUp.textarea.value.split(/\n/);
 		var caretPosition=markItUp.caretPosition;
 		var slectionEnd=caretPosition+markItUp.selection.length;
-		var replaceWith,openBlockWith='\n\n',closeBlockWith='\n\n';
+		var replaceWith,openBlockWith='\n',closeBlockWith='\n';
 
 		if(caretPosition==0) {
 			openBlockWith='';
@@ -70,7 +129,7 @@ markIt = {
 
 					if (length == caretPosition) {
 						if (lines[index].trim()) {
-							openBlockWith = '\n';
+							openBlockWith = '';
 						} else {
 							openBlockWith = '';
 						}
@@ -80,25 +139,25 @@ markIt = {
 				if(length==slectionEnd+1) {
 					if (lines.length > index + 1) {
 						if (lines[index + 1].trim()) {
-							closeBlockWith = '\n';
+							closeBlockWith = '';
 						} else {
 							closeBlockWith = '';
 						}
 					}else{
-						closeBlockWith='';
+						closeBlockWith = '';
 					}
 				}
 			});
 		return {openBlockWith:openBlockWith,closeBlockWith:closeBlockWith};
 	},
-	markdownList:function(markItUp){return this.markdownQuote(markItUp);},
-	markdownHeading:function(markItUp){return this.markdownQuote(markItUp);},
-	markdownLink: function(markItUp) {
+	latexList:function(markItUp){return this.latexBlock(markItUp);},
+	latexHeading:function(markItUp){return this.latexBlock(markItUp);},
+	latexLink: function(markItUp) {
 		var that=this;
 		var prompt = $('<div/>', {
 			title:'Hyperlink',
 			html:
-				'<form><label>URL</label>(<a href="https://functors.net/files" target="_blank">copy a link from file library</a>)<input name="url"  type="text" value="https://example.com" autofocus onfocus="this.select();" class="form-control"/></form>',
+				'<form><label>URL</label>(<a href="https://www.functor.network/files" target="_blank">copy a link from file library</a>)<input name="url"  type="text" value="https://example.com" autofocus onfocus="this.select();" class="form-control"/></form>',
 		});
 		prompt.dialog({
 			modal: true,
@@ -110,7 +169,7 @@ markIt = {
 						var url = $("input[name='url']").val();
 						$(this).remove();
 						var data={url:url};
-						that.markdownLinkCallback(markItUp,data);
+						that.latexLinkCallback(markItUp,data);
 					},
 				},
 				{
@@ -123,12 +182,12 @@ markIt = {
 			]
 		});
 	},
-	markdownImage: function(markItUp) {
+	latexImage: function(markItUp) {
 		var that=this;
 		var imagePrompt = $('<div/>', {
 				title:'Image',
 				html:
-				'<form><label>Image URL</label>(<a href="https://functors.net/files" target="_blank">copy a link from file library</a>)<input name="image-url"  type="text" value="https://example.com/image.jpg" autofocus onfocus="this.select();" class="form-control"/><label>Image width</label><input name="image-width" class="form-control" placeholder="e.g., 20px, 2em, or 60%"/></form>',
+				'<form><label>Image URL</label>(<a href="https://www.functor.network/files" target="_blank">copy a link from file library</a>)<input name="image-url"  type="text" value="https://example.com/image.jpg" autofocus onfocus="this.select();" class="form-control"/><label>Image width</label><input name="image-width" class="form-control" placeholder="e.g., 20px, 2em, or 60%"/><label>Image height</label><input name="image-height" class="form-control" placeholder="e.g., 20px, 2em, or 60%"/></form>',
 			});
 		imagePrompt.dialog({
 			modal:true,
@@ -143,10 +202,10 @@ markIt = {
 						html: "Continue",
 						class:"btn btn-primary",
 						click: function () {
-								var data={imageURL:$("input[name='image-url']").val(),imageWidth:$("input[name='image-width']").val()};
+								var data={imageURL:$("input[name='image-url']").val(),imageWidth:$("input[name='image-width']").val(),imageHeight:$("input[name='image-height']").val()};
 							
 								imagePrompt.remove();
-								that.markdownImageCallback(markItUp, data);	
+								that.latexImageCallback(markItUp, data);	
 						},
 					},
 					{
@@ -159,7 +218,7 @@ markIt = {
 				]
 		});
 	},
-	markdownTheorem: function(markItUp) {
+	latexTheorem: function(markItUp) {
 		var that=this;
 		var prompt = $('<div/>', {
 			title:'Theorem-like Environment',
@@ -180,7 +239,7 @@ markIt = {
 							number: $("input[name='theorem-number']").prop("checked"),
 						};
 						$(this).remove();
-						that.markdownTheoremCallback(markItUp,data);
+						that.latexTheoremCallback(markItUp,data);
 					},
 				},
 				{
@@ -193,7 +252,7 @@ markIt = {
 			]
 		});
 	},
-	markdownPreamble: function(markItUp) {
+	latexPreamble: function(markItUp) {
 		var that=this;
 		var prompt = $('<div/>', {
 			title:'Latex Preamble',
@@ -222,7 +281,7 @@ markIt = {
 			]
 		});
 	},
-	markdownCitation: function(markItUp) {
+	latexCitation: function(markItUp) {
 		var that=this;
 		var prompt = $('<div/>', {
 			title:'Latex Preamble',
@@ -252,7 +311,7 @@ markIt = {
 		});
 	},
 
-	markdownNumberedEquation: function(markItUp) {
+	latexNumberedEquation: function(markItUp) {
 		var that=this;
 		var prompt = $('<div/>', {
 			title:'Numbered equation',
@@ -268,7 +327,7 @@ markIt = {
 					click: function () {
 						var data ={label: $("input[name='equation-label']").val()};
 						$(this).remove();
-						that.markdownNumberedEquationCallback(markItUp,data);
+						that.latexNumberedEquationCallback(markItUp,data);
 					},
 				},
 				{
@@ -282,30 +341,70 @@ markIt = {
 		});
 	},
 	
-	markdownLinkCallback: function (markItUp,data) {
-		$.markItUp({openWith:'[', closeWith:']('+data.url+')', placeHolder:'Your text to link here...',});
+	latexAlignedEquation: function(markItUp) {
+		var that=this;
+		that.latexAlignedEquationCallback(markItUp);
+	},
+
+	latexLinkCallback: function (markItUp,data) {
+		$.markItUp({openWith:'\\href{'+data.url+'}{', closeWith:'}', placeHolder:'Your text to link here...',});
 		return false;
 	},
 
-	markdownImageCallback: function (markItUp,data) {
-		if(data.imageWidth){
-			$.markItUp({openWith:'![', closeWith:']('+data.imageURL+'){width='+data.imageWidth+'}', placeHolder:'Your text to link here...',});
+	latexImageCallback: function (markItUp,data) {
+		var openBlockWith='';
+		var closeBlockWith='';
+		if(markItUp.selection!=""){
+			openBlockWith=markIt.latexBlock(markItUp).openBlockWith + '\\begin{figure}[h]\n';
+			closeBlockWith='\n\\end{figure}'+ markIt.latexBlock(markItUp).closeBlockWith;
+			if (data.imageWidth && data.imageHeight){
+				$.markItUp({openBlockWith:openBlockWith,closeBlockWith:closeBlockWith,openWith:'\\includegraphics[width='+data.imageWidth+', height='+data.imageHeight+']{'+data.imageURL+'}\n\\caption{', closeWith:'}', placeHolder:"Your caption here..."});
+			}else{
+				if(data.imageHeight){
+					$.markItUp({openBlockWith:openBlockWith,closeBlockWith:closeBlockWith,openWith:'\\includegraphics[height='+data.imageHeight+']{'+data.imageURL+'}\n\\caption{', closeWith:'}', placeHolder:"Your caption here..."});
+				}
+				if(data.imageWidth){
+					$.markItUp({openBlockWith:openBlockWith,closeBlockWith:closeBlockWith,openWith:'\\includegraphics[width='+data.imageWidth+']{'+data.imageURL+'}\n\\caption{', closeWith:'}', placeHolder:"Your caption here..."});
+				}
+				if(!data.imageHeight && !data.imageWidth){
+					$.markItUp({openBlockWith:openBlockWith,closeBlockWith:closeBlockWith,openWith:'\\includegraphics{'+data.imageURL+'}\n\\caption{', closeWith:'}', placeHolder:"Your caption here..."});
+				}
+			}
+
 		}else{
-			$.markItUp({openWith:'![', closeWith:']('+data.imageURL+')', placeHolder:'Your text to link here...',});
-		}		
+
+			if (data.imageWidth && data.imageHeight){
+				$.markItUp({openWith:'\\includegraphics[width='+data.imageWidth+', height='+data.imageHeight+']{'+data.imageURL+'}', closeWith:'',});
+			}else{
+				if(data.imageHeight){
+					$.markItUp({openWith:'\\includegraphics[height='+data.imageHeight+']{'+data.imageURL+'}', closeWith:'',});
+				}
+				if(data.imageWidth){
+					$.markItUp({openWith:'\\includegraphics[width='+data.imageWidth+']{'+data.imageURL+'}', closeWith:'',});
+				}
+				if(!data.imageHeight && !data.imageWidth){
+					$.markItUp({openWith:'\\includegraphics{'+data.imageURL+'}', closeWith:'',});
+				}
+			}
+		}
 		return false;
 	},
 
-	markdownNumberedEquationCallback: function (markItUp,data) {
+	latexNumberedEquationCallback: function (markItUp,data) {
+		var openBlock=markIt.latexBlock(markItUp).openBlockWith + '\\begin{equation}';
+		var closeBlock='\n\\end{equation}'+ markIt.latexBlock(markItUp).closeBlockWith;
 		if(data.label){
-			$.markItUp({openWith:'\\begin{equation}\\label{'+ data.label +'}\n', closeWith:'\n\\end{equation}', placeHolder:'latex code for your equation',});
+			$.markItUp({		
+				openBlockWith:openBlock,closeBlockWith:closeBlock,
+				openWith:'\\label{'+ data.label +'}\n',placeHolder:'latex code for your equation',
+			});
 		}else{
-			$.markItUp({openWith:'\\begin{equation}\n', closeWith:'\n\\end{equation}', placeHolder:'latex code for your equation',});
+			$.markItUp({openBlockWith:openBlock,closeBlockWith:closeBlock,openWith:'\n',placeHolder:'latex code for your equation',});
 		}		
 		return false;
 	},
 
-	markdownTheoremCallback: function(markItUp,data){
+	latexTheoremCallback: function(markItUp,data){
 		var attr=".theorem-like";
 		if(data.identifier){attr=attr+" #"+data.identifier}
 		if(data.name){attr=attr+' name="'+data.name+'"'}

@@ -51,10 +51,8 @@ pageForm inputs=renderBootstrap3 BootstrapBasicForm $ EntryInput
 getEditPageR :: Text -> Handler Html
 getEditPageR title = do
     (userId, user)<- requireAuthPair
-    mAppUserId <- mAppAdministratorId
-    let isAppAdministrator = mAppUserId==Just userId
-    if title=="About" || isAppAdministrator
-        then do
+    case title of  
+        "About" -> do
             mEntry<-runDB $ selectFirst [EntryInputTitle==.title,EntryType==.Page,EntryUserId==.userId] [Desc EntryInserted]
             formatParam <- lookupGetParam "format"
             let format = case (formatParam,mEntry) of
@@ -75,8 +73,6 @@ getEditPageR title = do
         <form  method=post enctype=#{entryEnctype}>
             ^{entryWidget}
             <button .btn .btn-primary type=submit name=action value=publish>_{MsgUpdate}
-            $if isAppAdministrator 
-                <button .btn .btn-default type=submit name=action value=draft>_{MsgSave}
             <button .btn .btn-default .delete type=submit name=action value=delete>_{MsgReset}
                 |]            
                 toWidget        
@@ -89,154 +85,137 @@ getEditPageR title = do
                     |]
                 
                 markItUpWidget format (Format "html")
-        else notFound
+        _ -> notFound
 
 
 postEditPageR :: Text -> Handler Html
 postEditPageR title = do
     userId <- requireAuthId
-    mAppUserId <- mAppAdministratorId
-    let isAppAdministrator = mAppUserId==Just userId
-    mEntry<-runDB $ selectFirst [EntryInputTitle==.title,EntryType==.Page,EntryUserId==.userId] [Desc EntryInserted]
-    ((res, _), _) <- runFormPost $ pageForm Nothing
-    case res of 
-        FormSuccess formData->  do
-            let editorData::EditorData
-                editorData =  EditorData{
-                            editorPreamble=preamble formData
-                            ,editorContent=Just (content formData)
-                            ,editorCitation=citation formData
-                        } 
-            entryAction <- lookupPostParam "action"        
-            currentTime <- liftIO getCurrentTime
-            let parser=case inputFormat formData of
-                    Format "tex"->texToHtml
-                    _->mdToHtml
-            bodyHtml<- liftIO $  parse (Just userId) parser editorData
-            urlRenderParams<- getUrlRenderParams
-            case entryAction of
-                Just "delete"->case mEntry of 
-                    Just (Entity entryId _)->do
-                        runDB $ delete entryId 
-                        if title=="About"
-                            then do
+    case title of
+        "About" -> do
+            mEntry<-runDB $ selectFirst [EntryInputTitle==.title,EntryType==.Page,EntryUserId==.userId] [Desc EntryInserted]
+            ((res, _), _) <- runFormPost $ pageForm Nothing
+            case res of 
+                FormSuccess formData->  do
+                    let editorData::EditorData
+                        editorData =  EditorData{
+                                    editorPreamble=preamble formData
+                                    ,editorContent=Just (content formData)
+                                    ,editorCitation=citation formData
+                                } 
+                    entryAction <- lookupPostParam "action"        
+                    currentTime <- liftIO getCurrentTime
+                    let parser=case inputFormat formData of
+                            Format "tex"->texToHtml
+                            _->mdToHtml
+                    bodyHtml<- liftIO $  parse (Just userId) parser editorData
+                    urlRenderParams<- getUrlRenderParams
+                    case entryAction of
+                        Just "delete"->case mEntry of 
+                            Just (Entity entryId _)->do
+                                runDB $ delete entryId 
                                 setMessageI MsgAboutPageReset
-                            else do
-                                setMessageI MsgPageReset
-                        setMessageI MsgAboutPageReset
-                        redirect $ EditPageR title
-                    Nothing->do
-                        if title=="About"
-                            then do
+                                redirect $ EditPageR title
+                            Nothing->do
                                 setMessageI MsgAboutPageReset
-                            else do
-                                setMessageI MsgPageReset
-                        
-                        redirect $ EditPageR title
-                Just "publish"-> case mEntry of 
-                    Nothing -> do
-                        _<-runDB $ insert $ Entry   
-                            {entryParentId=Nothing
-                            ,entryUserId=userId
-                            ,entryType=Page
-                            ,entryInputFormat=(inputFormat formData)
-                            ,entryOutputFormat=Format "html"
-                            ,entryInputTitle=title
-                            ,entryOutputTitle=title
-                            ,entryInputPreamble=(preamble formData)
-                            ,entryInputBody=(content formData)
-                            ,entryOutputBody=bodyHtml
-                            ,entryInputCitation=(citation formData)
-                            ,entryInserted=currentTime
-                            ,entryUpdated=currentTime
-                            --,entryStuck=Just currentTime
-                            ,entryStatus=Publish
-                            ,entryLocked=False
-                            ,entryInputTags=[]
-                            ,entryOutputTags=[]
-                            }
-                        if title=="About"
-                            then do
-                                setMessage $ [hamlet|<a href=@{UserAboutR userId}>Your profile page</a> has been updated.|] urlRenderParams
-                            else do
-                                setMessage $ [hamlet|Your page, <a href=@{PageR title}>#{title}</a>, has been updated.|] urlRenderParams
-                        
-                        redirect $ EditPageR title
-                    Just (Entity entryId _) -> do
-                        runDB $ update entryId
-                            [EntryUserId=.userId
-                            ,EntryStatus=.Publish
-                            ,EntryInputPreamble=.(preamble formData)
-                            ,EntryInputFormat=.(inputFormat formData)
-                            ,EntryInputBody=.(content formData)
-                            ,EntryOutputBody=.bodyHtml
-                            ,EntryInputCitation=.(citation formData)
-                            ,EntryUpdated=.currentTime
-                            ]
-                        if title=="About"
-                            then do
-                                setMessage $ [hamlet|<a href=@{UserAboutR userId}>Your profile page</a> has been updated.|] urlRenderParams
-                            else do
-                                setMessage $ [hamlet|Your page, <a href=@{PageR title}>#{title}</a>, has been updated.|] urlRenderParams
-                        
-                        redirect $ EditPageR title
+                                redirect $ EditPageR title
+                        Just "publish"-> case mEntry of 
+                            Nothing -> do
+                                _<-runDB $ insert $ Entry   
+                                    {entryParentId=Nothing
+                                    ,entryUserId=userId
+                                    ,entryType=Page
+                                    ,entryInputFormat=(inputFormat formData)
+                                    ,entryOutputFormat=Format "html"
+                                    ,entryInputTitle=title
+                                    ,entryOutputTitle=title
+                                    ,entryInputPreamble=(preamble formData)
+                                    ,entryInputBody=(content formData)
+                                    ,entryOutputBody=bodyHtml
+                                    ,entryInputCitation=(citation formData)
+                                    ,entryInserted=currentTime
+                                    ,entryUpdated=currentTime
+                                    --,entryStuck=Just currentTime
+                                    ,entryStatus=Publish
+                                    ,entryLocked=False
+                                    ,entryInputTags=[]
+                                    ,entryOutputTags=[]
+                                    }
 
-                Just "draft"-> if isAppAdministrator then case mEntry of 
-                        Nothing -> do
-                            _<-runDB $ insert $ Entry   
-                                {entryParentId=Nothing
-                                ,entryUserId=userId
-                                ,entryType=Page
-                                ,entryInputFormat=(inputFormat formData)
-                                ,entryOutputFormat=Format "html"
-                                ,entryInputTitle=title
-                                ,entryOutputTitle=title
-                                ,entryInputPreamble=(preamble formData)
-                                ,entryInputBody=(content formData)
-                                ,entryOutputBody=bodyHtml
-                                ,entryInputCitation=(citation formData)
-                                ,entryInserted=currentTime
-                                ,entryUpdated=currentTime
-                                --,entryStuck=Just currentTime
-                                ,entryStatus=Draft
-                                ,entryLocked=False
-                                ,entryInputTags=[]
-                                ,entryOutputTags=[]
-                                }
+                                setMessage $ [hamlet|<a href=@{PageR userId title}>Your profile page</a> has been updated.|] urlRenderParams
+                                   
+                                redirect $ EditPageR title
+                            Just (Entity entryId _) -> do
+                                runDB $ update entryId
+                                    [EntryUserId=.userId
+                                    ,EntryStatus=.Publish
+                                    ,EntryInputPreamble=.(preamble formData)
+                                    ,EntryInputFormat=.(inputFormat formData)
+                                    ,EntryInputBody=.(content formData)
+                                    ,EntryOutputBody=.bodyHtml
+                                    ,EntryInputCitation=.(citation formData)
+                                    ,EntryUpdated=.currentTime
+                                    ]
 
-                            setMessage $ [hamlet|Your page, <a href=@{PageR title}>#{title}</a>, has been saved.|] urlRenderParams
-                            
+                                setMessage $ [hamlet|<a href=@{PageR userId title}>Your profile page</a> has been updated.|] urlRenderParams
+                                
+                                redirect $ EditPageR title
+
+                        Just "draft"-> case mEntry of 
+                                Nothing -> do
+                                    _<-runDB $ insert $ Entry   
+                                        {entryParentId=Nothing
+                                        ,entryUserId=userId
+                                        ,entryType=Page
+                                        ,entryInputFormat=(inputFormat formData)
+                                        ,entryOutputFormat=Format "html"
+                                        ,entryInputTitle=title
+                                        ,entryOutputTitle=title
+                                        ,entryInputPreamble=(preamble formData)
+                                        ,entryInputBody=(content formData)
+                                        ,entryOutputBody=bodyHtml
+                                        ,entryInputCitation=(citation formData)
+                                        ,entryInserted=currentTime
+                                        ,entryUpdated=currentTime
+                                        --,entryStuck=Just currentTime
+                                        ,entryStatus=Draft
+                                        ,entryLocked=False
+                                        ,entryInputTags=[]
+                                        ,entryOutputTags=[]
+                                        }
+
+                                    setMessage $ [hamlet|Your page, <a href=@{PageR userId title}>#{title}</a>, has been saved.|] urlRenderParams
+                                    
+                                    redirect $ EditPageR title
+
+                                Just (Entity entryId _) -> do
+                                    runDB $ update entryId
+                                        [EntryUserId=.userId
+                                        ,EntryStatus=.Draft
+                                        ,EntryInputPreamble=.(preamble formData)
+                                        ,EntryInputFormat=.(inputFormat formData)
+                                        ,EntryInputBody=.(content formData)
+                                        ,EntryOutputBody=.bodyHtml
+                                        ,EntryInputCitation=.(citation formData)
+                                        ,EntryUpdated=.currentTime
+                                        ]
+
+                                    setMessage $ [hamlet|Your page, <a href=@{PageR userId title}>#{title}</a>, has been saved.|] urlRenderParams
+                                    
+                                    redirect $ EditPageR title
+
+                        _-> do 
+                            setMessageI  MsgSomethingWrong
                             redirect $ EditPageR title
-
-                        Just (Entity entryId _) -> do
-                            runDB $ update entryId
-                                [EntryUserId=.userId
-                                ,EntryStatus=.Draft
-                                ,EntryInputPreamble=.(preamble formData)
-                                ,EntryInputFormat=.(inputFormat formData)
-                                ,EntryInputBody=.(content formData)
-                                ,EntryOutputBody=.bodyHtml
-                                ,EntryInputCitation=.(citation formData)
-                                ,EntryUpdated=.currentTime
-                                ]
-
-                            setMessage $ [hamlet|Your page, <a href=@{PageR title}>#{title}</a>, has been saved.|] urlRenderParams
-                            
-                            redirect $ EditPageR title
-                    else do
-                        setMessageI  MsgSomethingWrong
-                        redirect $ EditPageR title
-
-                _-> do 
-                    setMessageI  MsgSomethingWrong
+                FormFailure errors -> do
+                    setMessage [shamlet|
+                        $forall error <- errors
+                            <p>#{error}
+                        |]
                     redirect $ EditPageR title
-        FormFailure errors -> do
-            setMessage [shamlet|
-                $forall error <- errors
-                    <p>#{error}
-                |]
-            redirect $ EditPageR title
-        FormMissing -> do
-            setMessageI MsgFormMissing
-            redirect $ EditPageR title
+                FormMissing -> do
+                    setMessageI MsgFormMissing
+                    redirect $ EditPageR title
+
+        _ -> notFound
 

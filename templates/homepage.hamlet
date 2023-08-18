@@ -3,10 +3,11 @@
         <div .row>
             <h1 .header>
                 #{appName}
+                <p>a blog community for mathematicians
             <h2>
-                a blogging community for mathematicians
+                
             $maybe uid <- maybeUserId
-                <a href=@{UserHomeR uid} .btn.btn-info.btn-lg>
+                <a href=@{HomeR uid} .btn.btn-info.btn-lg>
                     My Homepage
             $nothing
                 <a href=@{AuthR LoginR} .btn.btn-info.btn-lg>
@@ -20,7 +21,7 @@
             <h1>What is #{appName}
 
             <p>
-                #{appName} is a blogging community for mathematicians. The term <i>mathematician</i> here is in a broad sense, including people studying math at any level as well as professionals in related fields. While we offer special support for mathematicians, anyone can register a blog site on our platform and express themselves on a variety of topics, whether they're related to math or not.     
+                #{appName} is a blog community for mathematicians. The term <i>mathematician</i> here is in a broad sense, including people studying math at any level as well as professionals in related fields. While we offer special support for mathematicians, anyone can register a blog site on our platform and express themselves on a variety of topics, whether they're related to math or not.     
         
     <hr>
     <div .bs-docs-section>
@@ -31,7 +32,7 @@
             $nothing
                 <p>
                     Comming soon...
-
+    <hr>
     <div .bs-docs-section>      
         <div .page-header>
             <h1>Screenshots

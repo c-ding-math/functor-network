@@ -213,9 +213,9 @@
 							t += levels[j]+"-";
 						}
 						li = $('<li class="markItUpButton markItUpButton'+t+(i)+' '+(button.className||'')+'"><a href="#" '+key+' title="'+title+'">'+(button.name||'')+'</a></li>')
-						.bind("contextmenu.markItUp", function() { // prevent contextmenu on mac and allow ctrl+click
+						/*.bind("contextmenu.markItUp", function() { // prevent contextmenu on mac and allow ctrl+click
 							return false;
-						}).bind('click.markItUp', function(e) {
+						})*/.bind('click.markItUp', function(e) {
 							e.preventDefault();
 						}).bind("focusin.markItUp", function(){
                             $$.focus();
@@ -225,7 +225,7 @@
 							}
 							setTimeout(function() { markup(button) },1);
 							return false;
-						}).bind('mouseenter.markItUp', function() {
+						})/*.bind('mouseenter.markItUp', function() {
 								$('> ul', this).show();
 								$(document).one('click', function() { // close dropmenu if click outside
 										$('ul ul', header).hide();
@@ -233,7 +233,7 @@
 								);
 						}).bind('mouseleave.markItUp', function() {
 								$('> ul', this).hide();
-						}).appendTo(ul);
+						})*/.appendTo(ul);
 						if (button.dropMenu) {
 							levels.push(i);
 							$(li).addClass('markItUpDropMenu').append(dropMenus(button.dropMenu));
@@ -294,6 +294,10 @@
 				var openBlockWith 		= prepare(clicked.openBlockWith);
 				var closeBlockWith 		= prepare(clicked.closeBlockWith);
 				var multiline 			= clicked.multiline;
+				
+				if (replaceWith === false){
+					return false;
+				}
 				
 				if (replaceWith !== "") {
 					block = openWith + replaceWith + closeWith;
@@ -655,6 +659,15 @@
 			init();
 		});
 	};
+
+	$(document).on('click', function(event) {
+		if (!$(event.target).closest('.markItUp').length) {
+		  $('.markItUpButton ul').hide();
+		} else {
+		  $('.markItUpButton ul').hide();
+		  $(event.target).closest('.markItUpButton').find('ul').toggle();
+		}
+	});
 
 	$.fn.markItUpRemove = function() {
 		return this.each(function() {
