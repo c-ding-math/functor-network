@@ -31,7 +31,10 @@ getEntryR _ entryId = do
         Just (Entity _ user) -> generateFormPost $ newCommentForm $ Just $ CommentInput (userDefaultPreamble user) format (Textarea "") (userDefaultCitation user)
 
     defaultLayout $ do
-        setTitleI MsgPost
+        setTitle $ toHtml $ entryInputTitle entry
+        setDescriptionIdemp $ (intercalate ";" $ entryInputTags entry) <> case mEntryAuthor of
+            Just author -> "; by " <> userName author
+            Nothing -> ""
         [whamlet|
 <div .entry :entryStatus entry == Draft:.draft>
   <h1>#{preEscapedToMarkup(scaleHeader 1 (entryOutputTitle entry))}

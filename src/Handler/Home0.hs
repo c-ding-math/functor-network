@@ -19,7 +19,8 @@ getHome0R = do
 
     defaultLayout $ do  
         --aDomId <- newIdent
-        setTitle $ toHtml $ appName<>"—a blogging community for mathematicians"
+        setTitle $ toHtml $ appName<>"—a blog community for mathematicians"
+        setDescriptionIdemp "Effortless Typesetting; Dual LaTeX and Markdown Support; Automated Numbering and Referencing; Latex Package Support; Clean and Focused Design"
         toWidgetHead
             [hamlet|
             <script type="application/ld+json">

@@ -433,18 +433,28 @@ instance YesodAuth App where
                                 _<-insert $ Login {loginIdent=ident,loginPlugin=plugin,loginUserId=Just uid,loginToken=Nothing,loginVerified=True,loginInserted=currentTime}
                                 return $ Authenticated uid
                             Nothing -> do 
-                                let uIdent = ident <> "@" <> plugin
-                                eUser<-insertBy $ User
-                                    {userIdent=uIdent
+                                --let uIdent = ident <> "@" <> plugin
+                                uid<-insert $ User
+                                    {userName=""
                                     ,userPassword=Nothing
-                                    ,userName=""
+                                    --,userIdent=uIdent
                                     ,userInserted=currentTime
                                     --,userModified=currentTime
                                     --,userAvatar=Nothing
-                                    ,userDefaultPreamble=Just (Textarea "\\usepackage{amsmath, amssymb, amsfonts}\n\\usepackage{tikz-cd}\n\\newcommand{\\NN}{\\mathbb{N}}")
+                                    ,userDefaultPreamble=Just (Textarea "\\usepackage{amsmath, amssymb, amsfonts}\n\\newcommand{\\NN}{\\mathbb{N}}")
                                     ,userDefaultCitation=Nothing
                                     }
-                                case eUser of
+                                let name = case plugin of
+                                        "google"->
+                                            case Yesod.Auth.Extra.googleUserName <$> Yesod.Auth.OAuth2.getUserResponseJSON creds of
+                                                Right n->n
+                                                _ -> (msgRender MsgUser) <>" " <> (toPathPiece uid)
+                                        _ -> (msgRender MsgUser) <>" " <> (toPathPiece uid)
+                                _<-insert $ Login {loginIdent=ident,loginPlugin=plugin,loginUserId=Just uid,loginToken=Nothing,loginVerified=True,loginInserted=currentTime}
+                                _<-update uid [UserName=.name]
+                                return $ Authenticated uid
+                                
+{-                                case eUser of
                                     Left (Entity uid _) -> do
                                         _<-insert $ Login {loginIdent=ident,loginPlugin=plugin,loginUserId=Just uid,loginToken=Nothing,loginVerified=True,loginInserted=currentTime}
                                         return $ Authenticated uid
@@ -458,7 +468,7 @@ instance YesodAuth App where
                                         _<-insert $ Login {loginIdent=ident,loginPlugin=plugin,loginUserId=Just uid,loginToken=Nothing,loginVerified=True,loginInserted=currentTime}
                                         _<-update uid [UserName=.name]
                                         return $ Authenticated uid
-
+-}
     -- You can add other plugins like Google Email, email or OAuth here
     authPlugins :: App -> [AuthPlugin App]
     authPlugins app = [authEmail] ++ [Yesod.Auth.OAuth2.Google.oauth2Google (appGoogleClientId (appSettings app)) (appGoogleClientSecret (appSettings app))] ++ extraAuthPlugins
@@ -553,22 +563,25 @@ instance YesodAuthEmail App where
         case maybeEmail of 
             Just email -> do
                 let insertNewUser = do
-                        newUser<-insertBy $ User 
-                                {userIdent=emailAddress email
+                        newUserId<-insert $ User 
+                                {userName=""
                                 ,userPassword=Nothing
-                                ,userName=""
+                                --,userIdent=emailAddress email
                                 ,userInserted=currentTime
                                 --,userModified=currentTime
                                 --,userAvatar=Nothing
-                                ,userDefaultPreamble=Just (Textarea "\\usepackage{amsmath, amssymb, amsfonts}\n\\usepackage{tikz-cd}\n\\newcommand{\\NN}{\\mathbb{N}}")
+                                ,userDefaultPreamble=Just (Textarea "\\usepackage{amsmath, amssymb, amsfonts}\n\\newcommand{\\NN}{\\mathbb{N}}")
                                 ,userDefaultCitation=Nothing
                                 }
-                        case newUser of
+                        let name = (msgRender MsgUser) <>" " <> (toPathPiece newUserId)
+                        _<-update newUserId [UserName=.name]
+                        return newUserId
+                        {-case newUser of
                             Left (Entity uid _) -> return uid -- existing user
                             Right uid -> do -- newly added user
                                 let name = (msgRender MsgUser) <>" " <> (toPathPiece uid)
                                 _<-update uid [UserName=.name]
-                                return uid
+                                return uid-}
 
                 uid <-  case emailUserId email of
                     Just uid-> do 

@@ -70,7 +70,7 @@ $else
                 $else
                     <li>
                         <a href="@{route}">#{label}
-        <ul .footer-middle style="visibility:hidden">
+        <ul .footer-middle>
             $forall MenuItem label route _ <- footerMiddleFilteredMenuItems
                 <li>
                     <a href="@{route}">#{label}

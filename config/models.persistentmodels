@@ -2,15 +2,15 @@
 -- Syntax for this file here: https://github.com/yesodweb/persistent/blob/master/docs/Persistent-entity-syntax.md
 
 User json
-    ident Text 
-    password Text Maybe
+    --ident Text 
     name Text
+    password Text Maybe
     inserted UTCTime default=CURRENT_TIME
     --modified UTCTime -- change the ident
     --avatar Text Maybe -- url
     defaultPreamble Textarea Maybe
     defaultCitation Textarea Maybe   
-    UniqueUser ident
+    --UniqueUser ident
     deriving Typeable Show
 
 Email json

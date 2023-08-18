@@ -106,25 +106,31 @@ footer{
   padding: 2em 0;
   border-top: 1px solid #dce4ec;
 }
-footer .container {
+footer .container { 
   display: flex;
   justify-content: space-around;
 }
-footer .container ul {
-  flex: 1;
+footer .container ul {  
   list-style: none;
   padding: 0;
   margin: 0;
 }
 footer .container ul li {
   display: inline-block;
-  margin-right: 1em;
+  margin-right: 0.6em;
 }
 .footer-left {
+  flex: 1;
   text-align: left;
 }
 .footer-right {
+  flex: 1;
   text-align: right;
+}
+.footer-middle {
+  text-align: center;
+  flex: 0 0 1em;
+  visibility: hidden;
 }
 
 footer .container a, footer .container a:hover, footer .container a:active, footer .container a:focus {

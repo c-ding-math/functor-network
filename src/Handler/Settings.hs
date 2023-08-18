@@ -103,7 +103,7 @@ getSettingsR = do
                             <ul>
                                 $forall Entity emailId email<-emails
                                     <li>#{emailAddress email}
-                                        <a href=@{EmailSettingR emailId}>delete
+                                        <a href=@{EmailSettingR emailId} .delete-setting>delete
                             <a .btn .btn-default href=@{AuthR registerR}>_{MsgNewEmail}
                     <p>
                 
@@ -115,7 +115,7 @@ getSettingsR = do
                             <ul>
                                 $forall Entity googleId google<-googles
                                     <li>#{loginIdent google}
-                                        <a href=@{LoginSettingR googleId}>delete
+                                        <a href=@{LoginSettingR googleId} .delete-setting>delete
                             <a .btn .btn-default href=@{AuthR (PluginR "google" ["forward"])}>_{MsgNewGoogle}
                     <p>
 
@@ -186,6 +186,9 @@ getSettingsR = do
 
         |]
         toWidget [lucius|
+            .delete-setting{
+                color:#b4bcc2;
+            }
             li>a {
                 padding:1em;
             }
