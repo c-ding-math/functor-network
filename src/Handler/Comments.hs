@@ -35,7 +35,7 @@ getCommentsR piece = do
                                 <a href=@{EntryR piece entryId}#comment-#{toPathPiece commentId}>
                                     <h2>#{preEscapedToMarkup (scaleHeader 2 (entryOutputTitle entry))}
                                 <div .tags>
-                                    ^{tagsWidget piece (zip (entryInputTags entry) (entryOutputTags entry))}
+                                    ^{tagsWidget (zip (entryInputTags entry) (entryOutputTags entry))}
         |]
         addStylesheet $ StaticR css_entry_list_css
 

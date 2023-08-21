@@ -8,6 +8,8 @@ import System.FilePath
 import System.Directory (removeFile, doesFileExist,createDirectoryIfMissing)
 import Import
 import Yesod.Form.Bootstrap3
+import qualified Data.Conduit.List as CL
+import qualified Data.ByteString as BS
 
 uploadForm :: Html -> MForm Handler (FormResult (FileInfo, Maybe Text, UTCTime), Widget)
 uploadForm = renderBootstrap3 BootstrapBasicForm $ (,,)
@@ -117,20 +119,35 @@ postFilesR :: Handler Html
 postFilesR = do
     --(userId, user) <- requireAuthPair
     userId <- requireAuthId
+    userFileDirectory <- getUserStaticDir userId
     ((result, _), _) <- runFormPost uploadForm
     case result of
         FormSuccess (fileInfo, info, date) -> do
             --urlRender <- getUrlRender
-            let userFileDirectory=uploadDirectory userId
-                name= fileName fileInfo
-            eFile <- runDB $ insertBy (File {fileDirectory=userFileDirectory, fileFilename=unpack name, fileDescription= info, fileInserted= date, fileUserId=userId})
-            case eFile of 
-                Left _ -> setMessageI (MsgFileExists name)
-                Right _-> do
-                    liftIO $ createDirectoryIfMissing True $ userFileDirectory
-                    liftIO $ fileMove fileInfo $ userFileDirectory </> (unpack name)
-                    setMessageI MsgFileSaved
-            redirect FilesR
+            let name = fileName fileInfo
+                fileSource' = fileSource fileInfo
+                
+                maxSizeInMb = 16::Int
+                maxSize = maxSizeInMb * 1024 * 1024  -- Maximum file size in bytes (e.g., 10MB)
+                allowedExtensions = [".jpg", ".jpeg", ".png", ".svg", ".ico", ".gif", ".tiff", ".webp", "jp2", ".txt", ".tex", ".md", ".bib", ".pdf", ".djvu", "docx", "pptx", "xlsx", "odt", "odp", "ods", "rtf", "html", "epub"] -- Allowed extensions
+                fileExtension = takeExtension $ unpack name
+            size <- liftIO $ runConduitRes $ fileSource' .| CL.foldM (\acc bs -> pure (acc + fromIntegral (BS.length bs))) 0
+            if (size > maxSize) then do
+                setMessageI $ MsgFileTooLarge maxSizeInMb
+                redirect FilesR
+            else 
+                if (not $ fileExtension `elem` allowedExtensions) then do
+                    setMessageI MsgFileTypeNotAllowed
+                    redirect FilesR
+                else do
+                    eFile <- runDB $ insertBy (File {fileDirectory=userFileDirectory, fileFilename=unpack name, fileDescription= info, fileInserted= date, fileUserId=userId})
+                    case eFile of 
+                        Left _ -> setMessageI (MsgFileExists name)
+                        Right _-> do
+                            liftIO $ createDirectoryIfMissing True $ userFileDirectory
+                            liftIO $ fileMove fileInfo $ userFileDirectory </> (unpack name)
+                            setMessageI MsgFileSaved
+                    redirect FilesR
         _ -> do
             setMessageI MsgSomethingWrong
             redirect FilesR
@@ -138,7 +155,8 @@ postFilesR = do
 deleteFileR :: FileId -> Handler ()
 deleteFileR fileId = do
     file <- runDB $ get404 fileId
-    let filePath = (uploadDirectory (fileUserId file)) </> (unpack (fileFilename file))
+    userFileDirectory <- getUserStaticDir (fileUserId file)
+    let filePath = userFileDirectory </> (unpack (fileFilename file))
     liftIO $ removeFile filePath
 
     -- only delete from database if file has been removed from server
@@ -153,12 +171,17 @@ deleteFileR fileId = do
             setMessageI MsgFileDeleted
             redirect FilesR
 
-uploadDirectory ::  UserId -> FilePath
-uploadDirectory userId= "static"</>"files" </> "user" </> ( unpack  (toPathPiece userId) )
+--uploadDirectory ::  UserId -> FilePath
+--uploadDirectory userId= "static"</>"files" </> "user" </> ( unpack  (toPathPiece userId) )
 --uploadDirectory _="static"</>"files" </> "user" </> "0"
 
-openConnectionCount :: Int
-openConnectionCount = 10
+getUserStaticDir :: UserId -> Handler FilePath
+getUserStaticDir userId = do
+    staticDir <- appStaticDir . appSettings <$> getYesod
+    return $ staticDir </> "files" </> "user" </> ( unpack  (toPathPiece userId) )
+
+--openConnectionCount :: Int
+--openConnectionCount = 10
 
 formatDateStr :: UTCTime -> String
 formatDateStr t = formatTime defaultTimeLocale "%e %b %Y" t

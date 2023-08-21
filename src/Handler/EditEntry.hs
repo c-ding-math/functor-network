@@ -84,7 +84,10 @@ getEditEntryR entryId = do
     --userId <- requireAuthId
     (entry, tags)<-runDB $ do    
         entry<-get404 entryId
-        return (entry,entryInputTags entry)
+        if entryType entry==Standard
+            then return (entry,entryInputTags entry)
+            else notFound
+ 
     formatParam <- lookupGetParam "format"
     let format = case formatParam of
             Just "tex" -> Format "tex"

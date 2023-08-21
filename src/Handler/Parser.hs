@@ -11,11 +11,11 @@ module Handler.Parser (
     postParserR
 )where
 
+import Import
 --import qualified Prelude (writeFile)
 --import System.Process
 import System.Directory
 --import Text.HTML.TagSoup 
-import Import
 import Parse.Parser(mdToHtml,texToHtml,EditorData(..))
 
 type InputFormat=Text
@@ -102,13 +102,13 @@ $(document).ready(function(){
         |]
 
 -- | Widget for tags
-tagsWidget::Path->[(Text,Text)]->Widget
-tagsWidget piece tags=do
+tagsWidget::[(Text,Text)]->Widget
+tagsWidget tags=do
     toWidget [hamlet|
 <ul>
     $forall (inputTag,outputTag) <-tags
         <li>
-            <a href=@{TagR piece inputTag}> #{preEscapedToMarkup outputTag}
+            <a href=@{TagR inputTag}> #{preEscapedToMarkup outputTag}
     |]
 
 -- | parse

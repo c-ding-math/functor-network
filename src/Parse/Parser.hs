@@ -37,7 +37,7 @@ instance FromJSON EditorData where
 mdToHtml::EditorData->IO Text
 mdToHtml docData=do
     
-    Prelude.writeFile ("yaml.yaml") $ textareaToYaml $ editorPreamble docData
+    Prelude.writeFile ("yaml.yaml") $ removeDocumentClass $ textareaToYaml $ editorPreamble docData
     Prelude.writeFile ("bib.bib")  $ textareaToString $ editorCitation docData
     htmlString<-readProcess "pandoc" ["--sandbox", "-F", "pandoc-security", "--metadata-file=" ++ ("yaml.yaml"), "-F","pandoc-theorem", "-F","math-filter", "-C", "--bibliography=" ++ "bib.bib"] $ textareaToString $ editorContent docData
     return $ pack htmlString
@@ -51,7 +51,7 @@ mdToHtmlSimple title=do
 texToHtml::EditorData->IO Text
 texToHtml docData=do
     
-    Prelude.writeFile ("yaml.yaml") $ textareaToYaml $ editorPreamble docData
+    Prelude.writeFile ("yaml.yaml") $ removeDocumentClass $ textareaToYaml $ editorPreamble docData
     Prelude.writeFile ("bib.bib")  $ textareaToString $ editorCitation docData
     htmlString<-readProcess "pandoc" ["--sandbox", "-F", "pandoc-security", "--metadata-file=" ++ ("yaml.yaml"), "-F","math-filter", "-C", "--bibliography=" ++ "bib.bib", "-f", "latex+raw_tex"] $ textareaToString $ editorContent docData
     return $ pack $ htmlString
@@ -87,6 +87,9 @@ textareaToYaml:: Maybe Textarea -> String
 textareaToYaml (Just textarea)= unpack $ pack "preamble: |\n" <> (yamlBlock (unTextarea textarea)) where
     yamlBlock text=Data.Text.unlines $ (\x-> pack " " <> strip x) <$> Data.Text.lines text
 textareaToYaml _ =""
+
+removeDocumentClass::String->String
+removeDocumentClass tex= subRegex (mkRegexWithOpts "\\\\documentclass[^\\{]*\\{[^\\}]*\\}" False True) tex ("")
 
 removePTag::String->String
 removePTag html =  subRegex (mkRegexWithOpts "<p[^>]*>(.*)</p>" False True) html ("\\1")

@@ -14,7 +14,7 @@ getEntryR _ entryId = do
     maybeUser<-maybeAuth
     (entry,mEntryAuthor,comments,mCommentAuthors)<-runDB $ do
         entry<-get404 entryId
-        if entryStatus entry==Publish || isAdministrator maybeUserId entry
+        if (entryStatus entry==Publish || isAdministrator maybeUserId entry) && (entryType entry==Standard)
           then do
             mEntryAuthor<-getAuthor $ entryUserId entry
             comments<-selectList [EntryParentId==.Just entryId,EntryType==.Comment][Asc EntryInserted]
