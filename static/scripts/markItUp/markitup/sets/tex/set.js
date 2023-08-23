@@ -99,18 +99,18 @@ markIt = {
 	editorToggle: function(markItUp) {
 		$(".markItUpContainer").toggleClass("full-screen");
 		if($(".markItUpContainer").hasClass("full-screen")) {
-			$(".markItUpContainer .toggle a").text("Normal");
+			$(".markItUpContainer .toggle a").text("Normal size");
 		} else {
 			$(".markItUpContainer .toggle a").text("Side by side");
 		}
 		return false;
 	},
 	latexSyntaxHelp: function(markItUp) {
-		window.open('https://www.functor.network/LaTeX%20Help');
+		window.open('https://www.functor.network/help/syntax?format=tex');
 		return false;
 	},
 	latexEditorHelp: function(markItUp) {
-		window.open('https://www.functor.network/help/Edit%20Help');
+		window.open('https://www.functor.network/help/editor?format=tex');
 		return false;
 	},
 	latexBlock: function(markItUp) {

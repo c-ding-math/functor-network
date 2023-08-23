@@ -19,8 +19,8 @@ getHome0R = do
 
     defaultLayout $ do  
         --aDomId <- newIdent
-        setTitle $ toHtml $ appName<>"—a blog community for mathematicians"
-        setDescriptionIdemp "Effortless Typesetting; Dual LaTeX and Markdown Support; Automated Numbering and Referencing; Latex Package Support; Clean and Focused Design"
+        setTitle $ toHtml $ appName
+        setDescriptionIdemp $ "Functor Network is a blog community for mathematicians. It is featured with effortless typesetting, dual latex and markdown support, latex package support, automated numbering and referencing, clean and focused design, and more."
         toWidgetHead
             [hamlet|
             <script type="application/ld+json">

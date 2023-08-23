@@ -31,7 +31,7 @@
                 #{preEscapedToMarkup (entryOutputBody features)}
             $nothing
                 <p>
-                    Comming soon...
+                    MsgComingsoon
     <hr>
     <div .bs-docs-section>      
         <div .page-header>
@@ -40,4 +40,4 @@
                 #{preEscapedToMarkup (entryOutputBody screenshots)}
             $nothing
                 <p>
-                    Comming soon...
+                    MsgComingsoon

@@ -30,7 +30,7 @@ getCommentsR piece = do
             $else
                 <div .entries>
                     <ul>
-                        $forall  (Entity entryId entry, Entity commentId comment) <- commentEntryList
+                        $forall  (Entity entryId entry, Entity commentId _) <- commentEntryList
                             <li :entryStatus entry == Draft:.draft>
                                 <a href=@{EntryR piece entryId}#comment-#{toPathPiece commentId}>
                                     <h2>#{preEscapedToMarkup (scaleHeader 2 (entryOutputTitle entry))}

@@ -15,6 +15,7 @@ import Import
 --import qualified Prelude (writeFile)
 --import System.Process
 import System.Directory
+import System.Random
 --import Text.HTML.TagSoup 
 import Parse.Parser(mdToHtml,texToHtml,EditorData(..))
 
@@ -116,11 +117,13 @@ parse:: Maybe UserId -> (a->IO Text) -> a -> IO Text
 parse maybeUserId parser docData = do
     currentWorkingDir<-getUserTemporaryDirectory maybeUserId
     createDirectoryIfMissing True currentWorkingDir  
-    cleanUpDirectory currentWorkingDir
+    --cleanUpDirectory currentWorkingDir
     --removeDirectoryRecursive currentWorkingDir
-    withCurrentDirectory currentWorkingDir $ parser docData  
+    output<-withCurrentDirectory currentWorkingDir $ parser docData  
+    removeDirectoryRecursive currentWorkingDir
+    return output
 
--- | Clean up a directory by removing all files and directories within it
+{--- | Clean up a directory by removing all files and directories within it
 cleanUpDirectory :: FilePath -> IO ()
 cleanUpDirectory dir = do
   contents <- listDirectory dir
@@ -134,11 +137,18 @@ cleanUpDirectory dir = do
             removeDirectory itemPath
           else removeFile itemPath
   mapM_ removeItem contents
+-}
 
 -- | get temporary directory for a user
 getUserTemporaryDirectory:: Maybe UserId -> IO FilePath
 getUserTemporaryDirectory maybeUserId=do
     tempDir <- getTemporaryDirectory
-    return $ tempDir </> "math-blog" </> "user" </>  case maybeUserId of 
-            Just userId->unpack (toPathPiece userId)
-            _ -> "0" 
+    let userDir = tempDir </> "functor-network" 
+    case maybeUserId of 
+            Just userId-> return $ userDir </> "user" </> unpack (toPathPiece userId)
+            _ -> do 
+                gen <- newStdGen
+                let randomString = take 10 (randomRs ('a','z') gen)
+                return $ userDir </> "anonymous" </> randomString
+
+

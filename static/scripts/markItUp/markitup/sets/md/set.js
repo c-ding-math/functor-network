@@ -111,18 +111,18 @@ markIt = {
 	editorToggle: function(markItUp) {
 		$(".markItUpContainer").toggleClass("full-screen");
 		if($(".markItUpContainer").hasClass("full-screen")) {
-			$(".markItUpContainer .toggle a").text("Normal");
+			$(".markItUpContainer .toggle a").text("Normal size");
 		} else {
 			$(".markItUpContainer .toggle a").text("Side by side");
 		}
 		return false;
 	},
 	markdownSyntaxHelp: function(markItUp) {
-		window.open('https://www.functor.network/Markdown%20Syntax');
+		window.open('https://www.functor.network/help/syntax?format=md');
 		return false;
 	},
 	markdownEditorHelp: function(markItUp) {
-		window.open('https://www.functor.network/help/Editor%20Help');
+		window.open('https://www.functor.network/help/editor?format=md');
 		return false;
 	},
 	markdownBlock: function(markItUp) {

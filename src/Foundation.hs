@@ -251,7 +251,7 @@ instance Yesod App where
         -- you to use normal widget features in default-layout.
 
         pc <- widgetToPageContent $ do
-            addStylesheet $ StaticR css_bootstrap_css
+            addStylesheet $ StaticR css_bootstrap_min_css
             addStylesheet $ StaticR css_entry_css
                                     -- ^ generated from @Settings/StaticFiles.hs@
             $(widgetFile "default-layout")
@@ -281,12 +281,14 @@ instance Yesod App where
     isAuthorized (TagR _)_ = return Authorized
     isAuthorized (CommentsR _) _ = return Authorized
     isAuthorized (Page0R _) _ = return Authorized
+    isAuthorized (EditHelpR _) _ = return Authorized
+    isAuthorized (ParserR _ _) _ = return Authorized
 
     -- Routes requiring authentication.
     isAuthorized (EditPageR _) _ = isAuthenticated
     isAuthorized SettingsR _ = isAuthenticated
     isAuthorized FilesR _ = isAuthenticated
-    isAuthorized (ParserR _ _) _ = isAuthenticated
+    --isAuthorized (ParserR _ _) _ = isAuthenticated
     isAuthorized (EditCommentR _) _ = isAuthenticated
     isAuthorized NewEntryR _ = isAuthenticated
 
