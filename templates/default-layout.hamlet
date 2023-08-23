@@ -66,7 +66,7 @@ $else
             $forall MenuItem label route _ <- footerLeftFilteredMenuItems  
                 $if (label == "Feedback")
                     <li>
-                        <a href="mailto:feedback@functor.network">#{label}
+                        <a href="mailto:feedback@functor.network?subject=Feedback&body=Your feedback is highly appreciated! Whether you have bug reports, functionality suggestions, content flags, or any other thoughts—even a simple hello, we welcome them all.%0A">#{label}
                 $else
                     <li>
                         <a href="@{route}">#{label}

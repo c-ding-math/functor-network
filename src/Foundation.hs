@@ -195,7 +195,19 @@ instance Yesod App where
                         ]
                     _ -> []
                 ++ case isJust mUserRoutePath of
-                    True -> 
+                    True | mcurrentRoute == Just (SettingsR) ->
+                        [ FooterLeft $ MenuItem
+                            { menuItemLabel = "Feedback"
+                            , menuItemRoute = Page0R "Feedback"
+                            , menuItemAccessCallback = True
+                            }
+                        , FooterRight $ MenuItem
+                            { menuItemLabel = "Version 20230823"
+                            , menuItemRoute = Page0R "Changelog"
+                            , menuItemAccessCallback = True
+                            }
+                        ]
+                    True | otherwise-> 
                         [ FooterLeft $ MenuItem
                             { menuItemLabel = "About Author"
                             , menuItemRoute = aboutRoute
@@ -214,7 +226,7 @@ instance Yesod App where
                             , menuItemAccessCallback = True
                             }
                         , FooterLeft $ MenuItem
-                            { menuItemLabel = "Privacy Policy"
+                            { menuItemLabel = "Privacy"
                             , menuItemRoute = Page0R "Privacy Policy"
                             , menuItemAccessCallback = True
                             }
@@ -652,12 +664,22 @@ instance YesodAuthEmail App where
                 authLayout $ do
                     setTitleI Msg.RegisterLong
                     [whamlet|
+                    <div .login-form-container>
+                        <h3>_{Msg.Register}
                         <p>_{Msg.EnterEmail}
-                        <form .form-inline method="post" action="@{toParentRoute registerR}" enctype=#{enctype}>
+                        <form method="post" action="@{toParentRoute registerR}" enctype=#{enctype}>
                             <div id="registerForm">
                                 ^{widget}
-                                <button .btn .btn-default>_{Msg.Register}
+                                
+                                <label>
+                                    <input type=checkbox name=agree-required>
+                                    I agree to the <a href="@{Page0R "Terms of Service"}">Terms of Service</a> and <a href="@{Page0R "Privacy Policy"}">Privacy Policy</a>                               
+                                <button .btn .btn-primary disabled>_{Msg.Register}
+                                
                     |]
+                    loginStyle
+                    loginWidget
+
         where
             
             registrationForm =  renderBootstrap3 BootstrapInlineForm $ Yesod.Auth.Extra.UserForm
@@ -670,6 +692,47 @@ instance YesodAuthEmail App where
                     fsName = Just "email",
                     fsAttrs = [("autofocus", ""), ("class", "form-control")]
                  }
+            loginStyle=toWidget [lucius|
+                .login-form-container{
+                    margin: auto;    
+                    width: 27em;    
+                    padding: 0 2em;
+                }
+                .login-form-container input{
+                    width:100%;
+                    margin:0.5em 0;
+                }   
+                .login-form-container h3{
+                    text-align:center;
+                }
+                .login-form-container button{
+                    width:100%;
+                    margin-bottom:1em;
+                }
+
+                .login-form-container input[type=checkbox]{
+                    width: auto;
+                    box-shadow: none;
+                }
+            |]
+            loginWidget=toWidget [julius|
+                $(document).ready(function(){
+                    $("input[name='agree-required']").change(function(){
+                        if(this.checked){
+                            $("#registerForm button").prop("disabled", false)
+                        }else{
+                            $("#registerForm button").prop("disabled", true)
+                        }
+                    });
+                    $("#registerForm").submit(function(){
+                        var agree = $("input[name='agree-required']").is(":checked");
+                        if (!agree){
+                            alert("Please agree to the Terms of Service and Privacy Policy.");
+                            return false;
+                        }
+                    });
+                });
+            |]
 
     forgotPasswordHandler = do
         (widget, enctype) <- generateFormPost forgotPasswordForm
