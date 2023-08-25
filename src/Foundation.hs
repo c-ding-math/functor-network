@@ -673,7 +673,7 @@ instance YesodAuthEmail App where
                                 
                                 <label>
                                     <input type=checkbox name=agree-required>
-                                    I agree to the <a href="@{Page0R "Terms of Service"}">Terms of Service</a> and <a href="@{Page0R "Privacy Policy"}">Privacy Policy</a>                               
+                                    I agree to the <a href="@{Page0R "Terms of Use"}">Terms of Use</a> and <a href="@{Page0R "Privacy Policy"}">Privacy Policy</a>                               
                                 <button .btn .btn-primary disabled>_{Msg.Register}
                                 
                     |]
