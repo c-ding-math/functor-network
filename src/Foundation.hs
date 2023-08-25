@@ -278,7 +278,7 @@ instance Yesod App where
     isAuthorized (PageR _ _) _ = return Authorized
     isAuthorized (EntriesR _) _ = return Authorized
     isAuthorized (EntryR _ _) _ = return Authorized
-    isAuthorized (TagR _ _)_ = return Authorized
+    isAuthorized (TagR _)_ = return Authorized
     isAuthorized (CommentsR _) _ = return Authorized
     isAuthorized (Page0R _) _ = return Authorized
 
@@ -330,6 +330,9 @@ instance Yesod App where
         Just $ uncurry (joinPath site (appStaticRoot $ appSettings site)) $ renderRoute s
     urlParamRenderOverride _ _ _ = Nothing
 
+    maximumContentLength _ (Just (FilesR)) = Just (256 * 1024 * 1024) -- 256MB
+    maximumContentLength _ _               = Nothing -- default 2MB
+
     -- What messages should be logged. The following includes all messages when
     -- in development, and warnings and errors in production.
     shouldLogIO :: App -> LogSource -> LogLevel -> IO Bool
@@ -360,7 +363,7 @@ instance YesodBreadcrumbs App where
             return (siteName, Just Home0R)
         PageR pathPiece _-> parentLink pathPiece
         EntriesR pathPiece -> parentLink pathPiece
-        TagR pathPiece _-> parentLink pathPiece
+        --TagR pathPiece _-> parentLink pathPiece
         Home0R -> return ("Home", Nothing)
         AuthR _ -> return ("Home", Just Home0R)
         _ -> return ("home", Nothing)
@@ -938,7 +941,7 @@ routeUser (Just route)
         CommentsR userId -> return $ Just userId
         EntriesR userId -> return $ Just userId
         EntryR userId _ -> return $ Just userId
-        TagR userId _ -> return $ Just userId
+        --TagR userId _ -> return $ Just userId
         _ -> do
             uid<-requireAuthId
             return $ Just uid

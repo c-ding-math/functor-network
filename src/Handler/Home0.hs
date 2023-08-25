@@ -8,7 +8,7 @@ module Handler.Home0 where
 
 import Import
 --import Yesod.Form.Bootstrap3 (BootstrapFormLayout (..), renderBootstrap3)
-import Text.Julius (RawJS (..))
+--import Text.Julius (RawJS (..))
 
 getHome0R :: Handler Html
 getHome0R = do
@@ -28,7 +28,7 @@ getHome0R = do
                     "@context" : "https://schema.org",
                     "@type" : "WebSite",
                     "name" : "#{appName}",
-                    "url" : "@{Home0R}",
+                    "url" : "@{Home0R}"
                 }
             |]
         $(widgetFile "homepage")

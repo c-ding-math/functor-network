@@ -16,7 +16,7 @@
 /entry NewEntryR GET POST !user !login
 /user/#UserId/entry/#EntryId EntryR GET POST !user
 /entry/#EntryId/edit EditEntryR GET POST !user !admin
-/user/#UserId/tag/#Text TagR GET !user
+tag/#Text TagR GET
 
 /files FilesR GET POST !user !login
 /file/#FileId FileR DELETE !admin

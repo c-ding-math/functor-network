@@ -6,12 +6,13 @@ module Handler.Tag where
 
 import Import
 import Handler.Parser (tagsWidget)
+import Parse.Parser (scaleHeader)
 
-getTagR :: Path -> Text -> Handler Html
-getTagR piece tag = do
+getTagR :: Text -> Handler Html
+getTagR tag = do
     mCurrentUserId<-maybeAuthId
     entryList<-runDB $ do
-        entries <- selectList [EntryUserId==.piece] [Desc EntryInserted]
+        entries <- selectList [EntryType==.Standard] [Desc EntryInserted]
         return $ [x | x<-entries, tag `elem` (entryInputTags . entityVal) x, entryStatus (entityVal x) == Publish||isAdministrator mCurrentUserId (entityVal x)]
     defaultLayout $ do
         setTitleI MsgTag
@@ -24,10 +25,10 @@ getTagR piece tag = do
                     <ul>
                         $forall Entity entryId entry<-entryList
                             <li :entryStatus entry == Draft:.draft>
-                                <a href=@{EntryR piece entryId}>
-                                    <h2>#{preEscapedToMarkup (entryOutputTitle entry)}
+                                <a href=@{EntryR (entryUserId entry) entryId}>
+                                    <h2>#{preEscapedToMarkup (scaleHeader 2 (entryOutputTitle entry))}
                                 <div .tags>
-                                    ^{tagsWidget piece (zip (entryInputTags entry) (entryOutputTags entry))}
+                                    ^{tagsWidget (zip (entryInputTags entry) (entryOutputTags entry))}
         |]
         addStylesheet $ StaticR css_entry_list_css
 

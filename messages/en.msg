@@ -48,6 +48,9 @@ ChangeSaved: Changes Saved
 UpdateSite: Update site
 
 File: File
+FileTooLarge maxSize@Int: The file is too large. The maximum file size is #{show maxSize} MB.
+FileTypeNotAllowed: File type not allowed.
+NoFileSelected: No file selected.
 Link: Link
 Description: Description
 Uploaded: Uploaded
