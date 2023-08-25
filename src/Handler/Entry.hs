@@ -4,7 +4,7 @@
 module Handler.Entry where
 
 import Yesod.Form.Bootstrap3
-import Handler.Parser(parse,markItUpWidget)
+import Handler.Parser(parse,markItUpWidget,userTemporaryDirectory)
 import Parse.Parser(mdToHtml,texToHtml,scaleHeader,EditorData(..))
 import Import
 
@@ -201,7 +201,8 @@ postEntryR _ entryId = do
             let parser=  case inputFormat newCommentFormData of
                         Format "tex" -> texToHtml
                         _ -> mdToHtml
-            bodyHtml <- liftIO $ parse (Just userId) parser editorData
+            userDir<-userTemporaryDirectory
+            bodyHtml <- liftIO $ parse userDir parser editorData
             let commentData=Entry 
                         {entryParentId=Just entryId
                         ,entryUserId=userId

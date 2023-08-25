@@ -4,7 +4,7 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 
 module Handler.Parser (
-    getUserTemporaryDirectory,
+    userTemporaryDirectory,
     parse,
     markItUpWidget,
     tagsWidget,
@@ -12,25 +12,31 @@ module Handler.Parser (
 )where
 
 import Import
---import qualified Prelude (writeFile)
---import System.Process
 import System.Directory
---import Text.HTML.TagSoup 
+import System.Environment (getExecutablePath)
+import System.FilePath
+import System.Random
 import Parse.Parser(mdToHtml,texToHtml,EditorData(..))
+--import Data.Time.Clock
 
 type InputFormat=Text
 type OutputFormat=Text
 
 postParserR :: InputFormat->OutputFormat-> Handler RepPlain
 postParserR inputFormat outputFormat = do
-    let parser = case (inputFormat,outputFormat) of
-            ("tex","html") -> texToHtml
-            _ -> mdToHtml
-    maybeUserId<-maybeAuthId
-    docData<- requireCheckJsonBody ::Handler EditorData
-    preview<-liftIO $ parse maybeUserId parser docData   
-    return $ RepPlain $ toContent $ preview
-
+    userDir<-userTemporaryDirectory
+    subdirectoriesNumber<-liftIO $ countSubdirectories $ takeDirectory userDir
+    if subdirectoriesNumber > 1 then do
+        let busyMessage::Text
+            busyMessage= "busy..."
+        return $ RepPlain $ toContent $ busyMessage
+    else do  
+        let parser = case (inputFormat,outputFormat) of
+                ("tex","html") -> texToHtml
+                _ -> mdToHtml
+        docData<- requireCheckJsonBody ::Handler EditorData
+        preview<-liftIO $ parse userDir parser docData  
+        return $ RepPlain $ toContent $ preview
 
 markItUpWidget ::Format->Format-> Widget
 markItUpWidget inputFormat outputFormat=    do    --addScriptRemote "https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"
@@ -111,34 +117,48 @@ tagsWidget tags=do
             <a href=@{TagR inputTag}> #{preEscapedToMarkup outputTag}
     |]
 
+-- | Get user temporary directory
+userTemporaryDirectory :: Handler FilePath
+userTemporaryDirectory = do
+    randomString<-liftIO $ fmap (take 10 . randomRs ('a','z')) newStdGen
+    {-appDirectory<-liftIO appWorkingDirectory
+    tempDir <- if takeFileName appDirectory == "functor-network" 
+        then liftIO $ getTemporaryDirectory >>= \dir -> return $ dir </> "functor-network"-- development
+        else return $ appDirectory </> "working"-- production-}
+    tempDir <- liftIO $ getTemporaryDirectory >>= \dir -> return $ dir </> "functor-network"
+    
+    maybeUserId<-maybeAuthId
+    case maybeUserId of
+        Nothing-> do
+            maybeToken <-  fmap reqToken getRequest
+            case maybeToken of
+                Nothing-> notFound
+                Just token-> do
+                    return $ tempDir </> "anonymous" </> unpack (toPathPiece (token)) </> randomString
+        Just userId-> return $ tempDir </> "user" </> unpack (toPathPiece userId) </> randomString
+
 -- | parse
-parse:: Maybe UserId -> (a->IO Text) -> a -> IO Text
-parse maybeUserId parser docData = do
-    currentWorkingDir<-getUserTemporaryDirectory maybeUserId
-    createDirectoryIfMissing True currentWorkingDir  
-    cleanUpDirectory currentWorkingDir
-    --removeDirectoryRecursive currentWorkingDir
-    withCurrentDirectory currentWorkingDir $ parser docData  
+parse:: FilePath -> (a->IO Text) -> a -> IO Text
+parse currentWorkingDir parser docData = do
+    appDirectory<-appWorkingDirectory
+    setCurrentDirectory appDirectory
+    createDirectoryIfMissing True currentWorkingDir
+    output<-withCurrentDirectory currentWorkingDir $ parser docData
+    removeDirectoryRecursive currentWorkingDir
+    return $ output
 
--- | Clean up a directory by removing all files and directories within it
-cleanUpDirectory :: FilePath -> IO ()
-cleanUpDirectory dir = do
-  contents <- listDirectory dir
-  let removeItem :: FilePath -> IO ()
-      removeItem item = do
-        let itemPath = dir </> item
-        isDir <- doesDirectoryExist itemPath
-        if isDir
-          then do
-            cleanUpDirectory itemPath
-            removeDirectory itemPath
-          else removeFile itemPath
-  mapM_ removeItem contents
+-- | get App root directory
+appWorkingDirectory :: IO FilePath
+appWorkingDirectory = do
+    exePath <- getExecutablePath  
+    return $ if takeFileName exePath == "ghc" 
+        then (takeDirectory $ takeDirectory $ takeDirectory $ takeDirectory $ takeDirectory $ takeDirectory $ takeDirectory exePath) </>  "functor-network"-- development
+        else takeDirectory $ takeDirectory $ takeDirectory exePath -- production
 
--- | get temporary directory for a user
-getUserTemporaryDirectory:: Maybe UserId -> IO FilePath
-getUserTemporaryDirectory maybeUserId=do
-    tempDir <- getTemporaryDirectory
-    return $ tempDir </> "math-blog" </> "user" </>  case maybeUserId of 
-            Just userId->unpack (toPathPiece userId)
-            _ -> "0" 
+countSubdirectories :: FilePath -> IO Int
+countSubdirectories dir = doesDirectoryExist dir >>= \exisitence ->
+    if exisitence then do
+        contents <- listDirectory dir
+        subdirs <- filterM (\f -> doesDirectoryExist $ dir </> f) contents
+        return $ length subdirs
+    else return 0

@@ -113,3 +113,4 @@ NoPage: No page found.
 Users: Members
 
 InvalidAction: Invalid action
+ComingSoon: Coming soon...

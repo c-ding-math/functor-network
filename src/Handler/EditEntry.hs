@@ -8,7 +8,7 @@ module Handler.EditEntry where
 
 import Import
 import Yesod.Form.Bootstrap3
-import Handler.Parser(parse,markItUpWidget)
+import Handler.Parser(parse,markItUpWidget,userTemporaryDirectory)
 import Parse.Parser(mdToHtml,mdToHtmlSimple,texToHtml,texToHtmlSimple,EditorData(..))
 import qualified Data.Text as T
 
@@ -131,13 +131,14 @@ postNewEntryR = do
                         } 
             entryAction <- lookupPostParam "action"        
             currentTime <- liftIO getCurrentTime
+            userDir<-userTemporaryDirectory
             (titleHtml,bodyHtml,tagHtmls) <- liftIO $ do
                 let (parser,parserSimple)=  case inputFormat formData of
                         Format "tex" -> (texToHtml,texToHtmlSimple)
-                        _ -> (mdToHtml,mdToHtmlSimple)
-                titleHtml <-parse (Just userId) parserSimple (title formData) --liftIO $ mdToHtmlSimple $ title formData
-                bodyHtml <- parse (Just userId) parser editorData
-                tagHtmls <- mapM (parse (Just userId) parserSimple) (inputToList (tags formData))
+                        _ -> (mdToHtml,mdToHtmlSimple)               
+                titleHtml <-parse userDir parserSimple (title formData) --liftIO $ mdToHtmlSimple $ title formData
+                bodyHtml <- parse userDir parser editorData
+                tagHtmls <- mapM (parse userDir parserSimple) (inputToList (tags formData))
                 return (titleHtml,bodyHtml,tagHtmls)
             --tagsHtml <- liftIO $ mdToHtml_tags $ getTags $ tags formData
             urlRenderParams<- getUrlRenderParams
@@ -212,13 +213,14 @@ postEditEntryR  entryId = do
                         } 
             entryAction <- lookupPostParam "action"        
             currentTime <- liftIO getCurrentTime
+            userDir<-userTemporaryDirectory
             (titleHtml,bodyHtml,tagHtmls) <- liftIO $ do
                 let (parser,parserSimple)=  case inputFormat formData of
                         Format "tex" -> (texToHtml,texToHtmlSimple)
                         _ -> (mdToHtml,mdToHtmlSimple)
-                titleHtml <-parse (Just userId) parserSimple (title formData) --liftIO $ mdToHtmlSimple $ title formData
-                bodyHtml <- parse (Just userId) parser editorData
-                tagHtmls <- mapM (parse (Just userId) parserSimple) (inputToList (tags formData))
+                titleHtml <-parse userDir parserSimple (title formData) --liftIO $ mdToHtmlSimple $ title formData
+                bodyHtml <- parse userDir parser editorData
+                tagHtmls <- mapM (parse userDir parserSimple) (inputToList (tags formData))
                 return (titleHtml,bodyHtml,tagHtmls)
             urlRenderParams<- getUrlRenderParams
             

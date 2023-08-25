@@ -36,3 +36,4 @@ tag/#Text TagR GET
 !/#Text Page0R GET
 !/user/#UserId/#Text PageR GET !user
 
+/help/#Text EditHelpR GET
