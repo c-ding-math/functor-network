@@ -12,6 +12,7 @@ module Handler.Parser (
 )where
 
 import Import
+--import Control.Concurrent
 import System.Directory
 import System.Environment (getExecutablePath)
 import System.FilePath
@@ -25,8 +26,8 @@ type OutputFormat=Text
 postParserR :: InputFormat->OutputFormat-> Handler RepPlain
 postParserR inputFormat outputFormat = do
     userDir<-userTemporaryDirectory
-    subdirectoriesNumber<-liftIO $ countSubdirectories $ takeDirectory userDir
-    if subdirectoriesNumber > 1 then do
+    subdirectoriesNumber<-liftIO $ countActiveSubdirectories $ takeDirectory userDir
+    if subdirectoriesNumber > 0 then do
         let busyMessage::Text
             busyMessage= "busy..."
         return $ RepPlain $ toContent $ busyMessage
@@ -144,6 +145,7 @@ parse currentWorkingDir parser docData = do
     setCurrentDirectory appDirectory
     createDirectoryIfMissing True currentWorkingDir
     output<-withCurrentDirectory currentWorkingDir $ parser docData
+    --threadDelay 10000000
     removeDirectoryRecursive currentWorkingDir
     return $ output
 
@@ -155,10 +157,23 @@ appWorkingDirectory = do
         then (takeDirectory $ takeDirectory $ takeDirectory $ takeDirectory $ takeDirectory $ takeDirectory $ takeDirectory exePath) </>  "functor-network"-- development
         else takeDirectory $ takeDirectory $ takeDirectory exePath -- production
 
-countSubdirectories :: FilePath -> IO Int
-countSubdirectories dir = doesDirectoryExist dir >>= \exisitence ->
+countActiveSubdirectories :: FilePath -> IO Int
+countActiveSubdirectories dir = doesDirectoryExist dir >>= \exisitence ->
     if exisitence then do
         contents <- listDirectory dir
         subdirs <- filterM (\f -> doesDirectoryExist $ dir </> f) contents
         return $ length subdirs
     else return 0
+
+{-isActiveDirectory :: FilePath -> IO Bool
+isActiveDirectory dir = doesDirectoryExist dir >>= \exisitence ->
+    if exisitence then do
+        accessTime <- getAccessTime dir
+        currentTime <- getCurrentTime
+        let timeDiff = diffUTCTime currentTime accessTime
+        if timeDiff < 60 * 60 
+            then return True 
+            else do --should not happen
+                removeDirectoryRecursive dir 
+                return False
+    else return False-}

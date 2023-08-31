@@ -12,14 +12,15 @@ module Parse.Parser (
     EditorData(..),
 ) where
 
+--import Import
 --import qualified Prelude 
 import Parse.Svg
 import System.Process
+import System.Exit
 --import System.Directory
 --import Text.HTML.TagSoup 
 import Text.Regex (mkRegexWithOpts, subRegex)
 import Text.Regex.Posix
---import Import
 import Yesod.Form.Fields 
 import Data.Text
 import GHC.Generics
@@ -39,28 +40,42 @@ mdToHtml docData=do
     
     Prelude.writeFile ("yaml.yaml") $ removeDocumentClass $ textareaToYaml $ editorPreamble docData
     Prelude.writeFile ("bib.bib")  $ textareaToString $ editorCitation docData
-    htmlString<-readProcess "pandoc" ["--sandbox", "-F", "pandoc-security", "--metadata-file=" ++ ("yaml.yaml"), "-F","pandoc-theorem", "-F","math-filter", "-C", "--bibliography=" ++ "bib.bib"] $ textareaToString $ editorContent docData
-    return $ pack htmlString
-
+    (exitCode, htmlString, errorString)<-readProcessWithExitCode "pandoc" ["--sandbox", "-F", "pandoc-security", "--metadata-file", "yaml.yaml", "-F","pandoc-theorem", "-F", "math-filter", "-C", "--bibliography=" ++ "bib.bib"] $ textareaToString $ editorContent docData
+    case exitCode of
+        ExitSuccess -> do
+            return $ pack $ removePTag htmlString
+        _ -> do
+            return $ pack errorString
+        
 mdToHtmlSimple::Text->IO Text
 mdToHtmlSimple title=do
-    titleString<-readProcess "pandoc" ["--sandbox", "-F", "pandoc-security", "-F","math-filter"] $ unpack $ title
-
-    return $ pack $ removePTag titleString  
+    (exitCode, htmlString, errorString)<-readProcessWithExitCode "pandoc" ["--sandbox", "-F", "pandoc-security", "-F", "math-filter"] $ unpack $ title
+    case exitCode of
+        ExitSuccess -> do
+            return $ pack $ removePTag htmlString
+        _ -> do
+            return $ pack errorString
 
 texToHtml::EditorData->IO Text
 texToHtml docData=do
     
     Prelude.writeFile ("yaml.yaml") $ removeDocumentClass $ textareaToYaml $ editorPreamble docData
     Prelude.writeFile ("bib.bib")  $ textareaToString $ editorCitation docData
-    htmlString<-readProcess "pandoc" ["--sandbox", "-F", "pandoc-security", "--metadata-file=" ++ ("yaml.yaml"), "-F","math-filter", "-C", "--bibliography=" ++ "bib.bib", "-f", "latex+raw_tex"] $ textareaToString $ editorContent docData
-    return $ pack $ htmlString
+    (exitCode, htmlString, errorString)<-readProcessWithExitCode "pandoc" ["--sandbox", "-F", "pandoc-security", "--metadata-file", "yaml.yaml", "-F", "math-filter", "-C", "--bibliography=" ++ "bib.bib", "-f", "latex+raw_tex"] $ textareaToString $ editorContent docData
+    case exitCode of
+        ExitSuccess -> do
+            return $ pack $ removePTag htmlString
+        _ -> do
+            return $ pack errorString
             
 texToHtmlSimple::Text->IO Text
 texToHtmlSimple title=do
-    titleString<-readProcess "pandoc" ["--sandbox", "-F", "pandoc-security", "-F","math-filter", "-f", "latex+raw_tex"] $ unpack $ title
-
-    return $ pack $ removePTag titleString 
+    (exitCode, htmlString, errorString)<-readProcessWithExitCode "pandoc" ["--sandbox", "-F", "pandoc-security", "-F", "math-filter", "-f", "latex+raw_tex"] $ unpack $ title
+    case exitCode of
+        ExitSuccess -> do
+            return $ pack $ removePTag htmlString
+        _ -> do
+            return $ pack errorString
 
 scaleHeader::Int->Text->Text
 scaleHeader n title|n<=6= do
@@ -85,21 +100,17 @@ textareaToString  _ = ""
 
 textareaToYaml:: Maybe Textarea -> String
 textareaToYaml (Just textarea)= unpack $ pack "preamble: |\n" <> (yamlBlock (unTextarea textarea)) where
-    yamlBlock text=Data.Text.unlines $ (\x-> pack " " <> strip x) <$> Data.Text.lines text
+    yamlBlock text=Data.Text.unlines $ (\x-> pack " " <> x) <$> [pack "```{=latex}"] ++ Data.Text.lines text ++ [pack "```"]
 textareaToYaml _ =""
 
 removeDocumentClass::String->String
-removeDocumentClass tex= subRegex (mkRegexWithOpts "\\\\documentclass[^\\{]*\\{[^\\}]*\\}" False True) tex ("")
+removeDocumentClass tex= do
+    let regexes=[
+            "\\\\documentclass[^\\{]*\\{[^\\}]*\\}"
+            --, "\\\\usepackage[^\\{]*\\{[[:space:]]*hyperref[[:space:]]*\\}"
+            ]
+    Prelude.foldl (\str regex-> subRegex (mkRegexWithOpts regex False True) str ("")) tex regexes
+    --subRegex (mkRegexWithOpts "\\\\documentclass[^\\{]*\\{[^\\}]*\\}" False True) tex ("")
 
 removePTag::String->String
 removePTag html =  subRegex (mkRegexWithOpts "<p[^>]*>(.*)</p>" False True) html ("\\1")
-    
-{-removePTag :: String -> String
-removePTag html =  renderTags $ Prelude.filter (not . isBlockquote) $ parseTags html where
-    isBlockquote (TagOpen "p" _) = True
-    isBlockquote _ = False-}
-
-{-removePTag :: String -> String
-removePTag html =  case parseTags html of
-    [TagOpen "p" _,tagString,TagClose "p"] -> fromTagText tagString
-    _ -> html-}
