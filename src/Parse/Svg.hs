@@ -7,6 +7,7 @@ type Svg = String
 type Depth = Double
 
 scale:: Double -> Svg -> Svg
+scale 1.0 svg = svg
 scale x svg =  do
     let (width, height) = getSize svg
         width' = width * x

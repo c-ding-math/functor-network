@@ -1,5 +1,5 @@
 {-# LANGUAGE QuasiQuotes           #-}
---{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE DeriveGeneric #-}
 --{-# LANGUAGE NoImplicitPrelude #-}
 
@@ -19,8 +19,8 @@ import System.Process
 import System.Exit
 --import System.Directory
 --import Text.HTML.TagSoup 
+import Text.HTML.Scalpel (scrapeStringLike, attrs, innerHTML)
 import Text.Regex (mkRegexWithOpts, subRegex)
-import Text.Regex.Posix
 import Yesod.Form.Fields 
 import Data.Text
 import GHC.Generics
@@ -43,7 +43,7 @@ mdToHtml docData=do
     (exitCode, htmlString, errorString)<-readProcessWithExitCode "pandoc" ["--sandbox", "-F", "pandoc-security", "--metadata-file", "yaml.yaml", "-F","pandoc-theorem", "-F", "math-filter", "-C", "--bibliography=" ++ "bib.bib"] $ textareaToString $ editorContent docData
     case exitCode of
         ExitSuccess -> do
-            return $ pack $ removePTag htmlString
+            return $ pack $ htmlString
         _ -> do
             return $ pack errorString
         
@@ -64,7 +64,7 @@ texToHtml docData=do
     (exitCode, htmlString, errorString)<-readProcessWithExitCode "pandoc" ["--sandbox", "-F", "pandoc-security", "--metadata-file", "yaml.yaml", "-F", "math-filter", "-C", "--bibliography=" ++ "bib.bib", "-f", "latex+raw_tex"] $ textareaToString $ editorContent docData
     case exitCode of
         ExitSuccess -> do
-            return $ pack $ removePTag htmlString
+            return $ pack $ htmlString
         _ -> do
             return $ pack errorString
             
@@ -77,20 +77,29 @@ texToHtmlSimple title=do
         _ -> do
             return $ pack errorString
 
+-- should be replaced. This is a temporary solution
 scaleHeader::Int->Text->Text
 scaleHeader n title|n<=6= do
     let headerScale=[2.4,2.00,1.6,1.3,1.0,0.7]
-    let widthMatches=getAllTextMatches $ unpack title =~ "width=\'([0-9]*\\.[0-9]*)pt\'" :: [String]
+    let temporaryReplacement="IDontBelieveThisStringWillEverOccurInUserInput"
+
+    let widthMatches=case scrapeStringLike (unpack title) (attrs "width" $ "svg") of
+            Just x -> x
+            Nothing -> []
         widths=(Prelude.map stringToDouble widthMatches)
-        heightMatches=getAllTextMatches $ unpack title =~ "height=\'([0-9]*\\.[0-9]*)pt\'" :: [String]
+        heightMatches=case scrapeStringLike (unpack title) (attrs "height" $ "svg") of
+            Just x -> x
+            Nothing -> []
         heights=(Prelude.map stringToDouble heightMatches)
     let modify:: [Double]->[Double]->String->String
         modify (w:ws) (h:hs) str= do
-            let newStr=subRegex (mkRegexWithOpts ("width=\'"++ show w ++"pt\'") False True) str ("width='" ++ (show (headerScale!!(n-1) * w)) ++ "pt'")
-            let newStr2=subRegex (mkRegexWithOpts ("height=\'"++ show h ++"pt\'") False True) newStr ("height='" ++ (show (headerScale!!(n-1) * h)) ++ "pt'")
-            modify ws hs newStr2
+            let str1=subRegex (mkRegexWithOpts ("(width=\')"++ show w ++"(pt\')") False True) str ("\\1" ++ temporaryReplacement ++ (show (headerScale!!(n-1) * w)) ++ "\\2")
+                str1'=subRegex (mkRegexWithOpts ("(width=\")"++ show w ++"(pt\")") False True) str1 ("\\1" ++ temporaryReplacement ++ (show (headerScale!!(n-1) * w)) ++ "\\2")
+                str2=subRegex (mkRegexWithOpts ("(height=\')"++ show h ++"(pt\')") False True) str1' ("\\1" ++ temporaryReplacement ++ (show (headerScale!!(n-1) * h)) ++ "\\2")
+                str2'=subRegex (mkRegexWithOpts ("(height=\")"++ show h ++"(pt\")") False True) str2 ("\\1" ++ temporaryReplacement ++ (show (headerScale!!(n-1) * h)) ++ "\\2")
+            modify ws hs str2'
         modify _ _ str=str
-    pack $ modify widths heights $ unpack title
+    pack $ subRegex (mkRegexWithOpts (temporaryReplacement) False True) (modify widths heights $ unpack title) ("")
         
 scaleHeader _ title = title
 
@@ -113,4 +122,6 @@ removeDocumentClass tex= do
     --subRegex (mkRegexWithOpts "\\\\documentclass[^\\{]*\\{[^\\}]*\\}" False True) tex ("")
 
 removePTag::String->String
-removePTag html =  subRegex (mkRegexWithOpts "<p[^>]*>(.*)</p>" False True) html ("\\1")
+removePTag html = case scrapeStringLike html (innerHTML $ "p") of
+    Just x -> x
+    Nothing -> html

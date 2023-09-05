@@ -102,6 +102,7 @@ Comments: Comments
 CommentPublished: Comment published
 LoginToComment: You must be logged in to comment
 CommentDeleted: Comment deleted
+Reply: Reply
 
 AboutPageReset: Your about page has been reset.
 PageDeleted: Page deleted

@@ -8,6 +8,7 @@ module Handler.EditEntry where
 
 import Import
 import Yesod.Form.Bootstrap3
+import Handler.EditComment(deleteEntryRecursive)
 import Handler.Parser(parse,markItUpWidget,userTemporaryDirectory)
 import Parse.Parser(mdToHtml,mdToHtmlSimple,texToHtml,texToHtmlSimple,EditorData(..))
 import qualified Data.Text as T
@@ -226,7 +227,7 @@ postEditEntryR  entryId = do
             
             case entryAction of
                 Just "delete"->  do
-                    runDB $ delete entryId 
+                    runDB $ deleteEntryRecursive entryId
                     setMessage $ [shamlet|Your blog post, #{title formData}, has been deleted.|] --getUrlRenderParams
                     redirect $ NewEntryR
                 Just "publish"-> do

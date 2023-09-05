@@ -18,6 +18,7 @@ import System.Environment (getExecutablePath)
 import System.FilePath
 import System.Random
 import Parse.Parser(mdToHtml,texToHtml,EditorData(..))
+--import qualified Prelude
 --import Data.Time.Clock
 
 type InputFormat=Text
@@ -102,8 +103,14 @@ $(document).ready(function(){
         if (selected=="2"){
             format="tex"
         }
-        var currentUrl = window.location.href.split(/[?#]/)[0];
-        window.location.href = currentUrl + '?format=' + format;
+        var currentUrl = window.location.href.split(/[?#]/)[0]+ '?format=' + format;
+        var elementId = window.location.href.match(/#[^?]*/);
+        if (elementId){
+            currentUrl=currentUrl+elementId;
+        }
+        
+        window.location.href = currentUrl 
+
     });
 });
         |]
@@ -144,7 +151,10 @@ parse currentWorkingDir parser docData = do
     appDirectory<-appWorkingDirectory
     setCurrentDirectory appDirectory
     createDirectoryIfMissing True currentWorkingDir
-    output<-withCurrentDirectory currentWorkingDir $ parser docData
+    output<-withCurrentDirectory currentWorkingDir $ do
+        output <- parser docData
+        --Prelude.writeFile "output.html" $ unpack output
+        return output
     --threadDelay 10000000
     removeDirectoryRecursive currentWorkingDir
     return $ output
