@@ -24,6 +24,8 @@ Email: Email
 Site: Site
 Profile: Profile
 User: User
+Users: Members
+UnregisteredUser: [Unregistered]
 Name: Name
 Avatar: Avatar
 About: About
@@ -91,7 +93,6 @@ ViewAll: View all
 Home: Home
 
 NothingFound: Nothing Found
-UnknownUser: Unknown user
 Publish: Publish
 HasSite: You have already registered a site
 
@@ -110,8 +111,6 @@ PageSaved: Page saved
 PageNotFound: Page not found
 Pages: Pages
 NoPage: No page found.
-
-Users: Members
 
 InvalidAction: Invalid action
 ComingSoon: Coming soon...

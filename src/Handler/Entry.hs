@@ -56,7 +56,7 @@ getEntryR authorId entryId = do
               
               <a href=@{PageR (entryUserId entry) "About"}>#{userName author}
           $nothing 
-              _{MsgUnknownUser}
+              _{MsgUnregisteredUser}
       <span .at>#{formatDateStr (entryInserted entry)}
   <div .entry-content>
       <article>#{preEscapedToMarkup(entryOutputBody entry)}
@@ -79,7 +79,7 @@ getEntryR authorId entryId = do
                       $maybe author<-mCommentAuthor                           
                           <a href=@{PageR (entryUserId comment) "About"}>#{userName author}
                       $nothing 
-                          _{MsgUnknownUser}
+                          _{MsgUnregisteredUser}
                   <span .at>#{formatDateStr (entryInserted comment)}
                   $maybe parentCommentId<-entryParentId comment
                     $if parentCommentId /= entryId
@@ -88,7 +88,7 @@ getEntryR authorId entryId = do
                                 $maybe parentAuthor<-mParentCommentAuthor
                                     #{userName parentAuthor}
                                 $nothing
-                                    _{MsgUnknownUser}
+                                    _{MsgUnregisteredUser}
 
               <div .entry-content>
                   <article>#{preEscapedToMarkup (entryOutputBody comment)}  
