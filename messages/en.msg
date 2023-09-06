@@ -77,7 +77,7 @@ InputFormat: Which format do you want to write you post in?
 OutputFormat: Which format do you want to publish your post in?
 Format: format
 Post: Post
-Entries: Posts
+Posts: Posts
 NewPost: New post
 FirstPost: Write your first post. 
 CommentsOn: Comments on

@@ -1,12 +1,10 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 module Handler.Tag where
 
 import Import
-import Handler.Parser (tagsWidget)
-import Parse.Parser (scaleHeader)
+import Handler.Entries (entryListWidget)
 
 getTagR :: Text -> Handler Html
 getTagR tag = do
@@ -19,16 +17,8 @@ getTagR tag = do
         [whamlet|
             <h1>_{MsgTag}: #{tag}
             $if null entryList
-                <div> _{MsgNothingFound}
+                <p>_{MsgNoPost}
             $else
-                <div .entries>
-                    <ul>
-                        $forall Entity entryId entry<-entryList
-                            <li :entryStatus entry == Draft:.draft>
-                                <a href=@{EntryR (entryUserId entry) entryId}>
-                                    <h2>#{preEscapedToMarkup (scaleHeader 2 (entryOutputTitle entry))}
-                                <div .tags>
-                                    ^{tagsWidget (zip (entryInputTags entry) (entryOutputTags entry))}
+                ^{entryListWidget entryList}
         |]
-        addStylesheet $ StaticR css_entry_list_css
-
+        

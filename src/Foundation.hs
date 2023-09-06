@@ -167,7 +167,7 @@ instance Yesod App where
                     Just uid | mUserRoutePath == muid->
                         [ NavbarMiddle $ MenuItem
                             { menuItemLabel = "Posts"
-                            , menuItemRoute = EntriesR uid
+                            , menuItemRoute = HomeR uid
                             , menuItemAccessCallback = True
                             }
                         , NavbarMiddle $ MenuItem
@@ -288,7 +288,7 @@ instance Yesod App where
     isAuthorized UsersR _ = return Authorized
     isAuthorized (HomeR _) _ = return Authorized
     isAuthorized (PageR _ _) _ = return Authorized
-    isAuthorized (EntriesR _) _ = return Authorized
+    --isAuthorized (EntriesR _) _ = return Authorized
     isAuthorized (EntryR _ _) _ = return Authorized
     isAuthorized (TagR _)_ = return Authorized
     isAuthorized (CommentsR _) _ = return Authorized
@@ -376,7 +376,7 @@ instance YesodBreadcrumbs App where
                     _ -> "Unknown"
             return (siteName, Just Home0R)
         PageR pathPiece _-> parentLink pathPiece
-        EntriesR pathPiece -> parentLink pathPiece
+        -- EntriesR pathPiece -> parentLink pathPiece
         --TagR pathPiece _-> parentLink pathPiece
         Home0R -> return ("Home", Nothing)
         AuthR _ -> return ("Home", Just Home0R)
@@ -1004,7 +1004,7 @@ routeUser (Just route)
         HomeR userId -> return $ Just userId
         PageR userId _ -> return $ Just userId
         CommentsR userId -> return $ Just userId
-        EntriesR userId -> return $ Just userId
+        --EntriesR userId -> return $ Just userId
         EntryR userId _ -> return $ Just userId
         --TagR userId _ -> return $ Just userId
         _ -> do

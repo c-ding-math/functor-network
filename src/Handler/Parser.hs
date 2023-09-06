@@ -7,7 +7,6 @@ module Handler.Parser (
     userTemporaryDirectory,
     parse,
     markItUpWidget,
-    tagsWidget,
     postParserR
 )where
 
@@ -41,7 +40,7 @@ postParserR inputFormat outputFormat = do
         return $ RepPlain $ toContent $ preview
 
 markItUpWidget ::Format->Format-> Widget
-markItUpWidget inputFormat outputFormat=    do    --addScriptRemote "https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"
+markItUpWidget inputFormat _=    do    --addScriptRemote "https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"
         addScript $ StaticR scripts_jquery_ui_jquery_ui_min_js
         addStylesheet $ StaticR scripts_jquery_ui_jquery_ui_min_css
         addStylesheet $ StaticR scripts_jquery_ui_jquery_ui_additional_css
@@ -114,16 +113,6 @@ $(document).ready(function(){
     });
 });
         |]
-
--- | Widget for tags
-tagsWidget::[(Text,Text)]->Widget
-tagsWidget tags=do
-    toWidget [hamlet|
-<ul>
-    $forall (inputTag,outputTag) <-tags
-        <li>
-            <a href=@{TagR inputTag}> #{preEscapedToMarkup outputTag}
-    |]
 
 -- | Get user temporary directory
 userTemporaryDirectory :: Handler FilePath
