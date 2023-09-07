@@ -10,7 +10,7 @@ getPageR userId _ = do
     _<-runDB $ get404 userId
     mCurrentUserId<-maybeAuthId
     -- Currently, support about page only
-    mEntry<-runDB $ selectFirst [EntryInputTitle==."About",EntryType==.Page,EntryUserId==.userId,EntryStatus==.Publish] [Desc EntryInserted]
+    mEntry<-runDB $ selectFirst [EntryInputTitle==."About",EntryType==.Page,EntryUserId==.Just userId,EntryStatus==.Publish] [Desc EntryInserted]
 
     case mEntry of
         Nothing->

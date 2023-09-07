@@ -24,7 +24,7 @@ getFilesR = do
     let fileLink::File->Text
         fileLink file=urlRender $ StaticR $ StaticRoute ["files","user",toPathPiece userId, pack (fileFilename file)] []
     ((_, uploadWidget), uploadEnctype) <- runFormPost uploadForm
-    files <- runDB $ selectList [FileUserId==.userId] [Desc FileInserted]
+    files <- runDB $ selectList [FileUserId==.Just userId] [Desc FileInserted]
     defaultLayout $ do
         --addStyleRemote "http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css"
         addWidget
@@ -119,7 +119,7 @@ postFilesR :: Handler Html
 postFilesR = do
     --(userId, user) <- requireAuthPair
     userId <- requireAuthId
-    userFileDirectory <- getUserStaticDir userId
+    userFileDirectory <- getUserStaticDir $ Just userId
     ((result, _), _) <- runFormPost uploadForm
     case result of
         FormSuccess (fileInfo, info, date) -> do
@@ -140,7 +140,7 @@ postFilesR = do
                     setMessageI MsgFileTypeNotAllowed
                     redirect FilesR
                 else do
-                    eFile <- runDB $ insertBy (File {fileDirectory=userFileDirectory, fileFilename=unpack name, fileDescription= info, fileInserted= date, fileUserId=userId})
+                    eFile <- runDB $ insertBy (File {fileDirectory=userFileDirectory, fileFilename=unpack name, fileDescription= info, fileInserted= date, fileUserId=Just userId})
                     case eFile of 
                         Left _ -> setMessageI (MsgFileExists name)
                         Right _-> do
@@ -171,14 +171,18 @@ deleteFileR fileId = do
             setMessageI MsgFileDeleted
             redirect FilesR
 
---uploadDirectory ::  UserId -> FilePath
---uploadDirectory userId= "static"</>"files" </> "user" </> ( unpack  (toPathPiece userId) )
---uploadDirectory _="static"</>"files" </> "user" </> "0"
-
-getUserStaticDir :: UserId -> Handler FilePath
-getUserStaticDir userId = do
+getUserStaticDir :: Maybe UserId -> Handler FilePath
+getUserStaticDir mUserId = do
     staticDir <- appStaticDir . appSettings <$> getYesod
-    return $ staticDir </> "files" </> "user" </> ( unpack  (toPathPiece userId) )
+    case mUserId of
+        Nothing -> do
+            maybeToken <-  fmap reqToken getRequest
+            case maybeToken of
+                Nothing-> notFound
+                Just token-> do
+                    return $ staticDir </> "files" </> "anonymous" </> ( unpack  (toPathPiece token) )
+        Just userId ->
+            return $ staticDir </> "files" </> "user" </> ( unpack  (toPathPiece userId) )
 
 --openConnectionCount :: Int
 --openConnectionCount = 10

@@ -33,7 +33,7 @@ Login --via third parties
 
 Entry
     parentId EntryId Maybe
-    userId UserId 
+    userId UserId Maybe
     type EntryType
     inputFormat Format 
     inputTitle Text
@@ -45,16 +45,19 @@ Entry
     outputBody Text
     inserted UTCTime default=CURRENT_TIME
     updated UTCTime default=CURRENT_TIME
-    --stuck UTCTime Maybe
     status EntryStatus
     locked Bool -- if locked, comments are not allowed
     inputTags [Text]
     outputTags [Text]
 
+EntryTree 
+    node EntryId
+    parent EntryId Maybe
+    
 File 
     filename String
     directory String
-    userId UserId
+    userId UserId Maybe
     inserted UTCTime
     description Text Maybe
     UniqueFile directory filename

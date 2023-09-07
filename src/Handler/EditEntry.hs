@@ -147,7 +147,7 @@ postNewEntryR = do
                 Just "publish"-> do
                     entryId<-runDB $ insert $ Entry   
                         {entryParentId=Nothing
-                        ,entryUserId=userId
+                        ,entryUserId=Just userId
                         ,entryType=Standard
                         ,entryInputFormat=inputFormat formData
                         ,entryOutputFormat=Format "html"
@@ -170,7 +170,7 @@ postNewEntryR = do
                 _-> do 
                     entryId<-runDB $ insert $ Entry   
                         {entryParentId=Nothing
-                        ,entryUserId=userId
+                        ,entryUserId=Just userId
                         ,entryType=Standard
                         ,entryInputFormat=inputFormat formData
                         ,entryOutputFormat=Format "html"
@@ -232,7 +232,7 @@ postEditEntryR  entryId = do
                     redirect $ NewEntryR
                 Just "publish"-> do
                     runDB $ update entryId                    
-                        [EntryUserId=.userId
+                        [EntryUserId=.Just userId
                         ,EntryStatus=.Publish
                         ,EntryInputTitle=.(title formData)
                         ,EntryOutputTitle=.titleHtml
@@ -249,7 +249,7 @@ postEditEntryR  entryId = do
                     redirect $ EditEntryR entryId
                 _-> do 
                     runDB  $ update entryId                    
-                        [EntryUserId=.userId
+                        [EntryUserId=.Just userId
                         ,EntryStatus=.Draft
                         ,EntryInputTitle=.(title formData)
                         ,EntryOutputTitle=.titleHtml

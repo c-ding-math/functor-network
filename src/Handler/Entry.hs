@@ -9,24 +9,30 @@ import Parse.Parser(scaleHeader)
 import Handler.EditComment(getChildIds)
 import Import
 
-getEntryR :: Path ->  EntryId -> Handler Html
+getEntryR :: UserId ->  EntryId -> Handler Html
 getEntryR authorId entryId = do    
     maybeUserId<-maybeAuthId
     maybeUser<-maybeAuth
     (entry,mEntryAuthor,comments,mCommentAuthors,mParentCommentAuthors)<-runDB $ do
         entry<-get404 entryId
-        if (entryUserId entry==authorId) && (entryStatus entry==Publish || isAdministrator maybeUserId entry) && (entryType entry==Standard)
+        if (entryUserId entry==Just authorId) && (entryStatus entry==Publish || isAdministrator maybeUserId entry) && (entryType entry==Standard)
           then do
-            mEntryAuthor<-get $ entryUserId entry
+            mEntryAuthor<- case entryUserId entry of
+                Just userId -> selectFirst [UserId==.userId] []
+                Nothing -> return Nothing
             commentIds<- getChildIds entryId
             comments<-selectList [EntryId <-. commentIds, EntryStatus==.Publish, EntryType==.Comment][Asc EntryInserted]     
-            mCommentAuthors<-mapM (get . entryUserId . entityVal) comments
+            mCommentAuthors<-mapM (\x-> case entryUserId $ entityVal x of
+                Just userId -> selectFirst [UserId==.userId] []
+                Nothing -> return Nothing ) comments
             mParentCommentAuthors<-mapM (\x -> case entryParentId $ entityVal x of
                 Just parentId -> do
                     mParentComment<-get parentId
                     case mParentComment of
                         Just parentComment -> do
-                            mParentCommentAuthor<-get $ entryUserId parentComment
+                            mParentCommentAuthor<- case entryUserId parentComment of
+                                Just userId -> selectFirst [UserId==.userId] []
+                                Nothing -> return Nothing
                             return mParentCommentAuthor
                         Nothing -> return Nothing
                 Nothing -> return Nothing
@@ -45,16 +51,15 @@ getEntryR authorId entryId = do
     defaultLayout $ do
         setTitle $ toHtml $ entryInputTitle entry
         setDescriptionIdemp $ (intercalate ";" $ entryInputTags entry) <> case mEntryAuthor of
-            Just author -> "; by " <> userName author
+            Just author -> "; by " <> (userName $ entityVal author)
             Nothing -> ""
         [whamlet|
 <div .entry :entryStatus entry == Draft:.draft #entry-#{toPathPiece entryId}>
   <h1>#{preEscapedToMarkup(scaleHeader 1 (entryOutputTitle entry))}
   <div .entry-meta>
       <span .by>
-          $maybe author<-mEntryAuthor    
-              
-              <a href=@{PageR (entryUserId entry) "About"}>#{userName author}
+          $maybe author<-mEntryAuthor      
+              <a href=@{PageR (entityKey author) "About"}>#{userName $ entityVal author}
           $nothing 
               _{MsgUnregisteredUser}
       <span .at>#{formatDateStr (entryInserted entry)}
@@ -77,7 +82,7 @@ getEntryR authorId entryId = do
               <div .entry-meta>
                   <span .by>
                       $maybe author<-mCommentAuthor                           
-                          <a href=@{PageR (entryUserId comment) "About"}>#{userName author}
+                          <a href=@{PageR (entityKey author) "About"}>#{userName $ entityVal author}
                       $nothing 
                           _{MsgUnregisteredUser}
                   <span .at>#{formatDateStr (entryInserted comment)}
@@ -86,7 +91,7 @@ getEntryR authorId entryId = do
                         <span .to>
                             <a href=#entry-#{toPathPiece parentCommentId}>
                                 $maybe parentAuthor<-mParentCommentAuthor
-                                    #{userName parentAuthor}
+                                    #{userName $ entityVal parentAuthor}
                                 $nothing
                                     _{MsgUnregisteredUser}
 

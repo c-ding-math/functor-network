@@ -12,7 +12,7 @@ getEntriesR authorId = do
     mCurrentUserId<-maybeAuthId
     (entryList,author)<-runDB $ do
         author<-get404 authorId      
-        entries<- selectList [EntryUserId==.authorId, EntryType==.Standard] [Desc EntryInserted]
+        entries<- selectList [EntryUserId==.Just authorId, EntryType==.Standard] [Desc EntryInserted]
         let entryList =[x | x<-entries, entryStatus (entityVal x) == Publish||isAdministrator mCurrentUserId (entityVal x)]          
         return $ (entryList,author)
     
@@ -39,14 +39,15 @@ entryListWidget entryList = do
     <div .entries>
         <ul>
             $forall Entity entryId entry<-entryList
-                <li :entryStatus entry == Draft:.draft>
-                    <a href=@{EntryR (entryUserId entry) entryId}>
-                        <h2>#{preEscapedToMarkup (scaleHeader 2 (entryOutputTitle entry))}
-                    <div .tags>
-                        <ul>
-                            $forall (inputTag, outputTag) <- zip (entryInputTags entry) (entryOutputTags entry)
-                                <li>
-                                    <a href=@{TagR inputTag}>#{preEscapedToMarkup outputTag}
+                $maybe authorId <- entryUserId entry
+                    <li :entryStatus entry == Draft:.draft>
+                        <a href=@{EntryR authorId entryId}>
+                            <h2>#{preEscapedToMarkup (scaleHeader 2 (entryOutputTitle entry))}
+                        <div .tags>
+                            <ul>
+                                $forall (inputTag, outputTag) <- zip (entryInputTags entry) (entryOutputTags entry)
+                                    <li>
+                                        <a href=@{TagR inputTag}>#{preEscapedToMarkup outputTag}
     |]
     toWidget [lucius|
 .entries>ul, .tags>ul {

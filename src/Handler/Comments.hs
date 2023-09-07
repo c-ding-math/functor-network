@@ -13,7 +13,7 @@ getCommentsR piece = do
     mCurrentUserId<-maybeAuthId 
     entryList<-runDB $ do
         _<-get404 piece
-        comments <- selectList [EntryUserId==.piece, EntryType==.Comment] [Desc EntryInserted]
+        comments <- selectList [EntryUserId==.Just piece, EntryType==.Comment] [Desc EntryInserted]
         entryIds <- mapM getRootEntryId $ entityKey <$> comments
         entries <- selectList [EntryId <-. entryIds, EntryType==.Standard] [Desc EntryInserted]
         return $ [x | x<-entries, entryStatus (entityVal x) == Publish||isAdministrator mCurrentUserId (entityVal x)]

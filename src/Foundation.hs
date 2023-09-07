@@ -916,7 +916,10 @@ instance YesodAuthEmail App where
             }
             .login-form-container table{
                 width:100%;
-            }     
+            }    
+            .login-form-container table tbody{
+                border:none;
+            } 
         |]
     
     checkPasswordSecurity :: AuthId site -> Text -> AuthHandler site (Either Text ())
@@ -975,10 +978,10 @@ instance Administrator Import.NoFoundation.Email where
     isAdministrator maybeUserId email | isJust maybeUserId && maybeUserId == emailUserId email =  True
     isAdministrator _ _= False
 instance Administrator File where
-    isAdministrator maybeUserId file | maybeUserId == Just (fileUserId file) =  True
+    isAdministrator maybeUserId file | isJust maybeUserId && maybeUserId == fileUserId file =  True
     isAdministrator _ _= False
 instance Administrator Entry where
-    isAdministrator maybeUserId entry | maybeUserId == Just (entryUserId entry) =  True
+    isAdministrator maybeUserId entry | isJust maybeUserId && maybeUserId == entryUserId entry =  True
     isAdministrator _ _= False
 
 isAdmin:: (Administrator a, PersistEntityBackend a ~ SqlBackend)=>Key a->Handler AuthResult

@@ -63,9 +63,11 @@ postEditCommentR entryId = do
     userId <- requireAuthId
     (rootEntryId, rootEntryAuthorId, entry) <- runDB $ do
         rootEntryId <- getRootEntryId entryId
-        rootEntryAuthorId <- entryUserId <$> get404 rootEntryId
         entry <- get404 entryId
-        return (rootEntryId, rootEntryAuthorId, entry)
+        mRootEntryAuthorId <- entryUserId <$> get404 rootEntryId  
+        case mRootEntryAuthorId of
+            Just rootEntryAuthorId -> return (rootEntryId, rootEntryAuthorId, entry)
+            Nothing -> notFound        
 
     urlRenderParams <- getUrlRenderParams
     
@@ -85,7 +87,7 @@ postEditCommentR entryId = do
             bodyHtml <- liftIO $ parse userDir parser editorData
             let commentData=Entry 
                         {entryParentId= Just entryId
-                        ,entryUserId=userId
+                        ,entryUserId=Just userId
                         ,entryType=Comment
                         ,entryInputFormat=inputFormat newCommentFormData
                         ,entryOutputFormat=Format "html"
@@ -136,5 +138,3 @@ getRootEntryId entryId = do
     case entryParentId entry of
         Just parentId -> getRootEntryId parentId
         Nothing -> return entryId
-
-
