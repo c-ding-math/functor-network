@@ -125,3 +125,28 @@ ul.task-list[class]{list-style: none;}
 ul.task-list li input[type="checkbox"] {
   margin-left:  -1.6em;
 }
+
+/* CSS for tables */
+table {
+    margin: 1em 0;
+    border-collapse: collapse;
+    width: 100%;
+    overflow-x: auto;
+    display: block;
+    font-variant-numeric: lining-nums tabular-nums;
+}
+table caption {
+    margin-bottom: 0.75em;
+}
+tbody {
+    margin-top: 0.5em;
+    border-top: 1px solid #dce4ec;
+    border-bottom: 1px solid #dce4ec;
+}
+th {
+    border-top: 1px solid #dce4ec;
+    padding: 0.25em 0.5em 0.25em 0.5em;
+}
+td {
+    padding: 0.125em 0.5em 0.25em 0.5em;
+}
