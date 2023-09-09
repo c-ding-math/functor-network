@@ -16,9 +16,10 @@ Password: Password
 ForgotPassword: Forgot password
 SetPassword: Set a new password
 EnterPasswordResetEmail: Enter your e-mail address below, and a password reset e-mail will be sent to you.
+Or: or
 Login: Login
 LoginViaEmail: Login via email
-LoginViaGoogle: Login via Google
+SignInWithGoogle: Sign in with Google
 NewGoogle: Connect to a new google account
 Email: Email
 Site: Site

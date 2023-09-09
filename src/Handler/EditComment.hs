@@ -16,8 +16,8 @@ deleteEditCommentR commentId = runDB $ do
     mRootEntry <- get rootEntryId
 
     case (isAdministrator maybeUserId comment, mRootEntry) of
-        (True, _) -> deleteEntryRecursive commentId
         (_, Just entry) | isAdministrator maybeUserId entry -> deleteEntryRecursive commentId
+        (True, _) -> deleteEntryRecursive commentId
         _ -> permissionDeniedI MsgPermissionDenied
 
 data CommentInput=CommentInput
@@ -86,8 +86,7 @@ postEditCommentR entryId = do
             userDir<-userTemporaryDirectory
             bodyHtml <- liftIO $ parse userDir parser editorData
             let commentData=Entry 
-                        {entryParentId= Just entryId
-                        ,entryUserId=Just userId
+                        {entryUserId=Just userId
                         ,entryType=Comment
                         ,entryInputFormat=inputFormat newCommentFormData
                         ,entryOutputFormat=Format "html"
@@ -106,9 +105,12 @@ postEditCommentR entryId = do
                         ,entryOutputTags=[]
                         }
                 
-            commentId <- runDB $ insert commentData
+            commentId <- runDB $ do
+                commentId<-insert commentData
+                insert_ $ EntryTree commentId entryId
+                return commentId
             
-            setMessage $ [hamlet|<a href=#entry-#{toPathPiece commentId}>Your comment</a> has been published.|] urlRenderParams
+            setMessage $ [hamlet|<a href=#entry-#{toPathPiece commentId}>Your comment</a> has been published. <a class=view href=#entry-#{toPathPiece commentId}>View</a>|] urlRenderParams
             redirect $ EntryR rootEntryAuthorId rootEntryId :#: ("entry-" <> toPathPiece commentId)
 
         FormMissing -> do
@@ -120,21 +122,24 @@ postEditCommentR entryId = do
 
 deleteEntryRecursive :: EntryId -> ReaderT SqlBackend (HandlerFor App) ()
 deleteEntryRecursive entryId = do
-    children<-getChildIds entryId
-    mapM_ deleteEntryRecursive children
-    delete entryId
+    children<-getChildIds entryId 
+    deleteWhere [EntryTreeNode <-. children++[entryId]]
+    deleteWhere [EntryId <-. children++[entryId]]
+    return ()
     
 getChildIds :: EntryId -> ReaderT SqlBackend (HandlerFor App) [EntryId]
 getChildIds entryId = do
-    children<-selectList [EntryParentId==.Just entryId] [Asc EntryInserted]
-    let childIds=entityKey <$> children
-    if null childIds then return [] else do
-        childIds'<-mapM getChildIds childIds
-        return $ childIds ++ (concat childIds')
+    tree<-selectList [EntryTreeParent==.entryId] []
+    case tree of
+        [] -> return []
+        x -> do
+            let childIds = entryTreeNode . entityVal <$> x
+            childIds'<-mapM getChildIds childIds
+            return $ childIds ++ (concat childIds')
 
 getRootEntryId :: EntryId -> ReaderT SqlBackend (HandlerFor App) EntryId
 getRootEntryId entryId = do
-    entry<-get404 entryId
-    case entryParentId entry of
-        Just parentId -> getRootEntryId parentId
+    mEntryTree<-selectFirst [EntryTreeNode==.entryId] []
+    case mEntryTree of
         Nothing -> return entryId
+        Just tree -> getRootEntryId $ entryTreeParent $ entityVal tree

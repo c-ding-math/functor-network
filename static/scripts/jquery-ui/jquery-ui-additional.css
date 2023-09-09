@@ -2,11 +2,13 @@
     background-color:white;
     border-radius: 0 0 0 0;
     border:solid 1px #ccc;
+    border-radius: 6px;
     padding:1em;
     z-index: 10001!important;
 }
 .ui-dialog-titlebar{
     border-bottom: 1px solid #ccc;
+    border-radius: 4px;
     background-color: #333;
     color: #fff;
 }

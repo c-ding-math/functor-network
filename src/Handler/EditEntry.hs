@@ -146,8 +146,7 @@ postNewEntryR = do
             case entryAction of
                 Just "publish"-> do
                     entryId<-runDB $ insert $ Entry   
-                        {entryParentId=Nothing
-                        ,entryUserId=Just userId
+                        {entryUserId=Just userId
                         ,entryType=Standard
                         ,entryInputFormat=inputFormat formData
                         ,entryOutputFormat=Format "html"
@@ -165,12 +164,11 @@ postNewEntryR = do
                         ,entryInputTags=(inputToList (tags formData))
                         ,entryOutputTags=tagHtmls
                         }
-                    setMessage $ [hamlet|Your blog post, <a href=@{EntryR userId entryId}>#{title formData}</a>, has been published.|] urlRenderParams
+                    setMessage $ [hamlet|Your blog post, <a href=@{EntryR userId entryId}>#{title formData}</a>, has been published. <a class=view href=@{EntryR userId entryId}>View</a>|] urlRenderParams
                     redirect $ EditEntryR entryId
                 _-> do 
                     entryId<-runDB $ insert $ Entry   
-                        {entryParentId=Nothing
-                        ,entryUserId=Just userId
+                        {entryUserId=Just userId
                         ,entryType=Standard
                         ,entryInputFormat=inputFormat formData
                         ,entryOutputFormat=Format "html"
@@ -188,7 +186,7 @@ postNewEntryR = do
                         ,entryInputTags=(inputToList (tags formData))
                         ,entryOutputTags=tagHtmls
                         }
-                    setMessage $ [hamlet|Your blog post, <a href=@{EntryR userId entryId}>#{title formData}</a>, has been saved.|] urlRenderParams
+                    setMessage $ [hamlet|Your blog post, <a href=@{EntryR userId entryId}>#{title formData}</a>, has been saved. <a class=view href=@{EntryR userId entryId}>View</a>|] urlRenderParams
                     redirect $ EditEntryR entryId
         FormMissing -> do
             setMessageI MsgFormMissing
@@ -245,7 +243,7 @@ postEditEntryR  entryId = do
                         ,EntryInputTags=.(inputToList (tags formData))
                         ,EntryOutputTags=.tagHtmls
                         ]
-                    setMessage $ [hamlet|Your blog post, <a href=@{EntryR userId entryId}>#{title formData}</a>, has been published.|] urlRenderParams --Message can't be too long, use title text instead of titleHtml
+                    setMessage $ [hamlet|Your blog post, <a href=@{EntryR userId entryId}>#{title formData}</a>, has been published. <a class=view href=@{EntryR userId entryId}>View</a>|] urlRenderParams --Message can't be too long, use title text instead of titleHtml
                     redirect $ EditEntryR entryId
                 _-> do 
                     runDB  $ update entryId                    
@@ -262,7 +260,7 @@ postEditEntryR  entryId = do
                         ,EntryInputTags=.(inputToList (tags formData))
                         ,EntryOutputTags=.tagHtmls
                         ]
-                    setMessage $ [hamlet|Your blog post, <a href=@{EntryR userId entryId}>#{title formData}</a>, has been saved.|] urlRenderParams
+                    setMessage $ [hamlet|Your blog post, <a href=@{EntryR userId entryId}>#{title formData}</a>, has been saved. <a class=view href=@{EntryR userId entryId}>View</a>|] urlRenderParams
                     redirect $ EditEntryR entryId
         FormMissing -> do          
             setMessageI MsgFormMissing

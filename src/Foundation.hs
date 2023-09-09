@@ -767,13 +767,18 @@ instance YesodAuthEmail App where
                 <div id="emailLoginForm">
                     ^{widget}
                     <div>
-                        <button type=submit .btn .btn-primary>
+                        <button .btn.btn-primary type=submit>
                             _{Msg.LoginViaEmail}
                         
-                        <a href="@{toParent registerR}">
+                        <a .btn.btn-default href="@{toParent registerR}">
                             _{Msg.RegisterLong}
-                        <a href="@{toParent forgotPasswordR}">
+                        <a .btn.btn-default href="@{toParent forgotPasswordR}">
                             _{MsgForgotPassword}
+                        <div .or>
+                            <span>_{MsgOr}
+                        <a .btn.btn-default .google-button href="@{AuthR (PluginR "google" ["forward"])}">
+                            <img src=@{StaticR icons_google_logo_png} alt=_{MsgSignInWithGoogle}>
+                            <span>_{MsgSignInWithGoogle}
         |]
         loginStyle
         
@@ -799,7 +804,13 @@ instance YesodAuthEmail App where
                     fsName = Just "password",
                     fsAttrs = [("class", "form-control")]
                 }
-            loginStyle=toWidget [lucius|
+            loginStyle=do
+                toWidgetHead [hamlet|
+                <link rel="preconnect" href="https://fonts.googleapis.com">
+                <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+                <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@500&display=swap" rel="stylesheet">
+                |]
+                toWidget [lucius|
                 .login-form-container, .login-form-container + a{
                     margin: auto;    
                     width: 25em;        
@@ -821,11 +832,38 @@ instance YesodAuthEmail App where
                     display:block;
                     text-align:center;
                     margin:0.5em auto;
+                    display:none;
                 }
                 .login-form-container h3{
                     text-align:center;
                 }
-            |]
+                .login-form-container div.or{
+                    text-align:center;
+                    margin:1em 0 1.5em;
+                    border-bottom: 1px solid #dce4ec; 
+                    line-height: 1px;
+                }
+                .login-form-container .or span{
+                    padding:0 1em; 
+                    background-color: #fff;
+                }
+                .login-form-container a.google-button{
+                    display:flex;
+                    align-items: center;
+                    background-color: #fff;
+                    color: #333;            
+                    font-family: 'Roboto', sans-serif;
+                    border: 1px solid #dce4ec;    
+                }
+                .login-form-container .google-button img{
+                    height: 1.5em;
+                }
+                .login-form-container .google-button span{
+                    flex-grow:1;
+                    text-align:center;
+                }
+
+                |]
 
     --needOldPassword _ =return False
 

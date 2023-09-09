@@ -121,8 +121,7 @@ postEditPage0R title = do
                 Just "publish"-> case mEntry of 
                     Nothing -> do
                         _<-runDB $ insert $ Entry   
-                            {entryParentId=Nothing
-                            ,entryUserId=Just userId
+                            {entryUserId=Just userId
                             ,entryType=Page0
                             ,entryInputFormat=(inputFormat formData)
                             ,entryOutputFormat=Format "html"
@@ -141,7 +140,7 @@ postEditPage0R title = do
                             ,entryOutputTags=[]
                             }
 
-                        setMessage $ [hamlet|Your page, <a href=@{Page0R title}>#{title}</a>, has been updated.|] urlRenderParams
+                        setMessage $ [hamlet|Your page, <a href=@{Page0R title}>#{title}</a>, has been updated. <a class=view href=@{Page0R title}>View</a>|] urlRenderParams
                            
                         redirect $ EditPage0R title
                     Just (Entity entryId _) -> do
@@ -155,15 +154,14 @@ postEditPage0R title = do
                             ,EntryInputCitation=.(citation formData)
                             ,EntryUpdated=.currentTime
                             ]
-                        setMessage $ [hamlet|Your page, <a href=@{Page0R title}>#{title}</a>, has been updated.|] urlRenderParams
+                        setMessage $ [hamlet|Your page, <a href=@{Page0R title}>#{title}</a>, has been updated. <a class=view href=@{Page0R title}>View</a>|] urlRenderParams
                         
                         redirect $ EditPage0R title
 
                 Just "draft"-> case mEntry of 
                         Nothing -> do
                             _<-runDB $ insert $ Entry   
-                                {entryParentId=Nothing
-                                ,entryUserId=Just userId
+                                {entryUserId=Just userId
                                 ,entryType=Page0
                                 ,entryInputFormat=(inputFormat formData)
                                 ,entryOutputFormat=Format "html"
@@ -182,7 +180,7 @@ postEditPage0R title = do
                                 ,entryOutputTags=[]
                                 }
 
-                            setMessage $ [hamlet|Your page, <a href=@{Page0R title}>#{title}</a>, has been saved.|] urlRenderParams
+                            setMessage $ [hamlet|Your page, <a href=@{Page0R title}>#{title}</a>, has been saved. <a class=view href=@{Page0R title}>View</a>|] urlRenderParams
                             
                             redirect $ EditPage0R title
 
@@ -198,7 +196,7 @@ postEditPage0R title = do
                                 ,EntryUpdated=.currentTime
                                 ]
 
-                            setMessage $ [hamlet|Your page, <a href=@{Page0R title}>#{title}</a>, has been saved.|] urlRenderParams
+                            setMessage $ [hamlet|Your page, <a href=@{Page0R title}>#{title}</a>, has been saved. <a class=view href=@{Page0R title}>View</a>|] urlRenderParams
                             
                             redirect $ EditPage0R title
 

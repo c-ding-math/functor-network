@@ -123,8 +123,7 @@ postEditPageR title = do
                         Just "publish"-> case mEntry of 
                             Nothing -> do
                                 _<-runDB $ insert $ Entry   
-                                    {entryParentId=Nothing
-                                    ,entryUserId=Just userId
+                                    {entryUserId=Just userId
                                     ,entryType=Page
                                     ,entryInputFormat=(inputFormat formData)
                                     ,entryOutputFormat=Format "html"
@@ -143,7 +142,7 @@ postEditPageR title = do
                                     ,entryOutputTags=[]
                                     }
 
-                                setMessage $ [hamlet|<a href=@{PageR userId title}>Your profile page</a> has been updated.|] urlRenderParams
+                                setMessage $ [hamlet|<a href=@{PageR userId title}>Your profile page</a> has been updated. <a class=view href=@{PageR userId title}>View</a>|] urlRenderParams
                                    
                                 redirect $ EditPageR title
                             Just (Entity entryId _) -> do
@@ -158,15 +157,14 @@ postEditPageR title = do
                                     ,EntryUpdated=.currentTime
                                     ]
 
-                                setMessage $ [hamlet|<a href=@{PageR userId title}>Your profile page</a> has been updated.|] urlRenderParams
+                                setMessage $ [hamlet|<a href=@{PageR userId title}>Your profile page</a> has been updated. <a class=view href=@{PageR userId title}>View</a>|] urlRenderParams
                                 
                                 redirect $ EditPageR title
 
                         Just "draft"-> case mEntry of 
                                 Nothing -> do
                                     _<-runDB $ insert $ Entry   
-                                        {entryParentId=Nothing
-                                        ,entryUserId=Just userId
+                                        {entryUserId=Just userId
                                         ,entryType=Page
                                         ,entryInputFormat=(inputFormat formData)
                                         ,entryOutputFormat=Format "html"
@@ -185,7 +183,7 @@ postEditPageR title = do
                                         ,entryOutputTags=[]
                                         }
 
-                                    setMessage $ [hamlet|Your page, <a href=@{PageR userId title}>#{title}</a>, has been saved.|] urlRenderParams
+                                    setMessage $ [hamlet|Your page, <a href=@{PageR userId title}>#{title}</a>, has been saved. <a class=view href=@{PageR userId title}>View</a>|] urlRenderParams
                                     
                                     redirect $ EditPageR title
 
@@ -201,7 +199,7 @@ postEditPageR title = do
                                         ,EntryUpdated=.currentTime
                                         ]
 
-                                    setMessage $ [hamlet|Your page, <a href=@{PageR userId title}>#{title}</a>, has been saved.|] urlRenderParams
+                                    setMessage $ [hamlet|Your page, <a href=@{PageR userId title}>#{title}</a>, has been saved. <a class=view href=@{PageR userId title}>View</a>|] urlRenderParams
                                     
                                     redirect $ EditPageR title
 

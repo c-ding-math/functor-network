@@ -32,7 +32,6 @@ Login --via third parties
     UniqueLogin plugin ident
 
 Entry
-    parentId EntryId Maybe
     userId UserId Maybe
     type EntryType
     inputFormat Format 
@@ -50,9 +49,9 @@ Entry
     inputTags [Text]
     outputTags [Text]
 
-EntryTree 
+EntryTree
     node EntryId
-    parent EntryId Maybe
+    parent EntryId
     
 File 
     filename String

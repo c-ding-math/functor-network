@@ -91,8 +91,18 @@ $(document).ready(function(){
 		if ((e.keyCode == 10 || e.keyCode == 13) && (e.ctrlKey || e.metaKey)) {
 			updatePreviewButton.trigger("mouseup");	
 		}
-    })
-    
+    });
+
+    //prevent refeshing page if the content is not saved
+    var originalContent=textarea.val();
+    $("form").submit(function(){
+        originalContent=textarea.val();
+    });
+    $(window).on('beforeunload', function(){
+        if (textarea.val()!=originalContent){
+            return confirm("You have unsaved changes. Are you sure you want to leave this page?");
+        }
+    });
 });
 
 $(document).ready(function(){

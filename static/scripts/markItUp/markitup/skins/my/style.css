@@ -8,7 +8,7 @@
 .markItUpContainer>*{
 	flex-grow: 100%;
 }
-.markItUpHeader li{
+.markItUpHeader ul{
 	list-style: none;	
 }
 

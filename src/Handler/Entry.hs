@@ -13,7 +13,7 @@ getEntryR :: UserId ->  EntryId -> Handler Html
 getEntryR authorId entryId = do    
     maybeUserId<-maybeAuthId
     maybeUser<-maybeAuth
-    (entry,mEntryAuthor,comments,mCommentAuthors,mParentCommentAuthors)<-runDB $ do
+    (entry,mEntryAuthor,comments,mCommentAuthors,mCommentParentIds,mCommentParentAuthors)<-runDB $ do
         entry<-get404 entryId
         if (entryUserId entry==Just authorId) && (entryStatus entry==Publish || isAdministrator maybeUserId entry) && (entryType entry==Standard)
           then do
@@ -25,19 +25,27 @@ getEntryR authorId entryId = do
             mCommentAuthors<-mapM (\x-> case entryUserId $ entityVal x of
                 Just userId -> selectFirst [UserId==.userId] []
                 Nothing -> return Nothing ) comments
-            mParentCommentAuthors<-mapM (\x -> case entryParentId $ entityVal x of
-                Just parentId -> do
-                    mParentComment<-get parentId
-                    case mParentComment of
-                        Just parentComment -> do
-                            mParentCommentAuthor<- case entryUserId parentComment of
-                                Just userId -> selectFirst [UserId==.userId] []
-                                Nothing -> return Nothing
-                            return mParentCommentAuthor
-                        Nothing -> return Nothing
-                Nothing -> return Nothing
+            mCommentParentIds<-mapM (\comment -> do
+                mEntryTree<-selectFirst [EntryTreeNode==.entityKey comment] [] 
+                case mEntryTree of
+                    Just tree -> return $ Just $ entryTreeParent $ entityVal tree
+                    Nothing -> return Nothing
                 ) comments
-            return $ (entry,mEntryAuthor,comments,mCommentAuthors,mParentCommentAuthors)        
+
+            mCommentParentAuthors<-mapM (\mCommentParentId -> do
+                case mCommentParentId of
+                    Just parentId -> do
+                        mParentComment<-get parentId
+                        case mParentComment of
+                            Just parentComment -> do
+                                mCommentParentAuthor<- case entryUserId parentComment of
+                                    Just userId -> selectFirst [UserId==.userId] []
+                                    Nothing -> return Nothing
+                                return mCommentParentAuthor
+                            Nothing -> return Nothing
+                    Nothing -> return Nothing
+                ) mCommentParentIds
+            return $ (entry,mEntryAuthor,comments,mCommentAuthors,mCommentParentIds,mCommentParentAuthors)        
           else notFound
 
     formatParam <- lookupGetParam "format"
@@ -77,7 +85,7 @@ getEntryR authorId entryId = do
         <p style="display:none">_{MsgNoComment}
     $else
         <h3>_{MsgComments}
-        $forall (Entity commentId comment,mCommentAuthor,mParentCommentAuthor)<-zip3 comments mCommentAuthors mParentCommentAuthors
+        $forall (Entity commentId comment,mCommentAuthor,mCommentParentId,mCommentParentAuthor)<-zip4 comments mCommentAuthors mCommentParentIds mCommentParentAuthors
             <div .comment id=entry-#{toPathPiece commentId}> 
               <div .entry-meta>
                   <span .by>
@@ -86,11 +94,11 @@ getEntryR authorId entryId = do
                       $nothing 
                           _{MsgUnregisteredUser}
                   <span .at>#{formatDateStr (entryInserted comment)}
-                  $maybe parentCommentId<-entryParentId comment
+                  $maybe parentCommentId<-mCommentParentId
                     $if parentCommentId /= entryId
                         <span .to>
                             <a href=#entry-#{toPathPiece parentCommentId}>
-                                $maybe parentAuthor<-mParentCommentAuthor
+                                $maybe parentAuthor<-mCommentParentAuthor
                                     #{userName $ entityVal parentAuthor}
                                 $nothing
                                     _{MsgUnregisteredUser}

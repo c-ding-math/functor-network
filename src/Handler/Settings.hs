@@ -107,7 +107,7 @@ getSettingsR = do
                             <a .btn .btn-default href=@{AuthR registerR}>_{MsgNewEmail}
                     <p>
                 
-                    <label>_{MsgLoginViaGoogle}
+                    <label>_{MsgSignInWithGoogle}
                     <div>
                         $if null googles 
                             <a .btn .btn-default href=@{AuthR (PluginR "google" ["forward"])}>_{MsgNewGoogle}
