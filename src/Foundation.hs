@@ -451,7 +451,7 @@ instance YesodAuth App where
                             Nothing -> do 
                                 --let uIdent = ident <> "@" <> plugin
                                 uid<-insert $ User
-                                    {userName=""
+                                    {userName=msgRender MsgAnonymousUser
                                     ,userPassword=Nothing
                                     --,userIdent=uIdent
                                     ,userInserted=currentTime
@@ -460,14 +460,17 @@ instance YesodAuth App where
                                     ,userDefaultPreamble=Just (Textarea "\\usepackage{amsmath, amssymb, amsfonts}\n\\newcommand{\\NN}{\\mathbb{N}}")
                                     ,userDefaultCitation=Nothing
                                     }
-                                let name = case plugin of
-                                        "google"->
-                                            case Yesod.Auth.Extra.googleUserName <$> Yesod.Auth.OAuth2.getUserResponseJSON creds of
-                                                Right n->n
-                                                _ -> (msgRender MsgUser) <>" " <> (toPathPiece uid)
-                                        _ -> (msgRender MsgUser) <>" " <> (toPathPiece uid)
+                                case plugin of
+                                    "google" -> do
+                                        case Yesod.Auth.Extra.googleUserName <$> Yesod.Auth.OAuth2.getUserResponseJSON creds of
+                                                Right n-> do
+                                                    update uid [UserName=.n]
+                                                    return ()
+                                                _ -> return ()
+                                        
+                                    _ -> return ()
+            
                                 _<-insert $ Login {loginIdent=ident,loginPlugin=plugin,loginUserId=Just uid,loginToken=Nothing,loginVerified=True,loginInserted=currentTime}
-                                _<-update uid [UserName=.name]
                                 return $ Authenticated uid
                                 
 {-                                case eUser of
@@ -487,7 +490,7 @@ instance YesodAuth App where
 -}
     -- You can add other plugins like Google Email, email or OAuth here
     authPlugins :: App -> [AuthPlugin App]
-    authPlugins app = [authEmail] ++ [Yesod.Auth.OAuth2.Google.oauth2Google (appGoogleClientId (appSettings app)) (appGoogleClientSecret (appSettings app))] ++ extraAuthPlugins
+    authPlugins app = [authEmail] ++ [Yesod.Auth.OAuth2.Google.oauth2GoogleScoped ["openid", "email", "profile"] (appGoogleClientId (appSettings app)) (appGoogleClientSecret (appSettings app))] ++ extraAuthPlugins
         -- Enable authDummy login if enabled.
         where extraAuthPlugins = [authDummy | appAuthDummyLogin $ appSettings app]
 
@@ -776,7 +779,7 @@ instance YesodAuthEmail App where
                         <div .or>
                             <span>_{MsgOr}
                         <a .btn.btn-default .google-button href="@{AuthR (PluginR "google" ["forward"])}">
-                            <img src=@{StaticR icons_google_logo_png} alt=_{MsgSignInWithGoogle}>
+                            <img src=@{StaticR icons_google_logo_png}>
                             <span>_{MsgSignInWithGoogle}
         |]
         loginStyle
