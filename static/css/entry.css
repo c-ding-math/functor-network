@@ -162,3 +162,11 @@ td {
 .ui-dialog{
     min-width:10cm;
 }
+
+/* flaot */
+.float-left{
+    float:left;
+}
+.float-right{
+    float:right;
+}

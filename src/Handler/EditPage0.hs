@@ -56,6 +56,7 @@ getEditPage0R title = do
     formatParam <- lookupGetParam "format"
     let format = case (formatParam,mEntry) of
             (Just "tex",_) -> Format "tex"
+            (Just "md",_) -> Format "md"
             (_,Just entry) -> entryInputFormat $ entityVal entry
             _ -> Format "md"
 

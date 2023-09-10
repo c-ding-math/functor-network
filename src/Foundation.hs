@@ -201,7 +201,7 @@ instance Yesod App where
                             , menuItemAccessCallback = True
                             }
                         , FooterRight $ MenuItem
-                            { menuItemLabel = "Version 20230823"
+                            { menuItemLabel = "Version 20230909"
                             , menuItemRoute = Page0R "Changelog"
                             , menuItemAccessCallback = True
                             }
@@ -372,7 +372,7 @@ instance YesodBreadcrumbs App where
             maybeUser <- runDB $ get pathPiece
             let siteName = case maybeUser of
                     Just user -> userName user
-                    _ -> "Unknown"
+                    _ -> "Anonymous User"
             return (siteName, Just Home0R)
         PageR pathPiece _-> parentLink pathPiece
         -- EntriesR pathPiece -> parentLink pathPiece
@@ -387,7 +387,7 @@ instance YesodBreadcrumbs App where
             maybeUser <- runDB $ get pathPiece
             return $ case maybeUser of
                 Just user -> (userName user, Just (HomeR pathPiece))
-                _ -> ("Unknown", Just (HomeR pathPiece))
+                _ -> ("Anonymous User", Just (HomeR pathPiece))
             
 
 -- How to run database actions.
@@ -580,7 +580,7 @@ instance YesodAuthEmail App where
             Just email -> do
                 let insertNewUser = do
                         newUserId<-insert $ User 
-                                {userName=""
+                                {userName=msgRender MsgAnonymousUser
                                 ,userPassword=Nothing
                                 --,userIdent=emailAddress email
                                 ,userInserted=currentTime
@@ -589,8 +589,7 @@ instance YesodAuthEmail App where
                                 ,userDefaultPreamble=Just (Textarea "\\usepackage{amsmath, amssymb, amsfonts}\n\\newcommand{\\NN}{\\mathbb{N}}")
                                 ,userDefaultCitation=Nothing
                                 }
-                        let name = (msgRender MsgUser) <>" " <> (toPathPiece newUserId)
-                        _<-update newUserId [UserName=.name]
+                        
                         return newUserId
                         {-case newUser of
                             Left (Entity uid _) -> return uid -- existing user

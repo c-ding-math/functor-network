@@ -27,6 +27,7 @@ Profile: Profile
 User: User
 Users: Members
 UnregisteredUser: [Unregistered]
+AnonymousUser: Anonymous User
 Name: Name
 Avatar: Avatar
 About: About

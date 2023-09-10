@@ -9,6 +9,7 @@ import Import
 import Yesod.Form.Bootstrap3
 import Handler.Parser(parse,markItUpWidget,userTemporaryDirectory)
 import Parse.Parser (mdToHtml,texToHtml,EditorData(..))
+import Text.Shakespeare.Text
 --import qualified Data.Text as T
 --import System.Directory
 
@@ -17,9 +18,6 @@ data EntryInput=EntryInput
     , inputFormat:: Format
     , content::Textarea 
     , citation:: Maybe Textarea}
-
-defaultContent::Textarea
-defaultContent=Textarea "Apparently, this user prefers to keep an air of mystery."
 
 pageForm::Maybe EntryInput -> Html -> MForm Handler (FormResult EntryInput, Widget)
 pageForm inputs=renderBootstrap3 BootstrapBasicForm $ EntryInput
@@ -57,6 +55,7 @@ getEditPageR title = do
             formatParam <- lookupGetParam "format"
             let format = case (formatParam,mEntry) of
                     (Just "tex",_) -> Format "tex"
+                    (Just "md",_) -> Format "md"
                     (_,Just entry) -> entryInputFormat $ entityVal entry
                     _ -> Format "md"
 
@@ -64,8 +63,17 @@ getEditPageR title = do
                 Just entry-> do
                     generateFormPost $ pageForm $ Just $ EntryInput (entryInputPreamble entry) format (entryInputBody entry) (entryInputCitation entry)
                 Nothing->do 
+                                    
+                    urlRender<-getUrlRender
+                    let defaultAboutInput = Textarea ([st|
+![](#{urlRender $ StaticR $ StaticRoute ["icons","user-photo.png"] []} "Avatar"){.float-right height=6em}
 
-                    generateFormPost $ pageForm $ Just $ EntryInput (userDefaultPreamble user) format defaultContent (userDefaultCitation user)
+### Basic Information
+
+**Name**: #{userName user}\
+**Homepage**: [#{urlRender (HomeR userId)}](#{urlRender (HomeR userId)})
+|]::Text)
+                    generateFormPost $ pageForm $ Just $ EntryInput (userDefaultPreamble user) format defaultAboutInput (userDefaultCitation user)
             defaultLayout $ do
                 setTitleI MsgEdit
                 [whamlet|
