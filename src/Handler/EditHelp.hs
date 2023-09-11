@@ -45,12 +45,12 @@ getEditHelpR "syntax" = do
     formatParam <- lookupGetParam "format"
     (maybeSyntax, maybeDemo, format, title) <- case formatParam of
             Just "tex" -> do
-                maybeSyntax<-runDB $ selectFirst [EntryInputTitle==."Latex Editor Help",EntryType==.Page0,EntryStatus==.Draft] [Desc EntryInserted]
-                maybeDemo <-runDB $ selectFirst [EntryInputTitle==."Sample post written in latex",EntryType==.Page0,EntryStatus==.Publish] [Desc EntryInserted]
+                maybeSyntax<-runDB $ selectFirst [EntryInputTitle==."Latex Help",EntryType==.Page0,EntryStatus==.Draft] [Desc EntryInserted]
+                maybeDemo <-runDB $ selectFirst [EntryInputTitle==."a sample post written in latex",EntryType==.Page0,EntryStatus==.Publish] [Desc EntryInserted]
                 return (maybeSyntax, maybeDemo, Format "tex", "Latex Help"::Text)
             _ -> do
-                maybeSyntax<-runDB $ selectFirst [EntryInputTitle==."Markdown Editor Help",EntryType==.Page0,EntryStatus==.Draft] [Desc EntryInserted]
-                maybeDemo <-runDB $ selectFirst [EntryInputTitle==."Sample post written in markdown",EntryType==.Page0,EntryStatus==.Publish] [Desc EntryInserted]
+                maybeSyntax<-runDB $ selectFirst [EntryInputTitle==."Markdown Help",EntryType==.Page0,EntryStatus==.Draft] [Desc EntryInserted]
+                maybeDemo <-runDB $ selectFirst [EntryInputTitle==."a sample post written in markdown",EntryType==.Page0,EntryStatus==.Publish] [Desc EntryInserted]
                 return (maybeSyntax, maybeDemo, Format "md", "Markdown Help"::Text)
     entryWidget <- case maybeDemo of
         Just (Entity _ entry) -> do
@@ -82,11 +82,11 @@ getEditHelpR "editor" = do
     (maybeSyntax, maybeDemo, format) <- case formatParam of
             Just "tex" -> do
                 maybeSyntax<-runDB $ selectFirst [EntryInputTitle==."Latex Editor Help",EntryType==.Page0,EntryStatus==.Draft] [Desc EntryInserted]
-                maybeDemo <-runDB $ selectFirst [EntryInputTitle==."Sample post written in latex",EntryType==.Page0,EntryStatus==.Publish] [Desc EntryInserted]
+                maybeDemo <-runDB $ selectFirst [EntryInputTitle==."a sample post written in latex",EntryType==.Page0,EntryStatus==.Publish] [Desc EntryInserted]
                 return (maybeSyntax, maybeDemo, Format "tex")
             _ -> do
                 maybeSyntax<-runDB $ selectFirst [EntryInputTitle==."Markdown Editor Help",EntryType==.Page0,EntryStatus==.Draft] [Desc EntryInserted]
-                maybeDemo <-runDB $ selectFirst [EntryInputTitle==."Sample post written in markdown",EntryType==.Page0,EntryStatus==.Publish] [Desc EntryInserted]
+                maybeDemo <-runDB $ selectFirst [EntryInputTitle==."a sample post written in markdown",EntryType==.Page0,EntryStatus==.Publish] [Desc EntryInserted]
                 return (maybeSyntax, maybeDemo, Format "md")
     
     entryWidget <- case maybeDemo of

@@ -17,24 +17,26 @@ getPageR userId _ = do
             defaultLayout $ do
                 setTitleI MsgAbout
                 [whamlet|
-<h1>_{MsgAbout}
-<p>Apparently, this user prefers to keep an air of mystery.
-$if mCurrentUserId == Just userId
-    <ul .entry-menu>
-        <li>
-            <a href=@{EditPageR "About"}>_{MsgEdit}
+<div .entry>
+    <h1>_{MsgAbout}
+    <p>Apparently, this user prefers to keep an air of mystery.
+    $if mCurrentUserId == Just userId
+        <ul .entry-menu>
+            <li>
+                <a href=@{EditPageR "About"}>_{MsgEdit}
                 |]
                 
         Just (Entity _ entry) ->
             defaultLayout $ do 
                 setTitleI MsgAbout
                 [whamlet|
-<h1>_{MsgAbout}
-#{preEscapedToMarkup (entryOutputBody entry)}
-$if mCurrentUserId == Just userId
-    <ul .entry-menu>
-        <li>
-            <a href=@{EditPageR "About"}>_{MsgEdit}
+<div .entry :entryStatus entry == Draft:.draft>
+    <h1>_{MsgAbout}
+    <div .entry-content>#{preEscapedToMarkup (entryOutputBody entry)}
+    $if mCurrentUserId == Just userId
+        <ul .entry-menu>
+            <li>
+                <a href=@{EditPageR "About"}>_{MsgEdit}
                 |]
 
 

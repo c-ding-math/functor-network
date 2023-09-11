@@ -82,7 +82,7 @@ getNewEntryR =  do
 getEditEntryR :: EntryId -> Handler Html
 getEditEntryR entryId = do
     --userId <- requireAuthId
-    (entry, tags)<-runDB $ do    
+    (entry, entryTags)<-runDB $ do    
         entry<-get404 entryId
         if entryType entry==Standard
             then return (entry,entryInputTags entry)
@@ -93,7 +93,7 @@ getEditEntryR entryId = do
             Just "tex" -> Format "tex"
             Just "md" -> Format "md"
             _ -> entryInputFormat entry
-    (entryWidget, entryEnctype) <- generateFormPost $ entryForm $ Just $ EntryInput (entryInputTitle entry) (entryInputPreamble entry) format (entryInputBody entry) (entryInputCitation entry) (listToInput tags) 
+    (entryWidget, entryEnctype) <- generateFormPost $ entryForm $ Just $ EntryInput (entryInputTitle entry) (entryInputPreamble entry) format (entryInputBody entry) (entryInputCitation entry) (listToInput entryTags) 
     defaultLayout $ do
         setTitleI MsgEdit
         [whamlet|
