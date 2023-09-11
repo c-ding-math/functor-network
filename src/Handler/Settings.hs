@@ -186,6 +186,10 @@ getSettingsR = do
 
         |]
         toWidget [lucius|
+            section+section{
+                margin-top:2em;
+                border-top:1px solid #dce4ec;
+            }
             .delete-setting{
                 color:#b4bcc2;
             }

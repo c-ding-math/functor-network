@@ -23,7 +23,7 @@ getEntriesR authorId = do
                 $if mCurrentUserId == Just authorId
                     <a .btn.btn-primary .new-entry.navbar-right href=@{NewEntryR}>_{MsgNewPost}
             $if null entryList
-                <p>_{MsgNoPost}
+                <p>_{MsgNoPost} #
                     $if mCurrentUserId == Just authorId                      
                         <a href=@{NewEntryR}>_{MsgFirstPost}
             $else

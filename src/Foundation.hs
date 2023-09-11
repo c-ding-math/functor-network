@@ -426,10 +426,11 @@ instance YesodAuth App where
         msgRender<-getMessageRender
         
         case plugin of 
-            x|x=="email-verify" || x=="email" ->do
+            
+            x| x=="email" || x=="email-verify" -> do
                 mEmail<-getBy $ UniqueEmail ident
                 case mEmail of
-                    Just (Entity _ email) -> do
+                    Just (Entity _ email) | emailVerified email -> do
                         let muid=emailUserId email
                         case muid of 
                             Just uid->return $ Authenticated uid
@@ -490,9 +491,15 @@ instance YesodAuth App where
 -}
     -- You can add other plugins like Google Email, email or OAuth here
     authPlugins :: App -> [AuthPlugin App]
-    authPlugins app = [authEmail] ++ [Yesod.Auth.OAuth2.Google.oauth2GoogleScoped ["openid", "email", "profile"] (appGoogleClientId (appSettings app)) (appGoogleClientSecret (appSettings app))] ++ extraAuthPlugins
+    authPlugins app = [authEmail] ++ [Yesod.Auth.OAuth2.Google.oauth2GoogleScopedWidget googleButtonWidget ["openid", "email", "profile"] (appGoogleClientId (appSettings app)) (appGoogleClientSecret (appSettings app))] ++ extraAuthPlugins
         -- Enable authDummy login if enabled.
-        where extraAuthPlugins = [authDummy | appAuthDummyLogin $ appSettings app]
+        where 
+            googleButtonWidget = [whamlet|
+                <span .btn .btn-default .google-button>
+                    <img src=@{StaticR icons_google_logo_png}>
+                    <span>_{MsgSignInWithGoogle}
+            |]
+            extraAuthPlugins = [authDummy | appAuthDummyLogin $ appSettings app]
 
 instance YesodAuthEmail App where
     type AuthEmailId App = EmailId
@@ -778,9 +785,6 @@ instance YesodAuthEmail App where
                             _{MsgForgotPassword}
                         <div .or>
                             <span>_{MsgOr}
-                        <a .btn.btn-default .google-button href="@{AuthR (PluginR "google" ["forward"])}">
-                            <img src=@{StaticR icons_google_logo_png}>
-                            <span>_{MsgSignInWithGoogle}
         |]
         loginStyle
         
@@ -807,20 +811,20 @@ instance YesodAuthEmail App where
                     fsAttrs = [("class", "form-control")]
                 }
             loginStyle=do
-                toWidgetHead [hamlet|
+                {-toWidgetHead [hamlet|
                 <link rel="preconnect" href="https://fonts.googleapis.com">
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
                 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@500&display=swap" rel="stylesheet">
-                |]
+                |]-}
                 toWidget [lucius|
-                .login-form-container, .login-form-container + a{
+                .login-form-container{
                     margin: auto;    
                     width: 25em;        
                 }
                 .login-form-container{
                     padding:2.5em 2.5em 0
                 }
-                .login-form-container input, .login-form-container button{
+                .login-form-container input, .login-form-container button, .google-button{
                     width:100%;
                     margin-bottom:1em;
                 }
@@ -829,12 +833,6 @@ instance YesodAuthEmail App where
                     text-align:center;
                     width:100%;
                     margin:0.5em 0;
-                }
-                .login-form-container + a{
-                    display:block;
-                    text-align:center;
-                    margin:0.5em auto;
-                    display:none;
                 }
                 .login-form-container h3{
                     text-align:center;
@@ -849,18 +847,30 @@ instance YesodAuthEmail App where
                     padding:0 1em; 
                     background-color: #fff;
                 }
-                .login-form-container a.google-button{
+                .login-form-container + a{
+                    display:block;
+                    text-align:center;
+                    margin:0.5em auto;
+                    width:20em;
+                }
+                .login-form-container + a:hover{
+                    text-decoration:none;
+                }
+                .google-button{
                     display:flex;
                     align-items: center;
                     background-color: #fff;
                     color: #333;            
-                    font-family: 'Roboto', sans-serif;
+                    /*font-family: 'Roboto', sans-serif;*/
                     border: 1px solid #dce4ec;    
                 }
-                .login-form-container .google-button img{
+                .google-button:hover{
+                    background-color: #fff;
+                }
+                .google-button img{
                     height: 1.5em;
                 }
-                .login-form-container .google-button span{
+                .google-button span{
                     flex-grow:1;
                     text-align:center;
                 }
