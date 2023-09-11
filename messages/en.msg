@@ -24,6 +24,8 @@ Email: Email
 Site: Site
 Profile: Profile
 User: User
+Users: Members
+UnregisteredUser: [Unregistered]
 Name: Name
 Avatar: Avatar
 About: About
@@ -77,7 +79,7 @@ InputFormat: Which format do you want to write you post in?
 OutputFormat: Which format do you want to publish your post in?
 Format: format
 Post: Post
-Entries: Posts
+Posts: Posts
 NewPost: New post
 FirstPost: Write your first post. 
 CommentsOn: Comments on
@@ -91,7 +93,6 @@ ViewAll: View all
 Home: Home
 
 NothingFound: Nothing Found
-UnknownUser: Unknown user
 Publish: Publish
 HasSite: You have already registered a site
 
@@ -102,6 +103,7 @@ Comments: Comments
 CommentPublished: Comment published
 LoginToComment: You must be logged in to comment
 CommentDeleted: Comment deleted
+Reply: Reply
 
 AboutPageReset: Your about page has been reset.
 PageDeleted: Page deleted
@@ -109,8 +111,6 @@ PageSaved: Page saved
 PageNotFound: Page not found
 Pages: Pages
 NoPage: No page found.
-
-Users: Members
 
 InvalidAction: Invalid action
 ComingSoon: Coming soon...

@@ -12,9 +12,9 @@
 /users UsersR GET
 /user/#UserId HomeR GET !user
 
-/user/#UserId/entries EntriesR GET !user
+--/user/#UserId/entries EntriesR GET !user
 /entry NewEntryR GET POST !user !login
-/user/#UserId/entry/#EntryId EntryR GET POST !user
+/user/#UserId/entry/#EntryId EntryR GET !user
 /entry/#EntryId/edit EditEntryR GET POST !user !admin
 tag/#Text TagR GET
 
@@ -27,7 +27,7 @@ tag/#Text TagR GET
 
 /parser/input/#Text/output/#Text ParserR POST !login
 
-/comment/#EntryId/edit EditCommentR POST !login 
+/comment/#EntryId/edit EditCommentR POST DELETE !login 
 /user/#UserId/comments CommentsR GET !user
 
 /page0/#Text/edit EditPage0R GET POST

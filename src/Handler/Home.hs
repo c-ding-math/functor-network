@@ -1,24 +1,20 @@
-{-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE TypeFamilies #-}
-
 module Handler.Home where
 
 import Import
-import Handler.Parser (tagsWidget)
-import Parse.Parser (scaleHeader)
+import Handler.Entries (getEntriesR)
 
-getHomeR :: Path -> Handler Html
-getHomeR piece = do    
+getHomeR :: UserId -> Handler Html
+getHomeR = getEntriesR
+    
+{-getHomeR :: Path -> Handler Html
+getHomeR authorId = do    
     mCurrentUserId<-maybeAuthId
     (recentEntryList, recentCommentEntryList)<-runDB $ do
-        _<-get404 piece      
-        entries<- selectList [EntryUserId==.piece,EntryType==.Standard] [Desc EntryInserted]
+        _<-get404 authorId      
+        entries<- selectList [EntryUserId==.authorId,EntryType==.Standard] [Desc EntryInserted]
         let entryList =[x | x<-entries, entryStatus (entityVal x) == Publish||isAdministrator mCurrentUserId (entityVal x)]          
             
-        comments <- selectList [EntryUserId==.piece,EntryType==.Comment] [Desc EntryInserted]
+        comments <- selectList [EntryUserId==.authorId,EntryType==.Comment] [Desc EntryInserted]
         commentEntryList'' <- mapM getCommentEntry comments
         let commentEntryList'=catMaybes commentEntryList''
             commentEntryList =[x | x<- commentEntryList', (entryStatus . entityVal . fst) x == Publish||isAdministrator mCurrentUserId ((entityVal . fst) x)]               
@@ -32,15 +28,15 @@ getHomeR piece = do
         <section .recent-entries>
             $if null recentEntryList
                 <h2>_{MsgRecentEntries}
-                    $if mCurrentUserId == Just piece
+                    $if mCurrentUserId == Just authorId
                         <a .navbar-right .btn.btn-default href=@{NewEntryR}>_{MsgNewPost} 
                 <div> _{MsgNoPost} 
-                    $if mCurrentUserId == Just piece                      
+                    $if mCurrentUserId == Just authorId                      
                         <a href=@{NewEntryR}>_{MsgFirstPost}
             $else
                 <h2>_{MsgRecentEntries}
-                    <a .navbar-right .btn.btn-default href=@{EntriesR piece}>_{MsgViewAll}
-                    $if mCurrentUserId == Just piece
+                    <a .navbar-right .btn.btn-default href=@{EntriesR authorId}>_{MsgViewAll}
+                    $if mCurrentUserId == Just authorId
                         <span .navbar-right style="visibility: hidden;">|</span>
                         <a .navbar-right .btn.btn-default href=@{NewEntryR}>_{MsgNewPost}
                         
@@ -50,7 +46,7 @@ getHomeR piece = do
                     <ul>
                         $forall Entity entryId entry<-recentEntryList
                             <li :entryStatus entry == Draft:.draft>
-                                <a href=@{EntryR piece entryId}>
+                                <a href=@{EntryR authorId entryId}>
                                     <h3>#{preEscapedToMarkup (scaleHeader 3 (entryOutputTitle entry))}
                                 <div .tags>
                                     ^{tagsWidget (zip (entryInputTags entry) (entryOutputTags entry))}
@@ -63,12 +59,12 @@ getHomeR piece = do
                 <div> _{MsgNoComment}
             $else
                 <h2>_{MsgRecentCommentsOn}
-                    <a .navbar-right .btn.btn-default href=@{CommentsR piece}>_{MsgViewAll} 
+                    <a .navbar-right .btn.btn-default href=@{CommentsR authorId}>_{MsgViewAll} 
                 <div .entries>
                     <ul>
                         $forall  (Entity entryId entry, Entity commentId _) <- recentCommentEntryList
                             <li :entryStatus entry == Draft:.draft>
-                                <a href=@{EntryR piece entryId}#comment-#{toPathPiece commentId}>
+                                <a href=@{EntryR authorId entryId}#comment-#{toPathPiece commentId}>
                                     <h3>#{preEscapedToMarkup (scaleHeader 3 (entryOutputTitle entry))}
                                 <div .tags>
                                     ^{tagsWidget (zip (entryInputTags entry) (entryOutputTags entry))}
@@ -85,3 +81,4 @@ getCommentEntry commentEntity = do
             case mEntry of
                 Nothing -> return Nothing
                 Just entry -> return $ Just (Entity entryId entry, commentEntity)
+-}

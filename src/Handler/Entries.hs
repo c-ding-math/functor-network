@@ -1,57 +1,76 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+
 module Handler.Entries where
 
 import Import
-import Handler.Parser (tagsWidget)
 import Parse.Parser (scaleHeader)
---import Yesod.Form.Bootstrap3
 
-{-data PreEntry = PreEntry {
-    preEntryInputFormat :: Format,
-    preEntryOutputFormat :: Format
-    } deriving Show
-
-preEntryForm:: Form PreEntry
-preEntryForm = renderBootstrap3 BootstrapBasicForm $ PreEntry
-    <$> areq (radioFieldList inputFormats) (bfs MsgInputFormat) Nothing
-    <*> areq (radioFieldList outputFormats) (bfs MsgOutputFormat) Nothing
-    where
-        inputFormats = [("Markdown", Format "md"), ("LaTeX", Format "tex")]::[(Text, Format)]
-        outputFormats = [("Standard", Format "html"), ("Slides", Format "slides")]::[(Text, Format)]
-        -}
-
-getEntriesR :: Path -> Handler Html
-getEntriesR piece = do
+getEntriesR :: UserId -> Handler Html
+getEntriesR authorId = do
     mCurrentUserId<-maybeAuthId
-    entryList<-runDB $ do
-        _<-get404 piece      
-        entries<- selectList [EntryUserId==.piece, EntryType==.Standard] [Desc EntryInserted]
+    (entryList,author)<-runDB $ do
+        author<-get404 authorId      
+        entries<- selectList [EntryUserId==.authorId, EntryType==.Standard] [Desc EntryInserted]
         let entryList =[x | x<-entries, entryStatus (entityVal x) == Publish||isAdministrator mCurrentUserId (entityVal x)]          
-        return $ entryList
-    --(widget, enctype)<-generateFormPost preEntryForm
+        return $ (entryList,author)
+    
     defaultLayout $ do
-        setTitleI MsgEntries
+        setTitle $ toHtml $ userName author
         [whamlet|        
-            <h1>_{MsgEntries}
-                $if mCurrentUserId == Just piece
+            <h1>_{MsgPosts}
+                $if mCurrentUserId == Just authorId
                     <a .btn.btn-primary .new-entry.navbar-right href=@{NewEntryR}>_{MsgNewPost}
             $if null entryList
-                <div> _{MsgNoPost}
+                <p>_{MsgNoPost}
+                    $if mCurrentUserId == Just authorId                      
+                        <a href=@{NewEntryR}>_{MsgFirstPost}
             $else
-                <div .entries>
-                    <ul>
-                        $forall Entity entryId entry<-entryList
-                            <li :entryStatus entry == Draft:.draft>
-                                <a href=@{EntryR piece entryId}>
-                                    <h2>#{preEscapedToMarkup (scaleHeader 2 (entryOutputTitle entry))}
-                                <div .tags>
-                                    ^{tagsWidget (zip (entryInputTags entry) (entryOutputTags entry))}
-
+                ^{entryListWidget entryList}
         |]
-            
-        addStylesheet $ StaticR css_entry_list_css
+        toWidget [hamlet|
+            <div style="display:none;"><a href=@{CommentsR authorId}>Comments</a></div>
+        |]
 
+entryListWidget :: [Entity Entry] -> Widget
+entryListWidget entryList = do
+    toWidget [hamlet|
+    <div .entries>
+        <ul>
+            $forall Entity entryId entry<-entryList
+                <li :entryStatus entry == Draft:.draft>
+                    <a href=@{EntryR (entryUserId entry) entryId}>
+                        <h2>#{preEscapedToMarkup (scaleHeader 2 (entryOutputTitle entry))}
+                    <div .tags>
+                        <ul>
+                            $forall (inputTag, outputTag) <- zip (entryInputTags entry) (entryOutputTags entry)
+                                <li>
+                                    <a href=@{TagR inputTag}>#{preEscapedToMarkup outputTag}
+    |]
+    toWidget [lucius|
+.entries>ul, .tags>ul {
+    list-style:none;
+    padding-left:0;
+}
+
+.entries>ul>li{
+    border-top:1px solid #dce4ec;
+    padding-bottom:1em;
+}
+.entries>ul>li>a>h2, .entries>ul>li>a>h3, .tags ul>li>a {
+    color:black;
+}
+
+.tags ul>li{
+    display:inline-block;
+    padding:0.5em;
+    background-color:whitesmoke;
+    margin-bottom:1em;
+}
+li h1{
+    color:black;
+    font-size:2em;
+}
+    |]
 

@@ -4,23 +4,35 @@
 module Handler.Entry where
 
 import Yesod.Form.Bootstrap3
-import Handler.Parser(parse,markItUpWidget,userTemporaryDirectory)
-import Parse.Parser(mdToHtml,texToHtml,scaleHeader,EditorData(..))
+import Handler.Parser(markItUpWidget)
+import Parse.Parser(scaleHeader)
+import Handler.EditComment(getChildIds)
 import Import
 
 getEntryR :: Path ->  EntryId -> Handler Html
-getEntryR _ entryId = do    
+getEntryR authorId entryId = do    
     maybeUserId<-maybeAuthId
     maybeUser<-maybeAuth
-    (entry,mEntryAuthor,comments,mCommentAuthors)<-runDB $ do
+    (entry,mEntryAuthor,comments,mCommentAuthors,mParentCommentAuthors)<-runDB $ do
         entry<-get404 entryId
-        if (entryStatus entry==Publish || isAdministrator maybeUserId entry) && (entryType entry==Standard)
+        if (entryUserId entry==authorId) && (entryStatus entry==Publish || isAdministrator maybeUserId entry) && (entryType entry==Standard)
           then do
-            mEntryAuthor<-getAuthor $ entryUserId entry
-            comments<-selectList [EntryParentId==.Just entryId,EntryType==.Comment][Asc EntryInserted]
-            mCommentAuthors<-mapM (getAuthor . entryUserId . entityVal) comments
-            return $ (entry,mEntryAuthor,comments,mCommentAuthors)        
-          else permissionDeniedI MsgPermissionDenied
+            mEntryAuthor<-get $ entryUserId entry
+            commentIds<- getChildIds entryId
+            comments<-selectList [EntryId <-. commentIds, EntryStatus==.Publish, EntryType==.Comment][Asc EntryInserted]     
+            mCommentAuthors<-mapM (get . entryUserId . entityVal) comments
+            mParentCommentAuthors<-mapM (\x -> case entryParentId $ entityVal x of
+                Just parentId -> do
+                    mParentComment<-get parentId
+                    case mParentComment of
+                        Just parentComment -> do
+                            mParentCommentAuthor<-get $ entryUserId parentComment
+                            return mParentCommentAuthor
+                        Nothing -> return Nothing
+                Nothing -> return Nothing
+                ) comments
+            return $ (entry,mEntryAuthor,comments,mCommentAuthors,mParentCommentAuthors)        
+          else notFound
 
     formatParam <- lookupGetParam "format"
     let format = case formatParam of
@@ -36,7 +48,7 @@ getEntryR _ entryId = do
             Just author -> "; by " <> userName author
             Nothing -> ""
         [whamlet|
-<div .entry :entryStatus entry == Draft:.draft>
+<div .entry :entryStatus entry == Draft:.draft #entry-#{toPathPiece entryId}>
   <h1>#{preEscapedToMarkup(scaleHeader 1 (entryOutputTitle entry))}
   <div .entry-meta>
       <span .by>
@@ -44,12 +56,13 @@ getEntryR _ entryId = do
               
               <a href=@{PageR (entryUserId entry) "About"}>#{userName author}
           $nothing 
-              _{MsgUnknownUser}
+              _{MsgUnregisteredUser}
       <span .at>#{formatDateStr (entryInserted entry)}
   <div .entry-content>
       <article>#{preEscapedToMarkup(entryOutputBody entry)}
   <ul .entry-menu>
-        <li .comment><a href=#comments>comment</a>
+        <li .reply>
+            <a href=#comment data-action=@{EditCommentR entryId}>comment
         <!--<li .print><a href=#>print</a>-->
         $if isAdministrator maybeUserId entry
             <li .edit><a href=@{EditEntryR entryId}>edit</a>
@@ -59,20 +72,29 @@ getEntryR _ entryId = do
         <p style="display:none">_{MsgNoComment}
     $else
         <h3>_{MsgComments}
-        $forall  (Entity commentId comment,mCommentAuthor)<-zip comments mCommentAuthors
-            <div .comment id=comment-#{toPathPiece commentId}> 
+        $forall (Entity commentId comment,mCommentAuthor,mParentCommentAuthor)<-zip3 comments mCommentAuthors mParentCommentAuthors
+            <div .comment id=entry-#{toPathPiece commentId}> 
               <div .entry-meta>
                   <span .by>
-                      $maybe author<-mCommentAuthor    
-                          
+                      $maybe author<-mCommentAuthor                           
                           <a href=@{PageR (entryUserId comment) "About"}>#{userName author}
                       $nothing 
-                          _{MsgUnknownUser}
+                          _{MsgUnregisteredUser}
                   <span .at>#{formatDateStr (entryInserted comment)}
+                  $maybe parentCommentId<-entryParentId comment
+                    $if parentCommentId /= entryId
+                        <span .to>
+                            <a href=#entry-#{toPathPiece parentCommentId}>
+                                $maybe parentAuthor<-mParentCommentAuthor
+                                    #{userName parentAuthor}
+                                $nothing
+                                    _{MsgUnregisteredUser}
+
               <div .entry-content>
                   <article>#{preEscapedToMarkup (entryOutputBody comment)}  
               <ul .entry-menu>                
-                  <!--<li .reply><a href=#comment>reply</a>-->
+                  <li .reply>
+                    <a href=#comment data-action=@{EditCommentR commentId}>reply
                   $if isAdministrator maybeUserId entry || isAdministrator maybeUserId comment
                       <li .delete>
                         <a href=@{EditCommentR commentId}>_{MsgDelete}
@@ -80,7 +102,7 @@ getEntryR _ entryId = do
 <section .new-comment>
         $maybe _ <- maybeUser
             <h3 #comment>_{MsgNewComment}
-            <form method=post enctype=#{commentEnctype}>
+            <form method=post enctype=#{commentEnctype} action=@{EditCommentR entryId}>
                 
                 <!--<select>
                     $if format == Format "tex"
@@ -105,7 +127,7 @@ menuWidget::Widget
 menuWidget=do
     toWidget [julius|
         $(document).ready(function()	{
-            $(".entry-menu .print a").click(function(){
+            /*$(".entry-menu .print a").click(function(){
                 window.print();
                 return false;
             }); 
@@ -122,20 +144,36 @@ menuWidget=do
                         },
                 });
                 return false;
-            });       
+            }); */
+            $(".entry .entry-menu .reply a").click(function(){
+                $("#comment").html("Add a comment");
+                var handlerUrl=$(this).attr("data-action");
+                $(".new-comment form").attr("action", handlerUrl);
+            });
+            $(".comment .entry-menu .reply a").click(function(){
+                var handlerUrl=$(this).attr("data-action");
+                $(".new-comment form").attr("action", handlerUrl);
+                var parentId=$(this).closest(".comment").attr("id").replace("entry-","");
+                var parentCommentAuthor=$(this).closest(".comment").find(".entry-meta .by a").html();
+                $("#comment").html("Reply to <a href=#entry-"+parentId+">"+parentCommentAuthor+"</a>");
+            });
             $(".entry-menu .delete a").click(function(event){  
                 if (confirm("Are you sure that you want to delete the comment?")) {
             
                     var that =$(this);
                     var url=$(this).attr("href");
                     $.ajax({
-                        type: "POST",
+                        type: "DELETE",
                         url: url,
+                        error: function(){//maybe parent entry was deleted
+                            location.reload();
+                        },
                         success: function(){
-                                that.closest(".comment").remove();
+                            location.reload();
+                                /*that.closest(".comment").remove();
                                 if ($(".comments .comment").length==0){
                                     $(".comments").html("");
-                                }
+                                }*/
                             },
                     });
                 }
@@ -183,76 +221,5 @@ newCommentForm mCommentData =  renderBootstrap3 BootstrapBasicForm $ CommentInpu
                 , fsAttrs =[("class", "hidden")]             
                 }
 
-postEntryR :: Path ->  EntryId -> Handler Html
-postEntryR _ entryId = do
-    userId <- requireAuthId
-    entry<-runDB $ get404 entryId
-    urlRenderParams <- getUrlRenderParams
-    
-    ((res, _), _) <- runFormPost $ newCommentForm $ Nothing
-    case res of
-        FormSuccess newCommentFormData -> do
-            let editorData=EditorData{
-                editorPreamble=preamble newCommentFormData
-                ,editorContent=Just (content newCommentFormData)
-                ,editorCitation=citation newCommentFormData
-            }
-            currentTime <- liftIO getCurrentTime
-            let parser=  case inputFormat newCommentFormData of
-                        Format "tex" -> texToHtml
-                        _ -> mdToHtml
-            userDir<-userTemporaryDirectory
-            bodyHtml <- liftIO $ parse userDir parser editorData
-            let commentData=Entry 
-                        {entryParentId=Just entryId
-                        ,entryUserId=userId
-                        ,entryType=Comment
-                        ,entryInputFormat=inputFormat newCommentFormData
-                        ,entryOutputFormat=Format "html"
-                        ,entryInputTitle="Comment on "<> (entryInputTitle entry)
-                        ,entryOutputTitle="Comment on "<> (entryOutputTitle entry)
-                        ,entryInputPreamble=(preamble newCommentFormData)
-                        ,entryInputBody=(content newCommentFormData)
-                        ,entryOutputBody=bodyHtml
-                        ,entryInputCitation=(citation newCommentFormData)
-                        ,entryInserted=currentTime
-                        ,entryUpdated=currentTime
-                        --,entryStuck=Just currentTime
-                        ,entryStatus=Publish
-                        ,entryLocked=True
-                        ,entryInputTags=[]
-                        ,entryOutputTags=[]
-                        }
-            
-            {-let commentData=Comment
-                  {
-                      commentEntryId=entryId
-                      --,commentCommentId=commentId newCommentFormData
-                      ,commentUserId = userId
-                      ,commentInputFormat = Format "md"
-                      ,commentOutputFormat = Format "html"
-                      ,commentInputPreamble = preamble newCommentFormData
-                      ,commentInputBody = content newCommentFormData
-                      ,commentOutputBody = bodyHtml
-                      ,commentInputCitation = citation newCommentFormData
-                      ,commentInserted =currentTime
-                      ,commentUpdated =currentTime
-                      ,commentStuck=Nothing
-                        }-}
-                
-            commentId <- runDB $ insert commentData
-            setMessage $ [hamlet|<a href=#comment-#{toPathPiece commentId}>Your comment</a> has been published.|] urlRenderParams
-            redirect $ EntryR userId entryId
-        _ -> do
-            setMessageI MsgSomethingWrong
-            redirect $ EntryR userId entryId
-
 formatDateStr :: UTCTime -> String
 formatDateStr t = formatTime defaultTimeLocale "%e %b %Y" t
-
-getAuthor ::  UserId -> ReaderT SqlBackend (HandlerFor App) (Maybe User)
-getAuthor uid = do
-    maybeAuthor<-get uid
-    return maybeAuthor
-
-

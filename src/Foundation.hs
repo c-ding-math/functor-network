@@ -136,17 +136,16 @@ instance Yesod App where
         muser <- maybeAuthPair
         muid <- maybeAuthId
         mcurrentRoute <- getCurrentRoute
+        mAuthorEntity<-routeUserEntity mcurrentRoute
 
         -- Get the breadcrumbs, as defined in the YesodBreadcrumbs instance.
         (title, parents) <- breadcrumbs
-        mUserRoutePath <- routeUser mcurrentRoute
-        (homeTitle, homeRoute, aboutRoute)<- case mUserRoutePath of
-            Just userId -> do
-                user <- runDB $ get404 userId
-                return (userName user, HomeR userId, PageR userId "About")
+        (homeTitle, homeRoute, aboutRoute)<- case mAuthorEntity of
+            Just (Entity userId user) -> return (userName user, HomeR userId, PageR userId "About")
             Nothing -> return (appName, Home0R, Page0R "About")
 
         -- Define the menu items of the header.
+        let mUserRoutePath = entityKey <$> mAuthorEntity
         let menuItems =
                 [ NavbarLeft $ MenuItem
                     { menuItemLabel = homeTitle
@@ -167,7 +166,7 @@ instance Yesod App where
                     Just uid | mUserRoutePath == muid->
                         [ NavbarMiddle $ MenuItem
                             { menuItemLabel = "Posts"
-                            , menuItemRoute = EntriesR uid
+                            , menuItemRoute = HomeR uid
                             , menuItemAccessCallback = True
                             }
                         , NavbarMiddle $ MenuItem
@@ -288,7 +287,7 @@ instance Yesod App where
     isAuthorized UsersR _ = return Authorized
     isAuthorized (HomeR _) _ = return Authorized
     isAuthorized (PageR _ _) _ = return Authorized
-    isAuthorized (EntriesR _) _ = return Authorized
+    --isAuthorized (EntriesR _) _ = return Authorized
     isAuthorized (EntryR _ _) _ = return Authorized
     isAuthorized (TagR _)_ = return Authorized
     isAuthorized (CommentsR _) _ = return Authorized
@@ -376,7 +375,7 @@ instance YesodBreadcrumbs App where
                     _ -> "Unknown"
             return (siteName, Just Home0R)
         PageR pathPiece _-> parentLink pathPiece
-        EntriesR pathPiece -> parentLink pathPiece
+        -- EntriesR pathPiece -> parentLink pathPiece
         --TagR pathPiece _-> parentLink pathPiece
         Home0R -> return ("Home", Nothing)
         AuthR _ -> return ("Home", Just Home0R)
@@ -997,20 +996,27 @@ isSiteAdmin piece=do
         then return Authorized
         else permissionDeniedI MsgPermissionDenied
 
-routeUser :: Maybe (Route App) -> Handler (Maybe UserId)
-routeUser Nothing= return Nothing
-routeUser (Just route) 
+routeUserEntity :: Maybe (Route App) -> Handler (Maybe (Entity User))
+routeUserEntity Nothing= return Nothing
+routeUserEntity (Just route) 
     | "user" `member` routeAttrs route = case route of 
-        HomeR userId -> return $ Just userId
-        PageR userId _ -> return $ Just userId
-        CommentsR userId -> return $ Just userId
-        EntriesR userId -> return $ Just userId
-        EntryR userId _ -> return $ Just userId
-        --TagR userId _ -> return $ Just userId
+        HomeR userId -> returnEntityIfExist userId
+        PageR userId _ -> returnEntityIfExist userId
+        CommentsR userId -> returnEntityIfExist userId
+        --EntriesR userId -> returnEntityIfExist userId
+        EntryR userId _ -> returnEntityIfExist userId
+        --TagR userId _ -> returnEntityIfExist userId
         _ -> do
-            uid<-requireAuthId
-            return $ Just uid
+            (userId, user) <- requireAuthPair
+            return $ Just (Entity userId user)
     | otherwise = return Nothing
+
+returnEntityIfExist :: (PersistEntityBackend val ~ SqlBackend, PersistEntity val) => Key val -> Handler (Maybe (Entity val))
+returnEntityIfExist entityId = do
+    mEntityValue<-runDB $ get entityId
+    return $ case mEntityValue of
+        Just entityValue -> Just (Entity entityId entityValue)
+        _ -> Nothing
 
 -- | get the app administrator id
 mAppAdministratorId :: Handler (Maybe UserId)

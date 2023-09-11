@@ -7,7 +7,6 @@ module Handler.Parser (
     userTemporaryDirectory,
     parse,
     markItUpWidget,
-    tagsWidget,
     postParserR
 )where
 
@@ -18,6 +17,7 @@ import System.Environment (getExecutablePath)
 import System.FilePath
 import System.Random
 import Parse.Parser(mdToHtml,texToHtml,EditorData(..))
+--import qualified Prelude
 --import Data.Time.Clock
 
 type InputFormat=Text
@@ -40,7 +40,7 @@ postParserR inputFormat outputFormat = do
         return $ RepPlain $ toContent $ preview
 
 markItUpWidget ::Format->Format-> Widget
-markItUpWidget inputFormat outputFormat=    do    --addScriptRemote "https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"
+markItUpWidget inputFormat _=    do    --addScriptRemote "https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"
         addScript $ StaticR scripts_jquery_ui_jquery_ui_min_js
         addStylesheet $ StaticR scripts_jquery_ui_jquery_ui_min_css
         addStylesheet $ StaticR scripts_jquery_ui_jquery_ui_additional_css
@@ -102,21 +102,17 @@ $(document).ready(function(){
         if (selected=="2"){
             format="tex"
         }
-        var currentUrl = window.location.href.split(/[?#]/)[0];
-        window.location.href = currentUrl + '?format=' + format;
+        var currentUrl = window.location.href.split(/[?#]/)[0]+ '?format=' + format;
+        var elementId = window.location.href.match(/#[^?]*/);
+        if (elementId){
+            currentUrl=currentUrl+elementId;
+        }
+        
+        window.location.href = currentUrl 
+
     });
 });
         |]
-
--- | Widget for tags
-tagsWidget::[(Text,Text)]->Widget
-tagsWidget tags=do
-    toWidget [hamlet|
-<ul>
-    $forall (inputTag,outputTag) <-tags
-        <li>
-            <a href=@{TagR inputTag}> #{preEscapedToMarkup outputTag}
-    |]
 
 -- | Get user temporary directory
 userTemporaryDirectory :: Handler FilePath
@@ -144,7 +140,10 @@ parse currentWorkingDir parser docData = do
     appDirectory<-appWorkingDirectory
     setCurrentDirectory appDirectory
     createDirectoryIfMissing True currentWorkingDir
-    output<-withCurrentDirectory currentWorkingDir $ parser docData
+    output<-withCurrentDirectory currentWorkingDir $ do
+        output <- parser docData
+        --Prelude.writeFile "output.html" $ unpack output
+        return output
     --threadDelay 10000000
     removeDirectoryRecursive currentWorkingDir
     return $ output

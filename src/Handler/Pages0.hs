@@ -1,11 +1,10 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 module Handler.Pages0 where
 
 import Import
-import Parse.Parser (scaleHeader)
+import Handler.Entries (entryListWidget)
 
 getPages0R :: Handler Html
 getPages0R = do
@@ -20,18 +19,8 @@ getPages0R = do
             $if null entryList
                 <div> _{MsgNoPage}
             $else
-                <div .entries>
-                    <ul>
-                        $forall Entity _ entry<-entryList
-                            <li :entryStatus entry == Draft:.draft>
-                                <a href=@{Page0R (entryInputTitle entry)}>
-                                    <h2>#{preEscapedToMarkup (scaleHeader 2 (entryOutputTitle entry))}
-                                <ul .entry-menu>
-                                    <li>
-                                        <a .entry-menu href=@{EditPage0R (entryInputTitle entry)}>_{MsgEdit}
-                                
+                ^{entryListWidget entryList}
         |]
-            
-        addStylesheet $ StaticR css_entry_list_css
+
 
 

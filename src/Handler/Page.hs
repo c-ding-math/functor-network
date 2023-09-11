@@ -32,7 +32,8 @@ getPageR userId _ = do
                 [whamlet|
 <div .entry :entryStatus entry == Draft:.draft>
     <h1>_{MsgAbout}
-    <div .entry-content>#{preEscapedToMarkup (entryOutputBody entry)}
+    <div .entry-content>
+        <article>#{preEscapedToMarkup (entryOutputBody entry)}
     $if mCurrentUserId == Just userId
         <ul .entry-menu>
             <li>
