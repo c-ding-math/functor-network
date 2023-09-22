@@ -51,12 +51,14 @@
 	min-height:20em;
 	overflow:auto;
 }
-.markItUpEditor,.markItUpFooter{
+.markItUpEditor{
 	padding: 1em;
 }
 
 .markItUpFooter{
 	overflow-x: auto;
+	padding-top:1px;
+	padding-bottom:1px;
 }
 
 .full-screen.markItUpContainer{

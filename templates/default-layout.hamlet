@@ -1,19 +1,16 @@
 
 <!-- Static navbar -->
 <nav .navbar.navbar-default.navbar-static-top>
+
     <div .container>        
-        <!--$maybe route <- mcurrentRoute-->
-            $if (isJust muid)
-                <div .navbar-header>
-                    <button type="button" .navbar-toggle.collapsed data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-                        <span class="sr-only">Toggle navigation
-                        <span class="icon-bar">
-                        <span class="icon-bar">
-                        <span class="icon-bar">  
+
+        <a class=navbar-brand href=@{homeRoute}>#{homeTitle}
         <div .navbar-menu>
+            
             <div .collapse.navbar-collapse.in>
 
                 <ul .nav.navbar-nav.navbar-left>
+                    
                     $forall MenuItem label route _ <- navbarLeftFilteredMenuItems
                         <li>
                             <a href="@{route}">#{label}
@@ -26,13 +23,19 @@
                                     <li :Just route == mcurrentRoute:.active>
                                         <a href="@{route}">#{label}
                                         
-            <div .collapse.navbar-collapse.in>    
+            <div #navbar .collapse.navbar-collapse>    
                 <ul .nav.navbar-nav.navbar-right>
                     $forall MenuItem label route _ <- navbarRightFilteredMenuItems
-                        <li>
+                        <li :Just route == mcurrentRoute:.active>
                             <a href="@{route}">#{label}        
-
                                     
+            
+        
+        <button type="button" .navbar-toggle.collapsed data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation
+                <span class="icon-bar">
+                <span class="icon-bar">
+                <span class="icon-bar">
 
 
 <!-- Page Contents -->

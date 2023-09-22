@@ -10,8 +10,8 @@ import Yesod.Form.Bootstrap3
 
 data NameSetting=NameSetting{_name::Text}
 --data AvatarSetting=AvatarSetting{_avatar::Maybe Text}
-data NotificationSetting=NotificationSetting{_notificationEmailId::Maybe EmailId}
-    deriving Show
+--data NotificationSetting=NotificationSetting{_notificationEmailId::Maybe EmailId}
+    --deriving Show
 data DefaultPreambleSetting=DefaultPreambleSetting{_defaultPreamble::Maybe Textarea}
 data DefaultCitationSetting=DefaultCitationSetting{_defaultCitation::Maybe Textarea}
 
@@ -23,13 +23,13 @@ nameSettingForm user=renderBootstrap3 BootstrapBasicForm $ NameSetting
 avatarSettingForm user=renderBootstrap3 BootstrapBasicForm $ AvatarSetting
     <$> aopt urlField (bfs MsgAvatar) (Just(userAvatar user))-}
 
-notificationSettingForm:: [Entity Email]->Maybe EmailId->Form NotificationSetting
+{-notificationSettingForm:: [Entity Email]->Maybe EmailId->Form NotificationSetting
 notificationSettingForm maybeEmailEntities maybeEmailId= renderBootstrap3 BootstrapBasicForm $ NotificationSetting
         <$> aopt (selectFieldList (options maybeEmailEntities)) (bfs MsgEmailNotification) (Just maybeEmailId)
         where 
             options::[Entity Email] -> [(Text, EmailId)]
             options entities =  (\(Entity eid e)->(emailAddress e, eid)) <$> entities
-            
+-}            
 
 {-notificationSettingForm userId extra=do
         (res, view) <- mreq checkBoxField (fieldSettingsLabel MsgNotifyMeViaEmail) Nothing
@@ -55,14 +55,14 @@ defaultCitationSettingForm user=renderBootstrap3 BootstrapBasicForm $ DefaultCit
 getSettingsR :: Handler Html
 getSettingsR = do 
     (userId, user)<-requireAuthPair
-    (emails, googles, mNotification) <- runDB $ do
+    (emails, googles) <- runDB $ do
         --roleEntities<-selectList [RoleUserId==.userId,RoleType==.Administrator] []  
         --mSites<- mapM (get . roleSiteId . entityVal) roleEntities   
         --sites<-selectList[SiteUserId==.Just userId] [Desc SiteInserted]
         emails<-selectList [EmailUserId==.Just userId, EmailVerified==.True] [Desc EmailInserted]
         googles<-selectList [ LoginPlugin==."google",LoginUserId==.Just userId, LoginVerified==.True] [Desc LoginInserted]
-        mNotification <-selectFirst [NotificationEmailId<-.map entityKey emails] [Desc NotificationInserted]
-        return $ (emails, googles, mNotification)
+        --mNotification <-selectFirst [NotificationEmailId<-.map entityKey emails] [Desc NotificationInserted]
+        return $ (emails, googles)
 
     (nameWidget, nameEnctype) <- generateFormPost $ nameSettingForm user
     --(avatarWidget, avatarEnctype) <- generateFormPost $ avatarSettingForm user
@@ -103,7 +103,11 @@ getSettingsR = do
                             <ul>
                                 $forall Entity emailId email<-emails
                                     <li>#{emailAddress email}
-                                        <a href=@{EmailSettingR emailId} .delete-setting>delete
+                                        <ul .entry-menu.inline-menu>
+                                            <li>
+                                                <a href=@{EmailSettingR emailId}>delete
+                                            <li>    
+                                                <a href=@{SubscriptionsR emailId}>manage subscriptions
                             <a .btn .btn-default href=@{AuthR registerR}>_{MsgNewEmail}
                     <p>
                 
@@ -115,7 +119,10 @@ getSettingsR = do
                             <ul>
                                 $forall Entity googleId google<-googles
                                     <li>#{loginIdent google}
-                                        <a href=@{LoginSettingR googleId} .delete-setting>delete
+                                        <ul .entry-menu.inline-menu>
+                                            <li>
+                                                <a href=@{LoginSettingR googleId}>delete
+                                        
                             <a .btn .btn-default href=@{AuthR (PluginR "google" ["forward"])}>_{MsgNewGoogle}
                     <p>
 
@@ -190,12 +197,7 @@ getSettingsR = do
                 margin-top:2em;
                 border-top:1px solid #dce4ec;
             }
-            .delete-setting{
-                color:#b4bcc2;
-            }
-            li>a {
-                padding:1em;
-            }
+
             .name-form,.notification-form{
                 max-width:15em;
             }
@@ -233,7 +235,7 @@ postSettingsR = do
                     setMessageI $ MsgChangeSaved
                     redirect $ SettingsR
                 _ -> notFound -}
-        Just "notification"-> do
+        {-Just "notification"-> do
             (emails, selected) <- runDB $ do
                 emails<-selectList [EmailUserId==.Just userId, EmailVerified==.True] [Desc EmailInserted]
                 mNotification<-selectFirst[NotificationEmailId<-.(entityKey <$> emails)] [Desc NotificationInserted]
@@ -266,7 +268,7 @@ postSettingsR = do
                         |]
                     redirect $ SettingsR
 
-
+        -}
         Just "preamble"-> do
             ((result,_), _) <- runFormPost $ defaultPreambleSettingForm user
             case result of

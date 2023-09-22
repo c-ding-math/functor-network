@@ -63,7 +63,7 @@ getEntryR authorId entryId = do
             Nothing -> ""
         [whamlet|
 <div .entry :entryStatus entry == Draft:.draft #entry-#{toPathPiece entryId}>
-  <h1>#{preEscapedToMarkup(scaleHeader 1 (entryOutputTitle entry))}
+  <h1 .entry-title>#{preEscapedToMarkup(scaleHeader 1 (entryOutputTitle entry))}
   <div .entry-meta>
       <span .by>
           $maybe author<-mEntryAuthor      

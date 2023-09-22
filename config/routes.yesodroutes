@@ -10,7 +10,7 @@
 / Home0R GET POST
 
 /users UsersR GET
-/user/#UserId HomeR GET !user
+/user/#UserId HomeR GET POST !user
 
 --/user/#UserId/entries EntriesR GET !user
 /entry NewEntryR GET POST !user !login
@@ -37,3 +37,8 @@ tag/#Text TagR GET
 !/user/#UserId/#Text PageR GET !user
 
 /help/#Text EditHelpR GET
+
+/subscriptions/#EmailId SubscriptionsR GET !user 
+/subscription/user/#UserSubscriptionId UserSubscriptionR GET POST
+
+/entries Entries0R GET

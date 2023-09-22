@@ -22,5 +22,8 @@ $else
             $forall Entity uid u<-users
                 <li>
                     <a href=@{HomeR uid}>#{userName u}
+                    <span>registered on #{formatDateStr (userInserted u)}
         |]
 
+formatDateStr :: UTCTime -> String
+formatDateStr t = formatTime defaultTimeLocale "%e %b %Y" t

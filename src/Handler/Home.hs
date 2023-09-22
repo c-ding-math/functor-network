@@ -1,11 +1,13 @@
 module Handler.Home where
 
 import Import
-import Handler.Entries (getEntriesR)
+import Handler.Entries (getEntriesR, postEntriesR)
 
 getHomeR :: UserId -> Handler Html
 getHomeR = getEntriesR
-    
+
+postHomeR :: UserId -> Handler Html
+postHomeR = postEntriesR
 {-getHomeR :: Path -> Handler Html
 getHomeR authorId = do    
     mCurrentUserId<-maybeAuthId

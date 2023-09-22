@@ -61,8 +61,11 @@ File
     description Text Maybe
     UniqueFile directory filename
 
-Notification
-    type SubscriptionType
-    emailId EmailId
+UserSubscription
+    email Text
+    userId UserId
     inserted UTCTime
+    key Text Maybe
+    verified Bool
+    UniqueUserSubscription email userId
     deriving Show

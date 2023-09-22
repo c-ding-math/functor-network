@@ -17,6 +17,7 @@ import Database.Persist.Sql (ConnectionPool, runSqlPool)
 import Text.Hamlet          (hamletFile)
 import Text.Jasmine         (minifym)
 import Control.Monad.Logger (LogSource)
+import Control.Concurrent
 
 -- Used only when in "auth-dummy-login" setting is enabled.
 import Yesod.Auth.Dummy
@@ -147,12 +148,38 @@ instance Yesod App where
         -- Define the menu items of the header.
         let mUserRoutePath = entityKey <$> mAuthorEntity
         let menuItems =
-                [ NavbarLeft $ MenuItem
-                    { menuItemLabel = homeTitle
-                    , menuItemRoute = homeRoute
-                    , menuItemAccessCallback = True
-                    }
-                , NavbarRight $ MenuItem
+                case muid of 
+                    Just uid | mUserRoutePath == muid->
+                        [ NavbarRight $ MenuItem
+                            { menuItemLabel = "Posts"
+                            , menuItemRoute = HomeR uid
+                            , menuItemAccessCallback = True
+                            }
+                        , NavbarRight $ MenuItem
+                            { menuItemLabel = "Comments"
+                            , menuItemRoute = CommentsR uid
+                            , menuItemAccessCallback = True
+                            }
+                        , NavbarRight $ MenuItem
+                            { menuItemLabel = "Files"
+                            , menuItemRoute = FilesR
+                            , menuItemAccessCallback = True
+                            }
+                        , NavbarRight $ MenuItem
+                            { menuItemLabel = "Settings"
+                            , menuItemRoute = SettingsR
+                            , menuItemAccessCallback = True
+                            }
+                        ]
+                    Just uid | otherwise ->
+                        [ NavbarRight $ MenuItem
+                            { menuItemLabel = "Home"
+                            , menuItemRoute = HomeR uid
+                            , menuItemAccessCallback = True
+                            }
+                        ]
+                    _ -> []
+                ++[ NavbarRight $ MenuItem
                     { menuItemLabel = "Login"
                     , menuItemRoute = AuthR LoginR
                     , menuItemAccessCallback = isNothing muser
@@ -162,38 +189,7 @@ instance Yesod App where
                     , menuItemRoute = AuthR LogoutR
                     , menuItemAccessCallback = isJust muser
                     }
-                ] ++ case muid of 
-                    Just uid | mUserRoutePath == muid->
-                        [ NavbarMiddle $ MenuItem
-                            { menuItemLabel = "Posts"
-                            , menuItemRoute = HomeR uid
-                            , menuItemAccessCallback = True
-                            }
-                        , NavbarMiddle $ MenuItem
-                            { menuItemLabel = "Comments"
-                            , menuItemRoute = CommentsR uid
-                            , menuItemAccessCallback = True
-                            }
-                        , NavbarMiddle $ MenuItem
-                            { menuItemLabel = "Files"
-                            , menuItemRoute = FilesR
-                            , menuItemAccessCallback = True
-                            }
-                        , NavbarMiddle $ MenuItem
-                            { menuItemLabel = "Settings"
-                            , menuItemRoute = SettingsR
-                            , menuItemAccessCallback = True
-                            }
-                        ]
-                    Just uid | otherwise ->
-                        [ NavbarMiddle $ MenuItem
-                            { menuItemLabel = "My Homepage"
-                            , menuItemRoute = HomeR uid
-                            , menuItemAccessCallback = True
-                            }
-                        ]
-                    _ -> []
-                ++ case isJust mUserRoutePath of
+                ] ++ case isJust mUserRoutePath of
                     True | mcurrentRoute == Just (SettingsR) ->
                         [ FooterLeft $ MenuItem
                             { menuItemLabel = "Feedback"
@@ -201,7 +197,7 @@ instance Yesod App where
                             , menuItemAccessCallback = True
                             }
                         , FooterRight $ MenuItem
-                            { menuItemLabel = "Version 20230909"
+                            { menuItemLabel = "Version 20230922"
                             , menuItemRoute = Page0R "Changelog"
                             , menuItemAccessCallback = True
                             }
@@ -219,7 +215,17 @@ instance Yesod App where
                             }
                         ]
                     False -> 
-                        [ FooterLeft $ MenuItem
+                        [ NavbarLeft $ MenuItem
+                            { menuItemLabel = "Posts"
+                            , menuItemRoute = Entries0R
+                            , menuItemAccessCallback = True
+                            }
+                        , NavbarLeft $ MenuItem
+                            { menuItemLabel = "Members"
+                            , menuItemRoute = Page0R "Users"
+                            , menuItemAccessCallback = True
+                            }
+                        , FooterLeft $ MenuItem
                             { menuItemLabel = "About"
                             , menuItemRoute = Page0R "About"
                             , menuItemAccessCallback = True
@@ -234,11 +240,7 @@ instance Yesod App where
                             , menuItemRoute = Page0R "Feedback"
                             , menuItemAccessCallback = True
                             }
-                        , FooterMiddle $ MenuItem
-                            { menuItemLabel = "Members"
-                            , menuItemRoute = Page0R "Users"
-                            , menuItemAccessCallback = True
-                            }
+
                         ]
 
         let navbarLeftMenuItems = [x | NavbarLeft x <- menuItems]
@@ -294,6 +296,8 @@ instance Yesod App where
     isAuthorized (Page0R _) _ = return Authorized
     isAuthorized (EditHelpR _) _ = return Authorized
     isAuthorized (ParserR _ _) _ = return Authorized
+    isAuthorized (UserSubscriptionR _) _ = return Authorized
+    isAuthorized Entries0R _ = return Authorized
 
     -- Routes requiring authentication.
     isAuthorized (EditPageR _) _ = isAuthenticated
@@ -308,6 +312,7 @@ instance Yesod App where
     isAuthorized (LoginSettingR x) _ = isAdmin x
     isAuthorized (EmailSettingR x) _ = isAdmin x
     isAuthorized (FileR x) _ = isAdmin x
+    isAuthorized (SubscriptionsR x) _ = isAdmin x
 
     -- app administrator routes
     isAuthorized (EditPage0R _ ) _ = isAppAdministrator
@@ -452,7 +457,7 @@ instance YesodAuth App where
                             Nothing -> do 
                                 --let uIdent = ident <> "@" <> plugin
                                 uid<-insert $ User
-                                    {userName=msgRender MsgAnonymousUser
+                                    {userName=msgRender MsgAnonymous
                                     ,userPassword=Nothing
                                     --,userIdent=uIdent
                                     ,userInserted=currentTime
@@ -507,7 +512,7 @@ instance YesodAuthEmail App where
     afterPasswordRoute _ = Home0R
 
     addUnverified email verkey = liftHandler $ runDB $ do
-        maybeUserId<-maybeAuthId -- update email if current user is logged in 
+        maybeUserId<-maybeAuthId
         currentTime<-liftIO getCurrentTime
         insert $ Email 
             {
@@ -590,7 +595,7 @@ instance YesodAuthEmail App where
             Just email -> do
                 let insertNewUser = do
                         newUserId<-insert $ User 
-                                {userName=msgRender MsgAnonymousUser
+                                {userName=msgRender MsgAnonymous
                                 ,userPassword=Nothing
                                 --,userIdent=emailAddress email
                                 ,userInserted=currentTime
@@ -877,7 +882,7 @@ instance YesodAuthEmail App where
 
                 |]
 
-    --needOldPassword _ =return False
+    needOldPassword _ =return False
 
     setPasswordHandler needOld = do
         messageRender <- getMessageRender
@@ -984,31 +989,34 @@ sendSystemEmail email subject text html= do
         let systemEmailPassword=appEmailPassword $ appSettings master
             systemEmailHost=appEmailHost $ appSettings master
             systemEmailUser=appEmailUser $ appSettings master
+            textMailPart = Part
+                { partType = "text/plain; charset=utf-8"
+                , partEncoding = None
+                , partDisposition = DefaultDisposition
+                , partContent = PartContent $ Data.Text.Lazy.Encoding.encodeUtf8 text
+                , partHeaders = []
+                }
+            htmlMailPart = Part
+                { partType = "text/html; charset=utf-8"
+                , partEncoding = None
+                , partDisposition = DefaultDisposition
+                , partContent = PartContent $ renderHtml html
+                , partHeaders = []
+                }
         --liftIO $ putStrLn $ systemEmailHost ++ systemEmailPassword ++ systemEmailUser
-        liftIO $ Network.Mail.SMTP.sendMailWithLoginTLS (unpack systemEmailHost) (unpack systemEmailUser) (unpack systemEmailPassword) (emptyMail $ Address Nothing systemEmailUser)
-            { mailTo = [Address Nothing email]
-            , mailHeaders =
-                [ ("Subject", subject)
-                ]
-            , mailParts = [[textMailPart, htmlMailPart]]
-            }
-
-      where       
-        textMailPart = Part
-            { partType = "text/plain; charset=utf-8"
-            , partEncoding = None
-            , partDisposition = DefaultDisposition
-            , partContent = PartContent $ Data.Text.Lazy.Encoding.encodeUtf8 text
-            , partHeaders = []
-            }
-        htmlMailPart = Part
-            { partType = "text/html; charset=utf-8"
-            , partEncoding = None
-            , partDisposition = DefaultDisposition
-            , partContent = PartContent $ renderHtml html
-            , partHeaders = []
-            }
-
+        liftIO $ do
+            _ <- forkIO $ do
+                
+                Network.Mail.SMTP.sendMailWithLoginTLS (unpack systemEmailHost) (unpack systemEmailUser) (unpack systemEmailPassword) (emptyMail $ Address Nothing systemEmailUser)
+                    { mailTo = [Address Nothing email]
+                    , mailHeaders =
+                        [ ("Subject", subject)
+                        ]
+                    , mailParts = [[textMailPart, htmlMailPart]]
+                    }
+                        
+            return ()
+ 
 -- | Access function to determine if a user is logged in.
 isAuthenticated :: Handler AuthResult
 isAuthenticated = do
@@ -1025,7 +1033,7 @@ instance Administrator Login where
     isAdministrator maybeUserId login | isJust maybeUserId && maybeUserId == loginUserId login =  True
     isAdministrator _ _= False
 instance Administrator Import.NoFoundation.Email where
-    isAdministrator maybeUserId email | isJust maybeUserId && maybeUserId == emailUserId email =  True
+    isAdministrator maybeUserId email | isJust maybeUserId && maybeUserId == emailUserId email && emailVerified email =  True
     isAdministrator _ _= False
 instance Administrator File where
     isAdministrator maybeUserId file | isJust maybeUserId && maybeUserId == fileUserId file =  True

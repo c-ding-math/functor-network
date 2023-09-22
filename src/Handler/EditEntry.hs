@@ -12,6 +12,7 @@ import Handler.EditComment(deleteEntryRecursive)
 import Handler.Parser(parse,markItUpWidget,userTemporaryDirectory)
 import Parse.Parser(mdToHtml,mdToHtmlSimple,texToHtml,texToHtmlSimple,EditorData(..))
 import qualified Data.Text as T
+import Text.Shakespeare.Text
 
 data EntryInput=EntryInput
     { title::Text
@@ -120,7 +121,8 @@ getEditEntryR entryId = do
 
 postNewEntryR :: Handler Html
 postNewEntryR = do
-    userId <- requireAuthId
+    (userId, user) <- requireAuthPair
+    
     ((res, _), _) <- runFormPost $ entryForm Nothing
     case res of 
         FormSuccess formData->  do
@@ -158,12 +160,37 @@ postNewEntryR = do
                         ,entryInputCitation=(citation formData)
                         ,entryInserted=currentTime
                         ,entryUpdated=currentTime
-                        --,entryStuck=Just currentTime
                         ,entryStatus=Publish
                         ,entryLocked=False
                         ,entryInputTags=(inputToList (tags formData))
                         ,entryOutputTags=tagHtmls
                         }
+                    subscribers <- runDB $ selectList [UserSubscriptionUserId ==. userId, UserSubscriptionVerified ==. True] []
+                    forM_ subscribers $ \(Entity subscriptionId subscription) -> do
+                        
+                        let unsubscribeUrl= urlRenderParams (UserSubscriptionR subscriptionId) $ case userSubscriptionKey subscription of
+                                Just key -> [("key", key)] 
+                                Nothing -> []
+                            entryUrl= urlRenderParams (EntryR userId entryId) []
+                            subject= "New post by " ++ (userName user) ++ ": " ++ (title formData) 
+                            emailText= [stext|
+The author #{userName user} you subscribed to has published a new post: 
+
+#{title formData}.
+
+You can view the post at #{entryUrl}.
+
+To unsubscribe, please visit #{unsubscribeUrl}.
+
+#{appName}
+                            |]
+                            emailHtml= [shamlet|
+<p>The author #{userName user} you subscribed to has published a new post:
+<p>#{title formData}
+<p><a href=#{entryUrl}>Go to view</a><span> | </span><a href=#{unsubscribeUrl}>Unsubscribe</a>    
+<p>#{appName}
+                            |]
+                        sendSystemEmail (userSubscriptionEmail subscription) subject emailText emailHtml
                     setMessage $ [hamlet|Your blog post, <a href=@{EntryR userId entryId}>#{title formData}</a>, has been published. <a class=view href=@{EntryR userId entryId}>View</a>|] urlRenderParams
                     redirect $ EditEntryR entryId
                 _-> do 
@@ -180,7 +207,6 @@ postNewEntryR = do
                         ,entryInputCitation=(citation formData)
                         ,entryInserted=currentTime
                         ,entryUpdated=currentTime
-                        --,entryStuck=Just currentTime
                         ,entryStatus=Draft
                         ,entryLocked=False
                         ,entryInputTags=(inputToList (tags formData))
@@ -200,7 +226,7 @@ postNewEntryR = do
 
 postEditEntryR :: EntryId -> Handler Html
 postEditEntryR  entryId = do
-    userId <- requireAuthId
+    (userId, user) <- requireAuthPair
     ((res, _), _) <- runFormPost $ entryForm Nothing
     case res of 
         FormSuccess formData->  do
@@ -229,6 +255,32 @@ postEditEntryR  entryId = do
                     setMessage $ [shamlet|Your blog post, #{title formData}, has been deleted.|] --getUrlRenderParams
                     redirect $ NewEntryR
                 Just "publish"-> do
+                    entry<-runDB $ get404 entryId
+                    when (entryInserted entry == entryUpdated entry) $ do
+                        subscribers <- runDB $ selectList [UserSubscriptionUserId ==. userId, UserSubscriptionVerified ==. True] []
+                        forM_ subscribers $ \(Entity subscriptionId subscription) -> do
+                            let unsubscribeUrl= urlRenderParams (UserSubscriptionR subscriptionId) $ case userSubscriptionKey subscription of
+                                    Just key -> [("key", key)] 
+                                    Nothing -> []
+                                entryUrl= urlRenderParams (EntryR userId entryId) []
+                                subject= "New post by " ++ (userName user) ++ ": " ++ (title formData) 
+                                emailText= [stext|
+The author #{userName user} you subscribed to has published a new post:
+
+#{title formData}.
+
+You can view the post at #{entryUrl}.
+To unsubscribe, please visit #{unsubscribeUrl}.
+#{appName}
+                                |]
+                                emailHtml= [shamlet|
+<p>The author #{userName user} you subscribed to has published a new post:
+<p><a href=#{entryUrl}>#{title formData}</a>
+<p><a href=#{entryUrl}>Go to view</a><span> | </span><a href=#{unsubscribeUrl}>Unsubscribe</a>
+<p>#{appName}
+                                |]
+                            sendSystemEmail (userSubscriptionEmail subscription) subject emailText emailHtml
+
                     runDB $ update entryId                    
                         [EntryUserId=.Just userId
                         ,EntryStatus=.Publish
@@ -256,7 +308,7 @@ postEditEntryR  entryId = do
                         ,EntryInputBody=.(content formData)
                         ,EntryOutputBody=.bodyHtml
                         ,EntryInputCitation=.(citation formData)
-                        ,EntryUpdated=.currentTime
+                        --,EntryUpdated=.currentTime
                         ,EntryInputTags=.(inputToList (tags formData))
                         ,EntryOutputTags=.tagHtmls
                         ]
