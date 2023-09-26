@@ -275,7 +275,7 @@ To unsubscribe, please visit #{unsubscribeUrl}.
                                 |]
                                 emailHtml= [shamlet|
 <p>The author #{userName user} you subscribed to has published a new post:
-<p><a href=#{entryUrl}>#{title formData}</a>
+<p>#{title formData}
 <p><a href=#{entryUrl}>Go to view</a><span> | </span><a href=#{unsubscribeUrl}>Unsubscribe</a>
 <p>#{appName}
                                 |]
@@ -298,20 +298,26 @@ To unsubscribe, please visit #{unsubscribeUrl}.
                     setMessage $ [hamlet|Your blog post, <a href=@{EntryR userId entryId}>#{title formData}</a>, has been published. <a class=view href=@{EntryR userId entryId}>View</a>|] urlRenderParams --Message can't be too long, use title text instead of titleHtml
                     redirect $ EditEntryR entryId
                 _-> do 
-                    runDB  $ update entryId                    
-                        [EntryUserId=.Just userId
-                        ,EntryStatus=.Draft
-                        ,EntryInputTitle=.(title formData)
-                        ,EntryOutputTitle=.titleHtml
-                        ,EntryInputPreamble=.(preamble formData)
-                        ,EntryInputFormat=.inputFormat formData
-                        ,EntryInputBody=.(content formData)
-                        ,EntryOutputBody=.bodyHtml
-                        ,EntryInputCitation=.(citation formData)
-                        --,EntryUpdated=.currentTime
-                        ,EntryInputTags=.(inputToList (tags formData))
-                        ,EntryOutputTags=.tagHtmls
-                        ]
+                    
+                    runDB  $ do 
+                        entry<-get404 entryId
+                        let updateTime=case entryStatus entry of
+                                Draft -> entryUpdated entry
+                                _ -> currentTime
+                        update entryId                    
+                            [EntryUserId=.Just userId
+                            ,EntryStatus=.Draft
+                            ,EntryInputTitle=.(title formData)
+                            ,EntryOutputTitle=.titleHtml
+                            ,EntryInputPreamble=.(preamble formData)
+                            ,EntryInputFormat=.inputFormat formData
+                            ,EntryInputBody=.(content formData)
+                            ,EntryOutputBody=.bodyHtml
+                            ,EntryInputCitation=.(citation formData)
+                            ,EntryUpdated=.updateTime
+                            ,EntryInputTags=.(inputToList (tags formData))
+                            ,EntryOutputTags=.tagHtmls
+                            ]
                     setMessage $ [hamlet|Your blog post, <a href=@{EntryR userId entryId}>#{title formData}</a>, has been saved. <a class=view href=@{EntryR userId entryId}>View</a>|] urlRenderParams
                     redirect $ EditEntryR entryId
         FormMissing -> do          

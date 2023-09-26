@@ -8,7 +8,10 @@
 /robots.txt RobotsR GET
 
 / Home0R GET POST
-
+/entries Entries0R GET
+/feedback FeedbackR GET POST
+/parser/input/#Text/output/#Text ParserR POST
+/help/#Text EditHelpR GET
 /users UsersR GET
 /user/#UserId HomeR GET POST !user
 
@@ -25,10 +28,12 @@ tag/#Text TagR GET
 /setting/email/#EmailId EmailSettingR GET POST !user !admin
 /setting/login/#LoginId LoginSettingR GET POST !user !admin
 
-/parser/input/#Text/output/#Text ParserR POST !login
+/subscriptions/#EmailId SubscriptionsR GET !user 
+/subscription/user/#UserSubscriptionId UserSubscriptionR GET POST
 
 /comment/#EntryId/edit EditCommentR POST DELETE !login 
 /user/#UserId/comments CommentsR GET !user
+
 
 /page0/#Text/edit EditPage0R GET POST
 /page/#Text/edit EditPageR GET POST !user
@@ -36,9 +41,5 @@ tag/#Text TagR GET
 !/#Text Page0R GET
 !/user/#UserId/#Text PageR GET !user
 
-/help/#Text EditHelpR GET
 
-/subscriptions/#EmailId SubscriptionsR GET !user 
-/subscription/user/#UserSubscriptionId UserSubscriptionR GET POST
 
-/entries Entries0R GET

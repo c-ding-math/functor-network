@@ -83,6 +83,7 @@ OutputFormat: Which format do you want to publish your post in?
 Format: format
 Post: Post
 Posts: Posts
+LatestPosts: Latest posts
 NewPost: New post
 FirstPost: Write your first post. 
 CommentsOn: Comments on
@@ -131,3 +132,8 @@ EmailSubscriptions: Email subscriptions
 EmailAddress: Email address
 SubscriptionVerified: Your subscription has been verified.
 SubscriptionDeleted: Subscription deleted
+
+Feedback: Feedback
+FeedbackSentDescription: Your feedback has been sent. Thank you!
+Send: Send
+SendAFeedback: Send a feedback

@@ -175,10 +175,15 @@ td {
     min-width:10cm;
 }
 
-/* flaot */
+/* float */
 .float-left{
     float:left;
 }
 .float-right{
     float:right;
+}
+
+/* other */
+.note{
+    color:#b4bcc2;
 }

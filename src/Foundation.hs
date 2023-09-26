@@ -193,7 +193,7 @@ instance Yesod App where
                     True | mcurrentRoute == Just (SettingsR) ->
                         [ FooterLeft $ MenuItem
                             { menuItemLabel = "Feedback"
-                            , menuItemRoute = Page0R "Feedback"
+                            , menuItemRoute = FeedbackR
                             , menuItemAccessCallback = True
                             }
                         , FooterRight $ MenuItem
@@ -206,6 +206,16 @@ instance Yesod App where
                         [ FooterLeft $ MenuItem
                             { menuItemLabel = "About Author"
                             , menuItemRoute = aboutRoute
+                            , menuItemAccessCallback = True
+                            }
+                        , FooterRight $ MenuItem
+                            { menuItemLabel = "Feedback"
+                            , menuItemRoute = FeedbackR
+                            , menuItemAccessCallback = True
+                            }
+                        , FooterRight $ MenuItem
+                            { menuItemLabel = "Privacy"
+                            , menuItemRoute = Page0R "Privacy Policy"
                             , menuItemAccessCallback = True
                             }
                         , FooterRight $ MenuItem
@@ -222,7 +232,7 @@ instance Yesod App where
                             }
                         , NavbarLeft $ MenuItem
                             { menuItemLabel = "Members"
-                            , menuItemRoute = Page0R "Users"
+                            , menuItemRoute = UsersR
                             , menuItemAccessCallback = True
                             }
                         , FooterLeft $ MenuItem
@@ -237,7 +247,7 @@ instance Yesod App where
                             }
                         , FooterLeft $ MenuItem
                             { menuItemLabel = "Feedback"
-                            , menuItemRoute = Page0R "Feedback"
+                            , menuItemRoute = FeedbackR
                             , menuItemAccessCallback = True
                             }
 
@@ -298,6 +308,7 @@ instance Yesod App where
     isAuthorized (ParserR _ _) _ = return Authorized
     isAuthorized (UserSubscriptionR _) _ = return Authorized
     isAuthorized Entries0R _ = return Authorized
+    isAuthorized FeedbackR _ = return Authorized
 
     -- Routes requiring authentication.
     isAuthorized (EditPageR _) _ = isAuthenticated
@@ -850,7 +861,7 @@ instance YesodAuthEmail App where
                 }
                 .login-form-container .or span{
                     padding:0 1em; 
-                    background-color: #fff;
+                    background-color: #f8f9f8;
                 }
                 .login-form-container + a{
                     display:block;

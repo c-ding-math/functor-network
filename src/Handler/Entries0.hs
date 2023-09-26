@@ -13,7 +13,7 @@ getEntries0R = do
         setTitleI MsgPosts
         [whamlet|
             <div .page-header>       
-                <h1>_{MsgPosts}
+                <h1>_{MsgLatestPosts}
                 <div .page-header-menu>
                     
             $if null entryList

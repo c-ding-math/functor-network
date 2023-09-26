@@ -1,42 +1,25 @@
 
 <!-- Static navbar -->
 <nav .navbar.navbar-default.navbar-static-top>
-
-    <div .container>        
-
-        <a class=navbar-brand href=@{homeRoute}>#{homeTitle}
-        <div .navbar-menu>
-            
-            <div .collapse.navbar-collapse.in>
-
-                <ul .nav.navbar-nav.navbar-left>
-                    
-                    $forall MenuItem label route _ <- navbarLeftFilteredMenuItems
-                        <li>
-                            <a href="@{route}">#{label}
-            
-            <!--$maybe route <- mcurrentRoute-->
-                $if (isJust muid) 
-                    <div #navbar .collapse.navbar-collapse>   
-                            <ul .nav.navbar-nav.navbar-middle>
-                                $forall MenuItem label route _ <- navbarMiddleFilteredMenuItems
-                                    <li :Just route == mcurrentRoute:.active>
-                                        <a href="@{route}">#{label}
-                                        
-            <div #navbar .collapse.navbar-collapse>    
-                <ul .nav.navbar-nav.navbar-right>
-                    $forall MenuItem label route _ <- navbarRightFilteredMenuItems
-                        <li :Just route == mcurrentRoute:.active>
-                            <a href="@{route}">#{label}        
-                                    
-            
-        
-        <button type="button" .navbar-toggle.collapsed data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+    <div .container>
+        <a .navbar-brand href=@{homeRoute}>#{homeTitle}
+        <div .navbar-header>
+            <button type="button" .navbar-toggle.collapsed data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
                 <span class="sr-only">Toggle navigation
                 <span class="icon-bar">
                 <span class="icon-bar">
                 <span class="icon-bar">
 
+        <div #navbar .collapse.navbar-collapse>
+            <ul .nav.navbar-nav>
+                $forall MenuItem label route _ <- navbarLeftFilteredMenuItems
+                    <li :Just route == mcurrentRoute:.active>
+                        <a href="@{route}">#{label}
+        
+            <ul .nav.navbar-nav.navbar-right>
+                $forall MenuItem label route _ <- navbarRightFilteredMenuItems
+                    <li :Just route == mcurrentRoute:.active>
+                        <a href="@{route}">#{label}
 
 <!-- Page Contents -->
 
@@ -67,19 +50,16 @@ $else
     <div .container>
         <ul .footer-left>
             $forall MenuItem label route _ <- footerLeftFilteredMenuItems  
-                $if (label == "Feedback")
-                    <li>
-                        <a href="mailto:feedback@functor.network?subject=Feedback&body=Your feedback is highly appreciated! Whether you have bug reports, functionality suggestions, content flags, or any other thoughts—even a simple hello, we welcome them all.%0A">#{label}
-                $else
-                    <li>
-                        <a href="@{route}">#{label}
-        <ul .footer-middle>
-            $forall MenuItem label route _ <- footerMiddleFilteredMenuItems
                 <li>
                     <a href="@{route}">#{label}
+        <!--<ul .footer-middle>
+            $forall MenuItem label route _ <- footerMiddleFilteredMenuItems
+                <li>
+                    <a href="@{route}">#{label}-->
         <ul .footer-right>
             $forall MenuItem label route _ <- footerRightFilteredMenuItems
                 <li>
                     <a href="@{route}">#{label}
 
             <!--#{appCopyright $ appSettings master}-->
+

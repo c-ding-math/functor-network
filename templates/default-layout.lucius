@@ -71,16 +71,7 @@ textarea{
   display: none;
 }
 
-nav>.container{
-  display:flex;
-  justify-content: space-between;
-}
-nav>.container .navbar-menu{
-  flex:1;
-  display:flex;
-  justify-content:space-between;
-}
-
+.navbar-brand{padding-left: 0px;}
 /*@media (max-width: 768px) {
   #navbar{
     position: absolute;
@@ -99,13 +90,13 @@ nav>.container .navbar-menu{
     padding-right: 8px
   }
 }
-
+*/
 @media (min-width: 768px) {
-  .navbar-default .navbar-middle > .active > a {
+  ul.navbar-nav>.active > a {
       background-color: transparent;
       border-bottom: 2px solid #fff;
   }
-}*/
+}
 
 
 footer{

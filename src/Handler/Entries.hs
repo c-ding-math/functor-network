@@ -11,9 +11,6 @@ import Text.Shakespeare.Text
 import qualified Crypto.Nonce as Nonce
 import System.IO.Unsafe (unsafePerformIO)
 
-userSubscriptionForm ::Maybe Text -> Form Text 
-userSubscriptionForm mEmail = renderBootstrap3 BootstrapBasicForm $ areq emailField (bfs MsgEmail) mEmail
-
 getEntriesR :: UserId -> Handler Html
 getEntriesR authorId = do
     mCurrentUserId<-maybeAuthId
@@ -22,16 +19,15 @@ getEntriesR authorId = do
         entries<- selectList [EntryUserId==.Just authorId, EntryType==.Standard] [Desc EntryInserted]
         let entryList =[x | x<-entries, entryStatus (entityVal x) == Publish||isAdministrator mCurrentUserId (entityVal x)]          
         return $ (entryList,author)
-    mCurrentUserEmail <- runDB $ selectFirst [EmailUserId ==. mCurrentUserId, EmailVerified ==. True] [Desc EmailInserted]
-    (subscribeWidget, subscribeEnctype) <- generateFormPost $ userSubscriptionForm $ (emailAddress . entityVal) <$> mCurrentUserEmail
-
+    
     defaultLayout $ do
         setTitle $ toHtml $ userName author
         [whamlet|
             <div .page-header>       
                 <h1>_{MsgPosts}
                 <div .page-header-menu>
-                    <a .btn.btn-default .subscribe href=#>_{MsgSubscribe}
+                    
+                    ^{subscribeUserWidget authorId}
                     $if mCurrentUserId == Just authorId
                         <a .btn.btn-primary .new-entry href=@{NewEntryR}>_{MsgNewPost}
             $if null entryList
@@ -40,53 +36,9 @@ getEntriesR authorId = do
                         <a href=@{NewEntryR}>_{MsgFirstPost}
             $else
                 ^{entryListWidget entryList}
-            <form style="display:none;" #subscribe-form method=post enctype=#{subscribeEnctype}>
-                <p>_{MsgSubscribeToUser}
-                ^{subscribeWidget}
         |]
         toWidget [hamlet|
             <div style="display:none;"><a href=@{CommentsR authorId}>Comments</a></div>
-        |]
-        toWidget [lucius|
-            .page-header{
-                display:flex;
-                justify-content:space-between;
-                align-items:center;
-            }
-        |]
-        addScript $ StaticR scripts_jquery_ui_jquery_ui_min_js
-        addStylesheet $ StaticR scripts_jquery_ui_jquery_ui_min_css
-        addStylesheet $ StaticR scripts_jquery_ui_jquery_ui_structure_min_css
-        addStylesheet $ StaticR scripts_jquery_ui_jquery_ui_additional_css
-        toWidget [julius|
-$(document).ready(function(){
-    $(".subscribe").click(function(e){
-        e.preventDefault();
-		var prompt = $("#subscribe-form");
-		prompt.dialog({
-			modal: true,
-            title: "Subscribe",
-			buttons: [
-				{
-					html: "Subscribe",
-					class: "btn btn-primary",
-					click: function () {
-                        $(this).dialog("close");
-                        $(this).submit();
-                    },
-				},
-				{
-					html: "Cancel",
-					class:"btn btn-default",
-					click: function () {
-						$(this).dialog( "close" );
-					},
-				},
-			]
-		});        
-
-    }); 
-});
         |]
 
 entryListWidget :: [Entity Entry] -> Widget
@@ -215,7 +167,66 @@ Thank you!
 <p>#{appName}
                         |] 
                         sendSystemEmail address emailSubject emailText emailHtml
-            redirect $ HomeR authorId
+            --redirect $ HomeR authorId
         FormFailure _ -> setMessageI MsgFormFailure
         _ -> setMessageI MsgFormMissing
     redirect $ HomeR authorId
+
+
+userSubscriptionForm ::Maybe Text -> Form Text 
+userSubscriptionForm mEmail = renderBootstrap3 BootstrapBasicForm $ areq emailField (bfs MsgEmail) mEmail
+
+subscribeUserWidget :: UserId -> Widget
+subscribeUserWidget authorId = do
+    (subscribeWidget, subscribeEnctype) <- handlerToWidget $ do
+        mCurrentUserId<-maybeAuthId
+        mCurrentUserEmail <- runDB $ selectFirst [EmailUserId ==. mCurrentUserId, EmailVerified ==. True] [Desc EmailInserted]
+
+        generateFormPost $ userSubscriptionForm $ (emailAddress . entityVal) <$> mCurrentUserEmail
+    [whamlet|
+        <a .btn.btn-default .subscribe href=#>_{MsgSubscribe}
+        <form style="display:none;" #subscribe-form method=post action=@{HomeR authorId} enctype=#{subscribeEnctype}>
+            <p>_{MsgSubscribeToUser}
+            ^{subscribeWidget}
+    |]
+    toWidget [julius|
+$(document).ready(function(){
+    $(".subscribe").click(function(e){
+        e.preventDefault();
+		var prompt = $("#subscribe-form");
+		prompt.dialog({
+			modal: true,
+            title: "Subscribe",
+			buttons: [
+				{
+					html: "Subscribe",
+					class: "btn btn-primary",
+					click: function () {
+                        $(this).dialog("close");
+                        $(this).submit();
+                    },
+				},
+				{
+					html: "Cancel",
+					class:"btn btn-default",
+					click: function () {
+						$(this).dialog( "close" );
+					},
+				},
+			]
+		});        
+
+    }); 
+});
+    |]
+    toWidget [lucius|
+        .page-header{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+        }
+    |]
+    addScript $ StaticR scripts_jquery_ui_jquery_ui_min_js
+    addStylesheet $ StaticR scripts_jquery_ui_jquery_ui_min_css
+    addStylesheet $ StaticR scripts_jquery_ui_jquery_ui_structure_min_css
+    addStylesheet $ StaticR scripts_jquery_ui_jquery_ui_additional_css

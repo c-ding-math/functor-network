@@ -22,7 +22,7 @@ getPageR userId _ = do
     <div .entry-content>
         <article>
             <p>
-                <img src=@{StaticR $ StaticRoute ["icons","user-photo.png"] []} title="Avatar" class="float-right" style="height:6em">
+                <img src=@{StaticR $ StaticRoute ["icons","user-photo.png"] []} title="Avatar" class="float-right" style="height:6em;">
             <h3 id="basic-information">Basic Information
             <p><strong>Name</strong>: #{userName author}<br>
                 <strong>Homepage</strong>: 

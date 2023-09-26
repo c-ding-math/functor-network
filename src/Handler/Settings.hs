@@ -216,7 +216,7 @@ getSettingsR = do
 postSettingsR :: Handler Html
 postSettingsR = do
     (userId,user)<-requireAuthPair
-    currentTime<-liftIO $ getCurrentTime
+    --currentTime<-liftIO $ getCurrentTime
     setting <- lookupPostParam "setting"
     case setting of 
         Just "name"-> do

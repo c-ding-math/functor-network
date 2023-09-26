@@ -37,7 +37,9 @@ postParserR inputFormat outputFormat = do
                 _ -> mdToHtml
         docData<- requireCheckJsonBody ::Handler EditorData
         preview<-liftIO $ parse userDir parser docData  
-        return $ RepPlain $ toContent $ preview
+        return $ RepPlain $ toContent $ case preview of
+            "\n"->""
+            x->x
 
 markItUpWidget ::Format->Format-> Widget
 markItUpWidget inputFormat _=    do    --addScriptRemote "https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"
@@ -81,8 +83,9 @@ $(document).ready(function(){
     var parent = textarea.closest('.markItUpContainer');
     var childrenToWrap = parent.children().not(':first-child');
     var wrapperDiv = $('<div>').attr('class', 'markItUpWrapper');
-    childrenToWrap.wrapAll(wrapperDiv);       
-    $('.markItUpFooter').append('<article></article>');
+    childrenToWrap.wrapAll(wrapperDiv);  
+    var previewArea = $('<article/>',{});  
+    previewArea.appendTo(parent.find('.markItUpFooter'));
 
     //update preview on Ctrl + Enter
     textarea.attr("placeholder","Your content goes here. Press [Ctrl + Enter] to update preview");

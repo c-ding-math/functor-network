@@ -53,11 +53,44 @@ $newline never
 
     $maybe analytics <- appAnalytics $ appSettings master
 
-      <!-- Google tag (gtag.js) -->
-      <script async src="https://www.googletagmanager.com/gtag/js?id=#{analytics}"></script>
       <script>
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
+        
+        gtag('consent', 'default', {
+          'ad_storage': 'denied',
+          'analytics_storage': 'denied'
+        });
+  
+      <script>
+        if(!window.location.href.match(/localhost/)){
+          (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+          new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+          j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+          'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+          })(window,document,'script','dataLayer','#{analytics}');     
+        } 
 
-        gtag('config', '#{analytics}');
+      <script>
+        function consentGranted() {
+          gtag('consent', 'update', {
+            'ad_storage': 'granted',
+            'analytics_storage': 'granted'
+          });
+          localStorage.setItem('cookie_consent', 'true');
+          document.getElementById('privacy-dialog').style.display = 'none';
+        }
+
+      <div #privacy-dialog style="display:none;position: fixed;margin: 0 auto;left: 0;right: 0;bottom:0;background-color:white;box-shadow: 0 0 2px 2px #dce4ec;"> 
+          <div .container style="display:flex;align-items:center;padding:1em;3em;">
+            <p style="flex-grow:1;">This website uses essential cookies to ensure the basic functionalities and tracking cookies to understand how you interact with it. If you continue to use this site we will assume that you are happy with it.
+            <button .btn.btn-primary.float-right onclick="consentGranted()">Got it!
+      $if isJust muid
+        <script>
+          consentGranted();
+      $else
+        <script>
+          if (localStorage.getItem('cookie_consent') != 'true') {
+            document.getElementById('privacy-dialog').style.display = 'block';
+          }
+    

@@ -101,11 +101,11 @@ getSubscriptions address = do
                             $maybe key <- userSubscriptionKey subscription
                                 <ul .entry-menu.inline-menu>
                                     <li>
-                                        <a unsubscribe href=@{UserSubscriptionR subscriptionId} data-key=#{key}>_{MsgUnsubscribe}
+                                        <a .unsubscribe href=@{UserSubscriptionR subscriptionId} data-key=#{key}>_{MsgUnsubscribe}
                             $nothing
                                 <ul .entry-menu.inline-menu>
                                     <li>
-                                        <a .menu-item.unsubscribe href=@{UserSubscriptionR subscriptionId} data-key="">_{MsgUnsubscribe}
+                                        <a .unsubscribe href=@{UserSubscriptionR subscriptionId} data-key="">_{MsgUnsubscribe}
                     <form .hidden #unsubscribe-form action="" method=post enctype=#{userUnsubscribeFormEnctype}>
                         ^{userUnsubscribeFormWidget}
                                     
