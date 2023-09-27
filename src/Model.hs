@@ -26,12 +26,6 @@ data RoleType =  SuperAdministrator | Administrator
     deriving (Show, Read, Eq)
 derivePersistField "RoleType"
 
-data SubscriptionType 
-        = EntrySubscription --when a entry receive a comment
-        | CommentSubscription --when a comment receive a reply
-    deriving (Show, Read, Eq)
-derivePersistField "SubscriptionType"
-
 data EntryType =  Standard | Page | Comment | Page0
     deriving (Show, Read, Eq)
 derivePersistField "EntryType"

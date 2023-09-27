@@ -71,17 +71,8 @@ textarea{
   display: none;
 }
 
-nav>.container{
-  display:flex;
-  justify-content: space-between;
-}
-nav>.container .navbar-menu{
-  flex:1;
-  display:flex;
-  justify-content:space-between;
-}
-
-@media (max-width: 768px) {
+.navbar-brand{padding-left: 0px;}
+/*@media (max-width: 768px) {
   #navbar{
     position: absolute;
     top:4em;
@@ -91,10 +82,17 @@ nav>.container .navbar-menu{
   .navbar-default .navbar-nav > .active > a {
       
   }
+  .navbar-left li{
+    display: inline-block;
+  }
+  .navbar-menu ul>li>a{
+    padding-left: 8px;
+    padding-right: 8px
+  }
 }
-
+*/
 @media (min-width: 768px) {
-  .navbar-default .navbar-middle > .active > a {
+  ul.navbar-nav>.active > a {
       background-color: transparent;
       border-bottom: 2px solid #fff;
   }
@@ -130,7 +128,6 @@ footer .container ul li {
 .footer-middle {
   text-align: center;
   flex: 0 0 1em;
-  visibility: hidden;
 }
 
 footer .container a, footer .container a:hover, footer .container a:active, footer .container a:focus {

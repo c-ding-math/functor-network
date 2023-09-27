@@ -8,6 +8,7 @@ SiteRegistrationFailed: The site path has been registered by others. Please choo
 EnterPath: Enter your site path below. 
 PathRegex: A path must begin with a lowercase letter and consists of lowercase letters, hyphens and digits.
 FormMissing: Form data missing
+FormFailure: Form data invalid
 
 Account: Account
 UserNumber: User number
@@ -16,9 +17,10 @@ Password: Password
 ForgotPassword: Forgot password
 SetPassword: Set a new password
 EnterPasswordResetEmail: Enter your e-mail address below, and a password reset e-mail will be sent to you.
+Or: or
 Login: Login
 LoginViaEmail: Login via email
-LoginViaGoogle: Login via Google
+SignInWithGoogle: Sign in with Google
 NewGoogle: Connect to a new google account
 Email: Email
 Site: Site
@@ -26,6 +28,7 @@ Profile: Profile
 User: User
 Users: Members
 UnregisteredUser: [Unregistered]
+Anonymous: Anonymous
 Name: Name
 Avatar: Avatar
 About: About
@@ -80,6 +83,7 @@ OutputFormat: Which format do you want to publish your post in?
 Format: format
 Post: Post
 Posts: Posts
+LatestPosts: Latest posts
 NewPost: New post
 FirstPost: Write your first post. 
 CommentsOn: Comments on
@@ -114,3 +118,22 @@ NoPage: No page found.
 
 InvalidAction: Invalid action
 ComingSoon: Coming soon...
+
+Subscribe: Subscribe
+AlreadySubscribed email@Text: You have already subscribed via email #{email}.
+SubscriptionConfirmationSent email@Text: A confirmation email has been sent to #{email}. Please click the link in the email to confirm your subscription.
+UserSubscriptionConfirmation email@Text: Your subscription via email #{email} has been confirmed. You will receive an email notification when the author publishes a new post.
+Unsubscribe: Unsubscribe
+UnsubscribeAll: Unsubscribe all
+SubscribeToUser: Please enter your email address below. You will receive an email notification when the author publishes a new post.
+UserSubscriptionsDescription: You are subscribed to the following members. You will receive an email notification when they publish a new post.
+NoSubscription: No subscription found.
+EmailSubscriptions: Email subscriptions
+EmailAddress: Email address
+SubscriptionVerified: Your subscription has been verified.
+SubscriptionDeleted: Subscription deleted
+
+Feedback: Feedback
+FeedbackSentDescription: Your feedback has been sent. Thank you!
+Send: Send
+SendAFeedback: Send a feedback

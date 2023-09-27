@@ -7,10 +7,10 @@ import Import
 
 getPageR :: UserId -> Text -> Handler Html
 getPageR userId _ = do
-    _<-runDB $ get404 userId
+    author<-runDB $ get404 userId
     mCurrentUserId<-maybeAuthId
     -- Currently, support about page only
-    mEntry<-runDB $ selectFirst [EntryInputTitle==."About",EntryType==.Page,EntryUserId==.userId,EntryStatus==.Publish] [Desc EntryInserted]
+    mEntry<-runDB $ selectFirst [EntryInputTitle==."About",EntryType==.Page,EntryUserId==.Just userId,EntryStatus==.Publish] [Desc EntryInserted]
 
     case mEntry of
         Nothing->
@@ -19,7 +19,14 @@ getPageR userId _ = do
                 [whamlet|
 <div .entry>
     <h1>_{MsgAbout}
-    <p>Apparently, this user prefers to keep an air of mystery.
+    <div .entry-content>
+        <article>
+            <p>
+                <img src=@{StaticR $ StaticRoute ["icons","user-photo.png"] []} title="Avatar" class="float-right" style="height:6em;">
+            <h3 id="basic-information">Basic Information
+            <p><strong>Name</strong>: #{userName author}<br>
+                <strong>Homepage</strong>: 
+                    <a href=@{HomeR userId}>@{HomeR userId}
     $if mCurrentUserId == Just userId
         <ul .entry-menu>
             <li>

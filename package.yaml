@@ -53,6 +53,7 @@ dependencies:
 - filepath==1.4.*
 - random==1.2.*
 - scalpel==0.6.*
+- nonce==1.0.*
 
 # The library contains all of our application code. The executable
 # defined below is just a thin wrapper.
