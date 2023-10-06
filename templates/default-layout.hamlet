@@ -3,24 +3,37 @@
 <nav .navbar.navbar-default.navbar-static-top>
     <div .container>
         <a .navbar-brand href=@{homeRoute}>#{homeTitle}
-        <div .navbar-header>
-            <button type="button" .navbar-toggle.collapsed data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-                <span class="sr-only">Toggle navigation
-                <span class="icon-bar">
-                <span class="icon-bar">
-                <span class="icon-bar">
+        $if length navbarRightFilteredMenuItems > 1
+            
+            <div .navbar-header>
+                <button type="button" .navbar-toggle.collapsed data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                    <span class="sr-only">Toggle navigation
+                    <span class="icon-bar">
+                    <span class="icon-bar">
+                    <span class="icon-bar">
 
-        <div #navbar .collapse.navbar-collapse>
-            <ul .nav.navbar-nav>
-                $forall MenuItem label route _ <- navbarLeftFilteredMenuItems
-                    <li :Just route == mcurrentRoute:.active>
-                        <a href="@{route}">#{label}
-        
-            <ul .nav.navbar-nav.navbar-right>
-                $forall MenuItem label route _ <- navbarRightFilteredMenuItems
-                    <li :Just route == mcurrentRoute:.active>
-                        <a href="@{route}">#{label}
+            <div #navbar .collapse.navbar-collapse>
+                <ul .nav.navbar-nav.navbar-left>
+                    $forall MenuItem label route _ <- navbarLeftFilteredMenuItems
+                        <li :Just route == mcurrentRoute:.active>
+                            <a href="@{route}">#{label}
+            
+                <ul .nav.navbar-nav.navbar-right>
+                    $forall MenuItem label route _ <- navbarRightFilteredMenuItems
+                        <li :Just route == mcurrentRoute:.active>
+                            <a href="@{route}">#{label}
 
+        $else
+            <div>
+                <ul .nav.navbar-nav.navbar-left>
+                    $forall MenuItem label route _ <- navbarLeftFilteredMenuItems
+                        <li :Just route == mcurrentRoute:.active>
+                            <a href="@{route}">#{label}
+            
+                <ul .nav.navbar-nav.navbar-right style="float:right;">
+                    $forall MenuItem label route _ <- navbarRightFilteredMenuItems
+                        <li :Just route == mcurrentRoute:.active>
+                            <a href="@{route}">#{label}
 <!-- Page Contents -->
 
 <div .container>

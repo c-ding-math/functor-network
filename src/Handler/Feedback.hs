@@ -58,14 +58,14 @@ postFeedbackR = do
     ((result, _), _) <- runFormPost $ feedbackForm Nothing
     case result of
         FormSuccess feedback -> do
-            master <- getYesod
-            let systemEmailUser=appEmailUser $ appSettings master
+            
+            let feedbackEmailAddress ="feedback@functor.network"
                 emailSubject = subject feedback
                 emailText = [stext|#{unTextarea(body feedback)}|]
                 emailHtml = [shamlet|
 #{unTextarea(body feedback)}
 |]
-            sendSystemEmail systemEmailUser emailSubject emailText emailHtml
+            sendSystemEmail feedbackEmailAddress emailSubject emailText emailHtml
             defaultLayout $ do
                 setTitleI MsgFeedback
                 [whamlet|

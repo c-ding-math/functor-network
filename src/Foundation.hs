@@ -197,14 +197,14 @@ instance Yesod App where
                             , menuItemAccessCallback = True
                             }
                         , FooterRight $ MenuItem
-                            { menuItemLabel = "Version 20230922"
+                            { menuItemLabel = "Version 2023-10-07"
                             , menuItemRoute = Page0R "Changelog"
                             , menuItemAccessCallback = True
                             }
                         ]
                     True | otherwise-> 
                         [ FooterLeft $ MenuItem
-                            { menuItemLabel = "About Author"
+                            { menuItemLabel = "About"
                             , menuItemRoute = aboutRoute
                             , menuItemAccessCallback = True
                             }
@@ -226,11 +226,6 @@ instance Yesod App where
                         ]
                     False -> 
                         [ NavbarLeft $ MenuItem
-                            { menuItemLabel = "Posts"
-                            , menuItemRoute = Entries0R
-                            , menuItemAccessCallback = True
-                            }
-                        , NavbarLeft $ MenuItem
                             { menuItemLabel = "Members"
                             , menuItemRoute = UsersR
                             , menuItemAccessCallback = True
@@ -306,7 +301,10 @@ instance Yesod App where
     isAuthorized (Page0R _) _ = return Authorized
     isAuthorized (EditHelpR _) _ = return Authorized
     isAuthorized (ParserR _ _) _ = return Authorized
-    isAuthorized (UserSubscriptionR _) _ = return Authorized
+    isAuthorized (EditUserSubscriptionR _) _ = return Authorized
+    isAuthorized (NewUserSubscriptionR _) _ = return Authorized
+    isAuthorized (EditEntrySubscriptionR _) _ = return Authorized
+    isAuthorized (NewEntrySubscriptionR _) _ = return Authorized
     isAuthorized Entries0R _ = return Authorized
     isAuthorized FeedbackR _ = return Authorized
 
@@ -892,6 +890,26 @@ instance YesodAuthEmail App where
                 }
 
                 |]
+
+    -- | Response after sending a confirmation email.
+    confirmationEmailSentResponse :: Text -> AuthHandler site TypedContent
+    confirmationEmailSentResponse identifier = do
+        mr <- getMessageRender
+        selectRep $ do
+            provideJsonMessage (mr msg)
+            provideRep $ authLayout $ do
+              setTitleI Msg.ConfirmationEmailSentTitle
+              [whamlet|
+                <p>A verification email has been sent to #{identifier}. Please click the link in the email to verify your account.
+                <p>Receive no email? There are some steps you can take:
+                <ul>
+                    <li> Wait a minute.
+                    <li> Make sure you typed your email address correctly.
+                    <li> With your email provider, add our domain <code>functor.network</code> to your whitelist and try again.
+                    <li> Send an email to <a href="mailto:feedback@functor.network">feedback@functor.network</a> and we will help you out.
+              |]
+      where
+        msg = Msg.ConfirmationEmailSent identifier
 
     needOldPassword _ =return False
 

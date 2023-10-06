@@ -64,12 +64,24 @@ entryForm inputs=renderBootstrap3 BootstrapBasicForm $ EntryInput
 
 getNewEntryR:: Handler Html
 getNewEntryR =  do
-    (_,user) <- requireAuthPair
+    (userId,user) <- requireAuthPair
     formatParam <- lookupGetParam "format"
     let format = case formatParam of
             Just "tex" -> Format "tex"
             _ -> Format "md"
-    (entryWidget, entryEnctype) <- generateFormPost $ entryForm $ Just $ EntryInput "" (userDefaultPreamble user) format "" (userDefaultCitation user) "" 
+    entryInput <- runDB $ do 
+        mEntry <- selectFirst [EntryUserId ==. Just userId,EntryType==.Standard] [Desc EntryInserted]
+        mSmaplePost<- case mEntry of
+            Just _ -> return Nothing
+            Nothing -> do 
+                case format of
+                    Format "tex" -> selectFirst [EntryInputTitle==."a sample post written in latex",EntryType==.Page0,EntryStatus==.Publish] [Desc EntryInserted]  
+                    _ -> selectFirst [EntryInputTitle==."a sample post written in markdown",EntryType==.Page0,EntryStatus==.Publish] [Desc EntryInserted]
+        case mSmaplePost of
+            Just (Entity _ entry) -> return $ EntryInput "" (entryInputPreamble entry) format (entryInputBody entry) (entryInputCitation entry) ""
+            Nothing -> return $ EntryInput "" (userDefaultPreamble user) format "" (userDefaultCitation user) ""
+    (entryWidget, entryEnctype) <- generateFormPost $ entryForm $ Just entryInput
+    --(entryWidget, entryEnctype) <- generateFormPost $ entryForm $ Just $ EntryInput "" (userDefaultPreamble user) format "" (userDefaultCitation user) "" 
     defaultLayout $ do
         setTitleI MsgEdit
         [whamlet|
@@ -168,7 +180,7 @@ postNewEntryR = do
                     subscribers <- runDB $ selectList [UserSubscriptionUserId ==. userId, UserSubscriptionVerified ==. True] []
                     forM_ subscribers $ \(Entity subscriptionId subscription) -> do
                         
-                        let unsubscribeUrl= urlRenderParams (UserSubscriptionR subscriptionId) $ case userSubscriptionKey subscription of
+                        let unsubscribeUrl= urlRenderParams (EditUserSubscriptionR subscriptionId) $ case userSubscriptionKey subscription of
                                 Just key -> [("key", key)] 
                                 Nothing -> []
                             entryUrl= urlRenderParams (EntryR userId entryId) []
@@ -259,7 +271,7 @@ postEditEntryR  entryId = do
                     when (entryInserted entry == entryUpdated entry) $ do
                         subscribers <- runDB $ selectList [UserSubscriptionUserId ==. userId, UserSubscriptionVerified ==. True] []
                         forM_ subscribers $ \(Entity subscriptionId subscription) -> do
-                            let unsubscribeUrl= urlRenderParams (UserSubscriptionR subscriptionId) $ case userSubscriptionKey subscription of
+                            let unsubscribeUrl= urlRenderParams (EditUserSubscriptionR subscriptionId) $ case userSubscriptionKey subscription of
                                     Just key -> [("key", key)] 
                                     Nothing -> []
                                 entryUrl= urlRenderParams (EntryR userId entryId) []

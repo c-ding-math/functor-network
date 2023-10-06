@@ -13,7 +13,7 @@
 /parser/input/#Text/output/#Text ParserR POST
 /help/#Text EditHelpR GET
 /users UsersR GET
-/user/#UserId HomeR GET POST !user
+/user/#UserId HomeR GET !user
 
 --/user/#UserId/entries EntriesR GET !user
 /entry NewEntryR GET POST !user !login
@@ -29,7 +29,11 @@ tag/#Text TagR GET
 /setting/login/#LoginId LoginSettingR GET POST !user !admin
 
 /subscriptions/#EmailId SubscriptionsR GET !user 
-/subscription/user/#UserSubscriptionId UserSubscriptionR GET POST
+/subscription/user/#UserSubscriptionId EditUserSubscriptionR GET POST
+/subscribe/user/#UserId NewUserSubscriptionR POST
+/subscription/entry/#EntrySubscriptionId EditEntrySubscriptionR GET POST
+/subscribe/entry/#EntryId NewEntrySubscriptionR POST
+
 
 /comment/#EntryId/edit EditCommentR POST DELETE !login 
 /user/#UserId/comments CommentsR GET !user
@@ -40,6 +44,5 @@ tag/#Text TagR GET
 /pages0 Pages0R GET
 !/#Text Page0R GET
 !/user/#UserId/#Text PageR GET !user
-
 
 

@@ -66,6 +66,10 @@ import Handler.EditHelp
 import Handler.Subscriptions
 import Handler.Entries0
 import Handler.Feedback
+import Handler.EditEntrySubscription
+import Handler.NewEntrySubscription
+import Handler.NewUserSubscription
+import Handler.EditUserSubscription
 
 -- This line actually creates our YesodDispatch instance. It is the second half
 -- of the call to mkYesodData which occurs in Foundation.hs. Please see the

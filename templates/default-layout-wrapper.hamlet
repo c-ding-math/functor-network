@@ -15,7 +15,27 @@ $newline never
       <meta name="description" content="">
     <meta name="author" content="">
 
-    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="viewport" content="width=device-width,initial-scale=1" id="viewport">
+    <script>
+      const screenWidth = screen.width;
+      const viewport = document.getElementById('viewport');
+      switch (true) {
+          case (screenWidth < 380 && screenWidth >= 320):
+              viewport.setAttribute('content','width=device-width,initial-scale=0.63');
+              break;
+          case (screenWidth < 400):
+              viewport.setAttribute('content','width=device-width,initial-scale=0.67');
+              break;
+          case (screenWidth < 500):
+              viewport.setAttribute('content','width=device-width,initial-scale=0.7');
+              break;
+          case (screenWidth < 600):
+              viewport.setAttribute('content','width=device-width,initial-scale=0.88');
+              break;
+              
+          default:
+              viewport.setAttribute('content','width=device-width,initial-scale=1');
+      }
 
     ^{pageHead pc}
 

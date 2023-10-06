@@ -2,7 +2,7 @@
 .navbar {
     background-color: rgb(27, 28, 29);
 }
-
+.navbar-left{display: none;}
 .masthead {
     margin-top: -21px;
     color: white;

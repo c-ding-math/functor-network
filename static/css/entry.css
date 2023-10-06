@@ -8,6 +8,10 @@ body{
 .entry{
     margin-bottom: 3em;
 }
+.comment{
+    margin-top: 1em;
+    margin-bottom: 2em;
+}
 .entry-content {
     background-color: white;
     border: 1px solid #dce4ec;
@@ -18,21 +22,22 @@ body{
 }
 
 .entry-meta>span.by::before{
-    content:"by ";
+    content:"";
 }
 .entry-meta>span.at:before{
-    content:"on ";
+    content:" - ";
 }
+
 .entry-meta>span.to:before{
-    content:"to ";
+    content:" (in reply to ";
+}
+.entry-meta>span.to:after{
+    content:")";
 }
 .entry-meta>span{
     color:#b4bcc2;
-    margin-right:1em;
 }
-.entry-meta>span:last-child{
-    margin-right:0;
-}
+
 
 .entry-meta{
     margin-bottom:1em;
@@ -100,10 +105,8 @@ div.mark{
 .proof-like>*:last-child::after{ 
     content: "";
     border: 1px solid black;
-    padding: 0.4em;
-    position: absolute;
-    bottom: 0;
-    right: 0;
+    padding: 0.3em;
+    float: right;
 }
 blockquote{
     font-size:inherit;

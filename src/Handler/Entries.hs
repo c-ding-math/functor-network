@@ -7,17 +7,25 @@ module Handler.Entries where
 import Import
 import Parse.Parser (scaleHeader)
 import Yesod.Form.Bootstrap3
-import Text.Shakespeare.Text 
-import qualified Crypto.Nonce as Nonce
-import System.IO.Unsafe (unsafePerformIO)
+import Handler.NewUserSubscription (subscribeToUserWidget)
 
+{-searchForm :: Form Text
+searchForm = renderBootstrap3 BootstrapBasicForm $ areq (searchField False) (bfs ("Search"::Text)) Nothing
+-}
 getEntriesR :: UserId -> Handler Html
 getEntriesR authorId = do
     mCurrentUserId<-maybeAuthId
+    --(searchFormWidget, searchFormEnctype) <- generateFormPost searchForm
+
     (entryList,author)<-runDB $ do
         author<-get404 authorId      
         entries<- selectList [EntryUserId==.Just authorId, EntryType==.Standard] [Desc EntryInserted]
-        let entryList =[x | x<-entries, entryStatus (entityVal x) == Publish||isAdministrator mCurrentUserId (entityVal x)]          
+        --searchParam <- lookupGetParam "q"
+        let entryList = [x | x<-entries, entryStatus (entityVal x) == Publish||isAdministrator mCurrentUserId (entityVal x)]          
+            {-entryList = case searchParam of
+                Just searchText -> [x | x<-entryList', searchText `isInfixOf` (entryInputTitle (entityVal x) <> unTextarea (entryInputBody (entityVal x)))]
+                _ -> entryList'-}
+
         return $ (entryList,author)
     
     defaultLayout $ do
@@ -27,14 +35,20 @@ getEntriesR authorId = do
                 <h1>_{MsgPosts}
                 <div .page-header-menu>
                     
-                    ^{subscribeUserWidget authorId}
+                    ^{subscribeToUserWidget authorId}
                     $if mCurrentUserId == Just authorId
                         <a .btn.btn-primary .new-entry href=@{NewEntryR}>_{MsgNewPost}
             $if null entryList
                 <p>_{MsgNoPost} #
                     $if mCurrentUserId == Just authorId                      
                         <a href=@{NewEntryR}>_{MsgFirstPost}
+
+                <p>Note: Accounts registered but never used may be considered as spam and deleted. To avoide your account being cleaned up by mistake, please post something.
+
             $else
+                <!--<form method=get enctype=#{searchFormEnctype}>
+                    ^{searchFormWidget}
+                    <button type="submit" .btn.btn-primary>_{MsgSearch}-->
                 ^{entryListWidget entryList}
         |]
         toWidget [hamlet|
@@ -84,149 +98,3 @@ li h1{
 }
     |]
 
-
-postEntriesR :: UserId -> Handler Html --Email subscription
-postEntriesR authorId = do
-    author <- runDB $ get404 authorId
-    ((result, _), _) <- runFormPost $ userSubscriptionForm Nothing
-    _<-case result of
-        FormSuccess address -> do
-            currentTime <- liftIO getCurrentTime
-            verificationKey <- liftIO $ Nonce.nonce128urlT $ unsafePerformIO (Nonce.new)
-            mCurrentUserId <- maybeAuthId
-            mEmail <- runDB $ getBy $ UniqueEmail address 
-            let  verified = case entityVal <$> mEmail of
-                    Just email | isAdministrator mCurrentUserId email -> True
-                    _ -> False
-            
-            eUserSubscription <- runDB $ insertBy $ UserSubscription{
-                userSubscriptionEmail = address,
-                userSubscriptionUserId = authorId,
-                userSubscriptionKey = Just verificationKey,
-                userSubscriptionInserted = currentTime,
-                userSubscriptionVerified = verified
-            }
-            case eUserSubscription of
-                Left (Entity subscriptionId subscription) -> if userSubscriptionVerified subscription
-                    then do
-                        setMessageI $ MsgAlreadySubscribed address
-                    else do
-                        
-                        setMessageI $ MsgSubscriptionConfirmationSent address
-                        urlRenderParams <- getUrlRenderParams
-                        
-                        let url = case userSubscriptionKey subscription of
-                                Just key -> urlRenderParams (UserSubscriptionR subscriptionId) [("key", key)]
-                                Nothing -> urlRenderParams (UserSubscriptionR subscriptionId) []
-                            
-                            emailSubject = "Subscription confirmation"
-                            emailText = [stext|
-Please confirm your subscription to #{userName author} with the link below.
-
-#{url}
-
-Thank you!
-
-#{appName}
-                            
-                        |]
-                            emailHtml = [shamlet|
-<p>Please confirm your subscription to #{userName author} by clicking the link below.
-<p>
-    <a href=#{url}>Confirm subscription
-<p>Thank you!
-<p>#{appName}
-                        |] 
-                        sendSystemEmail address emailSubject emailText emailHtml
-                Right subscriptionId -> if verified
-                    then do  
-                        setMessageI $ MsgUserSubscriptionConfirmation address
-
-                    else do
-                        
-                        setMessageI $ MsgSubscriptionConfirmationSent address
-                        urlRenderParams <- getUrlRenderParams
-                        
-                        let url = urlRenderParams (UserSubscriptionR subscriptionId) [("key", verificationKey)]
-                            emailSubject = "Subscription confirmation"
-                            emailText = [stext|
-Please confirm your subscription to #{userName author} with the link below.
-
-#{url}
-
-Thank you!
-
-#{appName}
-                            
-                        |]
-                            emailHtml = [shamlet|
-<p>Please confirm your subscription to #{userName author} by clicking the link below.
-<p>
-    <a href=#{url}>Confirm subscription
-<p>Thank you!
-<p>#{appName}
-                        |] 
-                        sendSystemEmail address emailSubject emailText emailHtml
-            --redirect $ HomeR authorId
-        FormFailure _ -> setMessageI MsgFormFailure
-        _ -> setMessageI MsgFormMissing
-    redirect $ HomeR authorId
-
-
-userSubscriptionForm ::Maybe Text -> Form Text 
-userSubscriptionForm mEmail = renderBootstrap3 BootstrapBasicForm $ areq emailField (bfs MsgEmail) mEmail
-
-subscribeUserWidget :: UserId -> Widget
-subscribeUserWidget authorId = do
-    (subscribeWidget, subscribeEnctype) <- handlerToWidget $ do
-        mCurrentUserId<-maybeAuthId
-        mCurrentUserEmail <- runDB $ selectFirst [EmailUserId ==. mCurrentUserId, EmailVerified ==. True] [Desc EmailInserted]
-
-        generateFormPost $ userSubscriptionForm $ (emailAddress . entityVal) <$> mCurrentUserEmail
-    [whamlet|
-        <a .btn.btn-default .subscribe href=#>_{MsgSubscribe}
-        <form style="display:none;" #subscribe-form method=post action=@{HomeR authorId} enctype=#{subscribeEnctype}>
-            <p>_{MsgSubscribeToUser}
-            ^{subscribeWidget}
-    |]
-    toWidget [julius|
-$(document).ready(function(){
-    $(".subscribe").click(function(e){
-        e.preventDefault();
-		var prompt = $("#subscribe-form");
-		prompt.dialog({
-			modal: true,
-            title: "Subscribe",
-			buttons: [
-				{
-					html: "Subscribe",
-					class: "btn btn-primary",
-					click: function () {
-                        $(this).dialog("close");
-                        $(this).submit();
-                    },
-				},
-				{
-					html: "Cancel",
-					class:"btn btn-default",
-					click: function () {
-						$(this).dialog( "close" );
-					},
-				},
-			]
-		});        
-
-    }); 
-});
-    |]
-    toWidget [lucius|
-        .page-header{
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-        }
-    |]
-    addScript $ StaticR scripts_jquery_ui_jquery_ui_min_js
-    addStylesheet $ StaticR scripts_jquery_ui_jquery_ui_min_css
-    addStylesheet $ StaticR scripts_jquery_ui_jquery_ui_structure_min_css
-    addStylesheet $ StaticR scripts_jquery_ui_jquery_ui_additional_css

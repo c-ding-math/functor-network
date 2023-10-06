@@ -3,11 +3,13 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 module Handler.Entry where
 
+import Import
 import Yesod.Form.Bootstrap3
 import Handler.Parser(markItUpWidget)
 import Parse.Parser(scaleHeader)
 import Handler.EditComment(getChildIds)
-import Import
+import Handler.NewEntrySubscription(subscribeToEntryWidget)
+
 
 getEntryR :: UserId ->  EntryId -> Handler Html
 getEntryR authorId entryId = do    
@@ -58,9 +60,7 @@ getEntryR authorId entryId = do
 
     defaultLayout $ do
         setTitle $ toHtml $ entryInputTitle entry
-        setDescriptionIdemp $ (intercalate ";" $ entryInputTags entry) <> case mEntryAuthor of
-            Just author -> "; by " <> (userName $ entityVal author)
-            Nothing -> ""
+
         [whamlet|
 <div .entry :entryStatus entry == Draft:.draft #entry-#{toPathPiece entryId}>
   <h1 .entry-title>#{preEscapedToMarkup(scaleHeader 1 (entryOutputTitle entry))}
@@ -77,6 +77,8 @@ getEntryR authorId entryId = do
         <li .reply>
             <a href=#comment data-action=@{EditCommentR entryId}>comment
         <!--<li .print><a href=#>print</a>-->
+        <li> 
+            ^{subscribeToEntryWidget entryId}
         $if isAdministrator maybeUserId entry
             <li .edit><a href=@{EditEntryR entryId}>edit</a>
 
@@ -108,6 +110,8 @@ getEntryR authorId entryId = do
               <ul .entry-menu>                
                   <li .reply>
                     <a href=#comment data-action=@{EditCommentR commentId}>reply
+                  <!--<li>
+                    ^{subscribeToEntryWidget commentId}-->
                   $if isAdministrator maybeUserId entry || isAdministrator maybeUserId comment
                       <li .delete>
                         <a href=@{EditCommentR commentId}>_{MsgDelete}
@@ -158,6 +162,7 @@ menuWidget=do
                 });
                 return false;
             }); */
+
             $(".entry .entry-menu .reply a").click(function(){
                 $("#comment").html("Add a comment");
                 var handlerUrl=$(this).attr("data-action");
