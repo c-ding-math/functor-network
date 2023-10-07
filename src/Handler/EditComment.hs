@@ -139,7 +139,7 @@ To unsubscribe, please visit #{unsubscribeUrl}.
                 sendSystemEmail (entrySubscriptionEmail subscription) subject emailText emailHtml
                         
 
-            setMessage $ [hamlet|<a href=#entry-#{toPathPiece commentId}>Your comment</a> has been published. <a class=view href=#entry-#{toPathPiece commentId}>View</a>|] urlRenderParams
+            setMessage $ [hamlet|<a href=#entry-#{toPathPiece commentId}>Your comment</a> has been published. <a class='view alert-link' href=#entry-#{toPathPiece commentId}>View</a>|] urlRenderParams
             redirect $ EntryR rootEntryAuthorId rootEntryId :#: ("entry-" <> toPathPiece commentId)
 
         FormMissing -> do

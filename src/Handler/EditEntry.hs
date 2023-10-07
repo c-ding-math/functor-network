@@ -203,7 +203,7 @@ To unsubscribe, please visit #{unsubscribeUrl}.
 <p>#{appName}
                             |]
                         sendSystemEmail (userSubscriptionEmail subscription) subject emailText emailHtml
-                    setMessage $ [hamlet|Your blog post, <a href=@{EntryR userId entryId}>#{title formData}</a>, has been published. <a class=view href=@{EntryR userId entryId}>View</a>|] urlRenderParams
+                    setMessage $ [hamlet|Your blog post, <a class=alert-link href=@{EntryR userId entryId}>#{title formData}</a>, has been published. <a class='view alert-link' href=@{EntryR userId entryId}>View</a>|] urlRenderParams
                     redirect $ EditEntryR entryId
                 _-> do 
                     entryId<-runDB $ insert $ Entry   
@@ -224,7 +224,7 @@ To unsubscribe, please visit #{unsubscribeUrl}.
                         ,entryInputTags=(inputToList (tags formData))
                         ,entryOutputTags=tagHtmls
                         }
-                    setMessage $ [hamlet|Your blog post, <a href=@{EntryR userId entryId}>#{title formData}</a>, has been saved. <a class=view href=@{EntryR userId entryId}>View</a>|] urlRenderParams
+                    setMessage $ [hamlet|Your blog post, <a class=alert-link href=@{EntryR userId entryId}>#{title formData}</a>, has been saved. <a class='view alert-link' href=@{EntryR userId entryId}>View</a>|] urlRenderParams
                     redirect $ EditEntryR entryId
         FormMissing -> do
             setMessageI MsgFormMissing
@@ -307,7 +307,7 @@ To unsubscribe, please visit #{unsubscribeUrl}.
                         ,EntryInputTags=.(inputToList (tags formData))
                         ,EntryOutputTags=.tagHtmls
                         ]
-                    setMessage $ [hamlet|Your blog post, <a href=@{EntryR userId entryId}>#{title formData}</a>, has been published. <a class=view href=@{EntryR userId entryId}>View</a>|] urlRenderParams --Message can't be too long, use title text instead of titleHtml
+                    setMessage $ [hamlet|Your blog post, <a class=alert-link href=@{EntryR userId entryId}>#{title formData}</a>, has been published. <a class='view alert-link' href=@{EntryR userId entryId}>View</a>|] urlRenderParams --Message can't be too long, use title text instead of titleHtml
                     redirect $ EditEntryR entryId
                 _-> do 
                     
@@ -330,7 +330,7 @@ To unsubscribe, please visit #{unsubscribeUrl}.
                             ,EntryInputTags=.(inputToList (tags formData))
                             ,EntryOutputTags=.tagHtmls
                             ]
-                    setMessage $ [hamlet|Your blog post, <a href=@{EntryR userId entryId}>#{title formData}</a>, has been saved. <a class=view href=@{EntryR userId entryId}>View</a>|] urlRenderParams
+                    setMessage $ [hamlet|Your blog post, <a class=alert-link href=@{EntryR userId entryId}>#{title formData}</a>, has been saved. <a class='view alert-link' href=@{EntryR userId entryId}>View</a>|] urlRenderParams
                     redirect $ EditEntryR entryId
         FormMissing -> do          
             setMessageI MsgFormMissing

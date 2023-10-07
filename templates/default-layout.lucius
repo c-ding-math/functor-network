@@ -7,7 +7,7 @@
     margin-top: -21px;
     color: white;
     text-align: center;
-    min-height: 500px;
+    padding-bottom: 5em;
 }
 
 .masthead .header {
@@ -25,8 +25,9 @@
  }
 
 .masthead h2 {
-    font-size: 1.7em;
+    font-size: 2.45em;
     font-weight: normal;
+    margin-bottom: 1.5em;
 }
 
 .masthead .btn {
@@ -53,7 +54,8 @@
 
 /* Space things out */
 .bs-docs-section {
-  margin-bottom: 60px;
+  margin-bottom: 45px;
+  margin-top: 45px;
 }
 .bs-docs-section:last-child {
   margin-bottom: 0;

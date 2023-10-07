@@ -42,8 +42,8 @@ getEntriesR authorId = do
                 <p>_{MsgNoPost} #
                     $if mCurrentUserId == Just authorId                      
                         <a href=@{NewEntryR}>_{MsgFirstPost}
-
-                <p>Note: Accounts registered but never used may be considered as spam and deleted. To avoide your account being cleaned up by mistake, please post something.
+                $if mCurrentUserId == Just authorId
+                    <p>Note: Accounts registered but never used may be considered as spam and deleted. To avoide your account being cleaned up by mistake, please post something.
 
             $else
                 <!--<form method=get enctype=#{searchFormEnctype}>

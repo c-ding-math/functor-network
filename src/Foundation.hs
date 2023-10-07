@@ -204,7 +204,7 @@ instance Yesod App where
                         ]
                     True | otherwise-> 
                         [ FooterLeft $ MenuItem
-                            { menuItemLabel = "About"
+                            { menuItemLabel = "About the author"
                             , menuItemRoute = aboutRoute
                             , menuItemAccessCallback = True
                             }

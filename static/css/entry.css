@@ -17,6 +17,16 @@ body{
     border: 1px solid #dce4ec;
     margin-bottom: 0.5em;
 }
+.preview-warning-block{
+    background-color: #dce4ec;
+    border: 1px solid #dce4ec;
+    margin-bottom: 1em;
+    padding: 1em;
+    border-radius: 2px;
+}
+.entry-content .preview-warning-block{
+    display: none;
+}
 .draft .entry-title::after{
     content:" (draft)";
 }
