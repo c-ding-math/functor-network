@@ -12,6 +12,9 @@ body{
     margin-top: 1em;
     margin-bottom: 2em;
 }
+.entry-title, .entry-content, .markItUpFooter, .entry-content h1, .entry-content h2, .entry-content h3, .entry-content h4, .entry-content h5, .entry-content h6 {
+    font-family: Georgia,Cambria,"Times New Roman",Times,serif;
+}
 .entry-content {
     background-color: white;
     border: 1px solid #dce4ec;
@@ -84,13 +87,13 @@ body{
     max-width:22cm;
     margin:auto;
 }
-.entry-content article, .markItUpFooter article{
+.entry-content .entry-content-wrapper, .markItUpFooter .entry-content-wrapper{
     width:14.2cm;
     margin:auto;
     color:black;
     padding:1em 0.2cm 0.5em;
 }
-.markItUpFooter article:empty{
+.markItUpFooter .entry-content-wrapper:empty{
     display:none;
 }
 

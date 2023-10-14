@@ -69,7 +69,7 @@ $(document).ready(function(){
     var textarea=$("textarea.editor");
     var extraSettings={
         onCtrlEnter: {keepDefault:false,},
-        previewInElement:'.markItUpFooter article', 
+        previewInElement:'.markItUpFooter .entry-content-wrapper', 
         previewParserPath: "@{parserPath}",
         previewAutoRefresh:false,     
         previewParser: function(content) {
@@ -88,7 +88,7 @@ $(document).ready(function(){
     var childrenToWrap = parent.children().not(':first-child');
     var wrapperDiv = $('<div>').attr('class', 'markItUpWrapper');
     childrenToWrap.wrapAll(wrapperDiv);  
-    var previewArea = $('<article/>',{});  
+    var previewArea = $('<div/>',{class:'entry-content-wrapper'});  
     previewArea.appendTo(parent.find('.markItUpFooter'));
 
     //update preview on Ctrl + Enter

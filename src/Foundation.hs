@@ -428,6 +428,18 @@ instance YesodAuth App where
     -- Override the above two destinations when a Referer: header is present
     redirectToReferer :: App -> Bool
     redirectToReferer _ = True
+    
+    --onLogin :: (MonadHandler m, master ~ HandlerSite m) => m () 
+    onLogin = do
+        muid <- maybeAuthId
+        case muid of 
+            Just uid -> do
+                urlRenderParam <- getUrlRenderParams
+                addMessage "success" $ [hamlet|
+                    You are now logged in.
+                    <a .view.alert-link href=@{HomeR uid}>Home
+                |] urlRenderParam 
+            _ -> addMessage "success" "You are now logged in."
 
     authenticate :: (MonadHandler m, HandlerSite m ~ App)
                  => Creds App -> m (AuthenticationResult App)

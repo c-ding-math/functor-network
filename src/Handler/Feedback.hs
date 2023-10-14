@@ -37,11 +37,11 @@ getFeedbackR = do
     defaultLayout $ do
         setTitleI MsgFeedback
         [whamlet|
-<div .entry>
+<article .entry>
   <h1>_{MsgFeedback}
   <div .entry-content>
     $maybe (Entity _ entry)<-mFeedbackDescription
-        <article>#{preEscapedToMarkup(entryOutputBody entry)}
+        <div .entry-content-wrapper>#{preEscapedToMarkup(entryOutputBody entry)}
     $nothing
         _{MsgComingSoon}
 <section .new-comment>

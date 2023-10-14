@@ -1,6 +1,6 @@
 ## About the project
 
-This is the source code for the [Functor Network](https://www.functor.network) web platform - a blog community for mathematicians. The term "mathematician" here is used in a broad sense, encompassing people studying math at any level, as well as professionals in related fields. While we provide special support for mathematicians, anyone can register a blog site on our platform and express themselves on a variety of topics, whether they're related to math or not.
+This is the source code for the [Functor Network](https://www.functor.network) - a blog platform for mathematicians. The term "mathematician" here is used in a broad sense, encompassing people studying math at any level, as well as professionals in related fields. While we provide special support for mathematicians, anyone can register a blog site on our platform and express themselves on a variety of topics, whether they're related to math or not.
 
 ## Features
 
@@ -28,4 +28,4 @@ At Functor Network, we've curated a suite of features designed to elevate your m
 
 You are welcome to join us in making the project better. Feedback and suggestions are highly appreciated. You can contact us via email [feedback@functor.network](mailto:feedback@functor.network).
 
-Our platform is built using [Haskell](https://www.haskell.org), [Yesod](https://www.yesodweb.com/), [Pandoc](https://pandoc.org), and [MarkItUp](https://markitup.jaysalvat.com/home/). We would like to express our gratitude to the developers of these projects for their outstanding work.
+Our platform is built using [Haskell](https://www.haskell.org), [Yesod](https://www.yesodweb.com/), [Pandoc](https://pandoc.org), and [TeX Live](https://tug.org/texlive/). We would like to express our gratitude to the developers of these projects for their outstanding work.

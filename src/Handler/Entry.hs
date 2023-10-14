@@ -62,7 +62,7 @@ getEntryR authorId entryId = do
         setTitle $ toHtml $ entryInputTitle entry
 
         [whamlet|
-<div .entry :entryStatus entry == Draft:.draft #entry-#{toPathPiece entryId}>
+<article .entry :entryStatus entry == Draft:.draft #entry-#{toPathPiece entryId}>
   <h1 .entry-title>#{preEscapedToMarkup(scaleHeader 1 (entryOutputTitle entry))}
   <div .entry-meta>
       <span .by>
@@ -72,7 +72,7 @@ getEntryR authorId entryId = do
               _{MsgUnregisteredUser}
       <span .at>#{formatDateStr (entryInserted entry)}
   <div .entry-content>
-      <article>#{preEscapedToMarkup(entryOutputBody entry)}
+      <div .entry-content-wrapper>#{preEscapedToMarkup(entryOutputBody entry)}
   <ul .entry-menu>
         <li .reply>
             <a href=#comment data-action=@{EditCommentR entryId}>comment
@@ -88,7 +88,7 @@ getEntryR authorId entryId = do
     $else
         <h3>_{MsgComments}
         $forall (Entity commentId comment,mCommentAuthor,mCommentParentId,mCommentParentAuthor)<-zip4 comments mCommentAuthors mCommentParentIds mCommentParentAuthors
-            <div .comment id=entry-#{toPathPiece commentId}> 
+            <article .comment id=entry-#{toPathPiece commentId}> 
               <div .entry-meta>
                   <span .by>
                       $maybe author<-mCommentAuthor                           
@@ -106,7 +106,7 @@ getEntryR authorId entryId = do
                                     _{MsgUnregisteredUser}
 
               <div .entry-content>
-                  <article>#{preEscapedToMarkup (entryOutputBody comment)}  
+                  <div .entry-content-wrapper>#{preEscapedToMarkup (entryOutputBody comment)}  
               <ul .entry-menu>                
                   <li .reply>
                     <a href=#comment data-action=@{EditCommentR commentId}>reply
@@ -134,7 +134,8 @@ getEntryR authorId entryId = do
         $nothing
             <h3 #comment>_{MsgNewComment}
             <p>
-                <a href=@{AuthR LoginR}>_{MsgLoginToComment}
+                You must <a href=@{AuthR LoginR}>sign in</a> to post a comment
+                
         |]
         markItUpWidget format (Format "html")
         menuWidget

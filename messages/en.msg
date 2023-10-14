@@ -106,7 +106,6 @@ NewComment: Add a comment
 Comment: Comment
 Comments: Comments
 CommentPublished: Comment published
-LoginToComment: You must be logged in to comment
 CommentDeleted: Comment deleted
 Reply: Reply
 

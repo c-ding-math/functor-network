@@ -13,10 +13,10 @@ getPage0R text = do
         Just (Entity _ entry) -> defaultLayout $ do 
                 setTitle $ toHtml text
                 [whamlet|
-<div .entry :entryStatus entry == Draft:.draft>
+<article .entry :entryStatus entry == Draft:.draft>
     <h1>#{text}
     <div .entry-content>
-      <article>#{preEscapedToMarkup (entryOutputBody entry)}
+      <div .entry-content-wrapper>#{preEscapedToMarkup (entryOutputBody entry)}
     <!--  <ul .entry-menu>
         <li>
             <a href=@{EditPage0R text}>_{MsgEdit}-->
