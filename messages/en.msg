@@ -143,3 +143,5 @@ Send: Send
 SendAFeedback: Send a feedback
 
 Search: Search
+SearchReultsFor query@Text: Search results for "#{query}"
+PostsContaining query@Text: Posts containing "#{query}"

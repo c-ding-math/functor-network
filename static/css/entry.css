@@ -1,8 +1,9 @@
 body{
-    background-color: #f8f9f8;
+    background-color: #f8f8f8;
 }
-.page-header{
-    margin:0;
+
+.page-header h1{
+    margin-top:0;
 }
 /* entry */
 .entry{

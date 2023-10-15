@@ -8,53 +8,79 @@ import Import
 import Parse.Parser (scaleHeader)
 import Yesod.Form.Bootstrap3
 import Handler.NewUserSubscription (subscribeToUserWidget)
+import Data.Text (toLower)
 
-{-searchForm :: Form Text
-searchForm = renderBootstrap3 BootstrapBasicForm $ areq (searchField False) (bfs ("Search"::Text)) Nothing
--}
+searchForm :: Form Text
+searchForm = renderBootstrap3 BootstrapBasicForm $ areq (searchField False) searchFieldSettings Nothing where
+    searchFieldSettings = FieldSettings {
+        fsLabel = "", 
+        fsTooltip = Nothing,
+        fsId = Nothing,
+        fsName = Just "keyword",
+        fsAttrs = [("class","form-control"),("placeholder","Search")]
+    }
+
 getEntriesR :: UserId -> Handler Html
 getEntriesR authorId = do
     mCurrentUserId<-maybeAuthId
-    --(searchFormWidget, searchFormEnctype) <- generateFormPost searchForm
+    ((searchFormResult, searchFormWidget), searchFormEnctype) <- runFormGet searchForm
 
-    (entryList,author)<-runDB $ do
+    (userEntryList,entryList,author,mSeachText)<-runDB $ do
         author<-get404 authorId      
         entries<- selectList [EntryUserId==.Just authorId, EntryType==.Standard] [Desc EntryInserted]
-        --searchParam <- lookupGetParam "q"
-        let entryList = [x | x<-entries, entryStatus (entityVal x) == Publish||isAdministrator mCurrentUserId (entityVal x)]          
-            {-entryList = case searchParam of
-                Just searchText -> [x | x<-entryList', searchText `isInfixOf` (entryInputTitle (entityVal x) <> unTextarea (entryInputBody (entityVal x)))]
-                _ -> entryList'-}
+        
+        let userEntryList = [x | x<-entries, entryStatus (entityVal x) == Publish||isAdministrator mCurrentUserId (entityVal x)]          
+        (entryList, mSeachText)<- case searchFormResult of
+                FormSuccess searchText -> do
+                    --setMessage $ toHtml $ "Search results for: " <> searchText
+                    let 
+                        searchTexts = Data.Text.toLower <$> words searchText
+                        searchArea :: Entity Entry -> Text
+                        searchArea x = Data.Text.toLower $ entryInputTitle (entityVal x) <> unTextarea (entryInputBody (entityVal x))
+                        
+                    return ([x | x<-userEntryList, all (\searchText -> searchText `isInfixOf` (searchArea x)) searchTexts], Just searchText)
+                _ -> return (userEntryList, Nothing)
 
-        return $ (entryList,author)
+        return $ (userEntryList,entryList,author,mSeachText)
     
     defaultLayout $ do
         setTitle $ toHtml $ userName author
         [whamlet|
             <div .page-header>       
                 <h1>_{MsgPosts}
+                <form .search-form method=get enctype=#{searchFormEnctype}>
+                    ^{searchFormWidget}
                 <div .page-header-menu>
                     
                     ^{subscribeToUserWidget authorId}
                     $if mCurrentUserId == Just authorId
                         <a .btn.btn-primary .new-entry href=@{NewEntryR}>_{MsgNewPost}
+            
+            $maybe searchText <- mSeachText
+                <p>_{MsgPostsContaining searchText}:
             $if null entryList
                 <p>_{MsgNoPost} #
-                    $if mCurrentUserId == Just authorId                      
-                        <a href=@{NewEntryR}>_{MsgFirstPost}
                 $if mCurrentUserId == Just authorId
-                    <p>Note: Accounts registered but never used may be considered as spam and deleted. To avoide your account being cleaned up by mistake, please post something.
+                    $if null userEntryList
+                        <a href=@{NewEntryR}>_{MsgFirstPost}
+                        <p>Note: Accounts registered but never used may be considered as spam and deleted. To avoide your account being cleaned up by mistake, please post something.
 
             $else
-                <!--<form method=get enctype=#{searchFormEnctype}>
-                    ^{searchFormWidget}
-                    <button type="submit" .btn.btn-primary>_{MsgSearch}-->
                 ^{entryListWidget entryList}
         |]
         toWidget [hamlet|
             <div style="display:none;"><a href=@{CommentsR authorId}>Comments</a></div>
         |]
-
+        toWidget [lucius| 
+            .search-form{
+                flex-grow:1;
+                margin:0 1em;
+            }
+            .search-form .form-group{
+                margin-bottom:0;
+            }
+        |]
+        
 entryListWidget :: [Entity Entry] -> Widget
 entryListWidget entryList = do
     toWidget [hamlet|
