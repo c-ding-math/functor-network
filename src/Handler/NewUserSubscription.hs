@@ -47,7 +47,7 @@ postNewUserSubscriptionR authorId = do
                             
                             emailSubject = "Subscription confirmation"
                             emailText = [stext|
-Please confirm your subscription to #{userName author} with the link below.
+Please confirm your subscription to the author #{userName author} with the link below.
 
 #{url}
 
@@ -57,7 +57,7 @@ Thank you!
                             
                         |]
                             emailHtml = [shamlet|
-<p>Please confirm your subscription to #{userName author} by clicking the link below.
+<p>Please confirm your subscription to the author #{userName author} by clicking the link below.
 <p>
     <a href=#{url}>Confirm subscription
 <p>Thank you!
@@ -76,7 +76,7 @@ Thank you!
                         let url = urlRenderParams (EditUserSubscriptionR subscriptionId) [("key", verificationKey)]
                             emailSubject = "Subscription confirmation"
                             emailText = [stext|
-Please confirm your subscription to #{userName author} with the link below.
+Please confirm your subscription to the author #{userName author} with the link below.
 
 #{url}
 
@@ -86,7 +86,7 @@ Thank you!
                             
                         |]
                             emailHtml = [shamlet|
-<p>Please confirm your subscription to #{userName author} by clicking the link below.
+<p>Please confirm your subscription to the author #{userName author} by clicking the link below.
 <p>
     <a href=#{url}>Confirm subscription
 <p>Thank you!

@@ -101,8 +101,6 @@ postEditCommentR entryId = do
                         ,entryUpdated=currentTime
                         ,entryStatus=Publish
                         ,entryLocked=False
-                        ,entryInputTags=[]
-                        ,entryOutputTags=[]
                         }
                 
             commentId <- runDB $ do
@@ -133,7 +131,7 @@ To unsubscribe, please visit #{unsubscribeUrl}.
                     emailHtml= [shamlet|
 <p>The following post you subscribed to received a new comment:
 <p>#{entryInputTitle rootEntry}
-<p><a href=#{entryUrl}>Go to view</a><span> | </span><a href=#{unsubscribeUrl}>Unsubscribe</a>    
+<p><a href=#{entryUrl}>Go to view</a><span> | </span><a href=#{unsubscribeUrl}>Manage subscriptions</a>    
 <p>#{appName}
                     |]
                 sendSystemEmail (entrySubscriptionEmail subscription) subject emailText emailHtml

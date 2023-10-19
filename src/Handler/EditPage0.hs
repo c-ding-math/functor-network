@@ -137,8 +137,6 @@ postEditPage0R title = do
                             --,entryStuck=Just currentTime
                             ,entryStatus=Publish
                             ,entryLocked=False
-                            ,entryInputTags=[]
-                            ,entryOutputTags=[]
                             }
 
                         setMessage $ [hamlet|Your page, <a .alert-link href=@{Page0R title}>#{title}</a>, has been updated. <a .alert-link class=view href=@{Page0R title}>View</a>|] urlRenderParams
@@ -177,8 +175,6 @@ postEditPage0R title = do
                                 --,entryStuck=Just currentTime
                                 ,entryStatus=Draft
                                 ,entryLocked=False
-                                ,entryInputTags=[]
-                                ,entryOutputTags=[]
                                 }
 
                             setMessage $ [hamlet|Your page, <a .alert-link href=@{Page0R title}>#{title}</a>, has been saved. <a .alert-link class=view href=@{Page0R title}>View</a>|] urlRenderParams

@@ -3,7 +3,7 @@
 <nav .navbar.navbar-default.navbar-static-top>
     <div .container>
         <a .navbar-brand href=@{homeRoute}>#{homeTitle}
-        $if length navbarRightFilteredMenuItems > 1
+        $if length (navbarRightFilteredMenuItems ++ navbarLeftFilteredMenuItems) > 1
             
             <div .navbar-header>
                 <button type="button" .navbar-toggle.collapsed data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
@@ -25,10 +25,11 @@
 
         $else
             <div>
-                <ul .nav.navbar-nav.navbar-left>
+                <!--<ul .nav.navbar-nav.navbar-left>
                     $forall MenuItem label route _ <- navbarLeftFilteredMenuItems
                         <li :Just route == mcurrentRoute:.active>
                             <a href="@{route}">#{label}
+                -->
             
                 <ul .nav.navbar-nav.navbar-right style="float:right;">
                     $forall MenuItem label route _ <- navbarRightFilteredMenuItems

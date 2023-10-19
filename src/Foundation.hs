@@ -197,7 +197,7 @@ instance Yesod App where
                             , menuItemAccessCallback = True
                             }
                         , FooterRight $ MenuItem
-                            { menuItemLabel = "Version 2023-10-07"
+                            { menuItemLabel = "Version 2023-10-17"
                             , menuItemRoute = Page0R "Changelog"
                             , menuItemAccessCallback = True
                             }
@@ -226,6 +226,11 @@ instance Yesod App where
                         ]
                     False -> 
                         [ NavbarLeft $ MenuItem
+                            { menuItemLabel = "Posts"
+                            , menuItemRoute = Entries0R
+                            , menuItemAccessCallback = True
+                            }
+                        , NavbarLeft $ MenuItem
                             { menuItemLabel = "Members"
                             , menuItemRoute = UsersR
                             , menuItemAccessCallback = True
@@ -296,7 +301,6 @@ instance Yesod App where
     isAuthorized (PageR _ _) _ = return Authorized
     --isAuthorized (EntriesR _) _ = return Authorized
     isAuthorized (EntryR _ _) _ = return Authorized
-    isAuthorized (TagR _)_ = return Authorized
     isAuthorized (CommentsR _) _ = return Authorized
     isAuthorized (Page0R _) _ = return Authorized
     isAuthorized (EditHelpR _) _ = return Authorized
@@ -390,7 +394,6 @@ instance YesodBreadcrumbs App where
             return (siteName, Just Home0R)
         PageR pathPiece _-> parentLink pathPiece
         -- EntriesR pathPiece -> parentLink pathPiece
-        --TagR pathPiece _-> parentLink pathPiece
         Home0R -> return ("Home", Nothing)
         AuthR _ -> return ("Home", Just Home0R)
         _ -> return ("home", Nothing)
@@ -1107,7 +1110,6 @@ routeUserEntity (Just route)
         CommentsR userId -> returnEntityIfExist userId
         --EntriesR userId -> returnEntityIfExist userId
         EntryR userId _ -> returnEntityIfExist userId
-        --TagR userId _ -> returnEntityIfExist userId
         _ -> do
             (userId, user) <- requireAuthPair
             return $ Just (Entity userId user)

@@ -49,7 +49,7 @@ postNewEntrySubscriptionR entryId= do
                             
                             emailSubject = "Subscription confirmation"
                             emailText = [stext|
-Please confirm your subscription to #{entryInputTitle entry} with the link below.
+Please confirm your subscription to the post "#{entryInputTitle entry}" with the link below.
 
 #{url}
 
@@ -59,7 +59,7 @@ Thank you!
                             
                         |]
                             emailHtml = [shamlet|
-<p>Please confirm your subscription to #{entryInputTitle entry} by clicking the link below.
+<p>Please confirm your subscription to the post "#{entryInputTitle entry}" by clicking the link below.
 <p>
     <a href=#{url}>Confirm subscription
 <p>Thank you!
@@ -77,7 +77,7 @@ Thank you!
                         let url = urlRenderParams (EditEntrySubscriptionR subscriptionId) [("key", verificationKey)]
                             emailSubject = "Subscription confirmation"
                             emailText = [stext|
-Please confirm your subscription to #{entryInputTitle entry} with the link below.
+Please confirm your subscription to the post "#{entryInputTitle entry}" with the link below.
 
 #{url}
 
@@ -87,7 +87,7 @@ Thank you!
                             
                         |]
                             emailHtml = [shamlet|
-<p>Please confirm your subscription to #{entryInputTitle entry} by clicking the link below.
+<p>Please confirm your subscription to the post "#{entryInputTitle entry}" by clicking the link below.
 <p>
     <a href=#{url}>Confirm subscription
 <p>Thank you!

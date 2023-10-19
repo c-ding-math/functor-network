@@ -146,8 +146,6 @@ postEditPageR title = do
                                     --,entryStuck=Just currentTime
                                     ,entryStatus=Publish
                                     ,entryLocked=False
-                                    ,entryInputTags=[]
-                                    ,entryOutputTags=[]
                                     }
 
                                 setMessage $ [hamlet|<a .alert-link href=@{PageR userId title}>Your profile page</a> has been updated. <a class='view alert-link' href=@{PageR userId title}>View</a>|] urlRenderParams
@@ -187,8 +185,6 @@ postEditPageR title = do
                                         --,entryStuck=Just currentTime
                                         ,entryStatus=Draft
                                         ,entryLocked=False
-                                        ,entryInputTags=[]
-                                        ,entryOutputTags=[]
                                         }
 
                                     setMessage $ [hamlet|Your page, <a .alert-link href=@{PageR userId title}>#{title}</a>, has been saved. <a class='view alert-link' href=@{PageR userId title}>View</a>|] urlRenderParams

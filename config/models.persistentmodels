@@ -46,8 +46,6 @@ Entry
     updated UTCTime default=CURRENT_TIME
     status EntryStatus
     locked Bool -- if locked, comments are not allowed
-    inputTags [Text]
-    outputTags [Text]
 
 EntryTree
     node EntryId

@@ -9,6 +9,7 @@ import Parse.Parser (scaleHeader)
 import Yesod.Form.Bootstrap3
 import Handler.NewUserSubscription (subscribeToUserWidget)
 import Data.Text (toLower)
+import Handler.Entry (formatDateStr)
 
 searchForm :: Form Text
 searchForm = renderBootstrap3 BootstrapBasicForm $ areq (searchField False) searchFieldSettings Nothing where
@@ -38,7 +39,7 @@ getEntriesR authorId = do
                         searchArea :: Entity Entry -> Text
                         searchArea x = Data.Text.toLower $ entryInputTitle (entityVal x) <> unTextarea (entryInputBody (entityVal x))
                         
-                    return ([x | x<-userEntryList, all (\searchText -> searchText `isInfixOf` (searchArea x)) searchTexts], Just searchText)
+                    return ([x | x<-userEntryList, all (\keyword -> keyword `isInfixOf` (searchArea x)) searchTexts], Just searchText)
                 _ -> return (userEntryList, Nothing)
 
         return $ (userEntryList,entryList,author,mSeachText)
@@ -59,12 +60,14 @@ getEntriesR authorId = do
             $maybe searchText <- mSeachText
                 <p>_{MsgPostsContaining searchText}:
             $if null entryList
-                <p>_{MsgNoPost} #
+                
                 $if mCurrentUserId == Just authorId
                     $if null userEntryList
-                        <a href=@{NewEntryR}>_{MsgFirstPost}
+                        <p>_{MsgNoPost} #
+                            <a href=@{NewEntryR}>_{MsgFirstPost}
                         <p>Note: Accounts registered but never used may be considered as spam and deleted. To avoide your account being cleaned up by mistake, please post something.
-
+                $else
+                    <p>_{MsgNoPost}
             $else
                 ^{entryListWidget entryList}
         |]
@@ -88,39 +91,25 @@ entryListWidget entryList = do
         <ul>
             $forall Entity entryId entry<-entryList
                 $maybe authorId <- entryUserId entry
-                    <li :entryStatus entry == Draft:.draft>
+                    <li :entryStatus entry == Draft:.draft data-date=#{formatDateStr (entryInserted entry)}>
                         <a href=@{EntryR authorId entryId}>
-                            <h2 .entry-title>#{preEscapedToMarkup (scaleHeader 2 (entryOutputTitle entry))}
-                        <div .tags>
-                            <ul>
-                                $forall (inputTag, outputTag) <- zip (entryInputTags entry) (entryOutputTags entry)
-                                    <li>
-                                        <a href=@{TagR inputTag}>#{preEscapedToMarkup outputTag}
+                            <h3 .entry-title>#{preEscapedToMarkup (scaleHeader 3 (entryOutputTitle entry))}
+                        
+                            
     |]
     toWidget [lucius|
-
-.entries>ul, .tags>ul {
+.entries>ul{   
     list-style:none;
     padding-left:0;
 }
-
-.entries>ul>li{
-    border-top:1px solid #dce4ec;
-    padding-bottom:1em;
+.entries>ul>li::before {
+    content: attr(data-date);
+    color: #b4bcc2;
 }
-.entries>ul>li>a>h2, .entries>ul>li>a>h3, .tags ul>li>a {
+.entries>ul>li>a>h3{
     color:black;
+    margin:0.2em 0 1em;
 }
 
-.tags ul>li{
-    display:inline-block;
-    padding:0.25em 0.5em;
-    background-color:#eee;
-    margin-bottom:1em;
-}
-li h1{
-    color:black;
-    font-size:2em;
-}
     |]
 
