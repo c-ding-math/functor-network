@@ -18,51 +18,8 @@ getSubscriptionsR emailId = do
         else do
             permissionDeniedI MsgPermissionDenied
     
-getUserSubscriptionR :: UserSubscriptionId -> Handler Html
-getUserSubscriptionR subscriptionId = do
-    subscription <- runDB $ get404 subscriptionId
-    verificationKey <- lookupGetParam "key"
-    if userSubscriptionKey subscription == verificationKey && isJust (userSubscriptionKey subscription)
-        then do
-            if userSubscriptionVerified subscription
-                then do
-                    getSubscriptions $ userSubscriptionEmail subscription
-                else do
-                    runDB $ update subscriptionId [UserSubscriptionVerified =. True]
-                    
-                    setMessageI MsgSubscriptionVerified
-                    getSubscriptions $ userSubscriptionEmail subscription
-        else do
-            permissionDeniedI MsgPermissionDenied
-            
-
-postUserSubscriptionR :: UserSubscriptionId -> Handler Html
-postUserSubscriptionR subscriptionId = do
-    ((result, _), _) <- runFormPost userUnsubscribeForm
-    case result of
-        FormSuccess verificationKey -> do
-            subscription <- runDB $ get404 subscriptionId
-            if userSubscriptionKey subscription == verificationKey && isJust (userSubscriptionKey subscription)
-                then do
-                    runDB $ delete subscriptionId
-                    setMessageI MsgSubscriptionDeleted
-                    getSubscriptions $ userSubscriptionEmail subscription
-                else do
-                    permissionDeniedI MsgPermissionDenied
-        
-        FormFailure errors -> do
-            setMessage [shamlet|
-                $forall error <- errors
-                    <p>#{error}
-                |]
-            redirectUltDest Home0R
-        _ -> do
-            setMessageI MsgFormMissing
-            redirectUltDest Home0R
-
-
-userUnsubscribeForm :: Form (Maybe Text)
-userUnsubscribeForm = renderBootstrap3 BootstrapBasicForm $ aopt hiddenField keySettings Nothing
+unsubscribeForm :: Form (Maybe Text)
+unsubscribeForm = renderBootstrap3 BootstrapBasicForm $ aopt hiddenField keySettings Nothing
     where
         keySettings = FieldSettings {
             fsLabel = "",
@@ -74,22 +31,28 @@ userUnsubscribeForm = renderBootstrap3 BootstrapBasicForm $ aopt hiddenField key
 
 getSubscriptions :: Text -> Handler Html
 getSubscriptions address = do
-    (userSubscriptionList,userList) <-runDB $ do
+    (userSubscriptionList,userList,entrySubscriptionList,entryList) <-runDB $ do
         userSubscriptionEntities <- selectList [UserSubscriptionEmail ==. address, UserSubscriptionVerified==.True] [Desc UserSubscriptionInserted]
+        entrySubscriptionEntities <- selectList [EntrySubscriptionEmail ==. address, EntrySubscriptionVerified==.True] [Desc EntrySubscriptionInserted]
         userEntities <- mapM (\x -> do
             let userId = userSubscriptionUserId $ entityVal x
             user <- get404 userId
             return $ Entity userId user
             ) userSubscriptionEntities
-        return (userSubscriptionEntities,userEntities)
-    (userUnsubscribeFormWidget, userUnsubscribeFormEnctype) <- generateFormPost userUnsubscribeForm
+        entryEntities <- mapM (\x -> do
+            let entryId = entrySubscriptionEntryId $ entityVal x
+            entry <- get404 entryId
+            return $ Entity entryId entry
+            ) entrySubscriptionEntities
+        return (userSubscriptionEntities,userEntities,entrySubscriptionEntities,entryEntities)
+    (unsubscribeFormWidget, unsubscribeFormEnctype) <- generateFormPost unsubscribeForm
     defaultLayout $ do
         setTitleI MsgEmailSubscriptions
         [whamlet|
             <h1>_{MsgEmailSubscriptions}
             <label>_{MsgEmailAddress}: </label>
             <span>#{address}
-            <!--<h3>_{MsgUsers}-->
+            <h3>_{MsgUsers}
             <p>_{MsgUserSubscriptionsDescription}
             $if null userSubscriptionList
                 <p>_{MsgNoSubscription}
@@ -101,13 +64,34 @@ getSubscriptions address = do
                             $maybe key <- userSubscriptionKey subscription
                                 <ul .entry-menu.inline-menu>
                                     <li>
-                                        <a .unsubscribe href=@{UserSubscriptionR subscriptionId} data-key=#{key}>_{MsgUnsubscribe}
+                                        <a .unsubscribe href=@{EditUserSubscriptionR subscriptionId} data-key=#{key}>_{MsgUnsubscribe}
                             $nothing
                                 <ul .entry-menu.inline-menu>
                                     <li>
-                                        <a .unsubscribe href=@{UserSubscriptionR subscriptionId} data-key="">_{MsgUnsubscribe}
-                    <form .hidden #unsubscribe-form action="" method=post enctype=#{userUnsubscribeFormEnctype}>
-                        ^{userUnsubscribeFormWidget}
+                                        <a .unsubscribe href=@{EditUserSubscriptionR subscriptionId} data-key="">_{MsgUnsubscribe}
+                    <!--<form .hidden #unsubscribe-form action="" method=post enctype=#{unsubscribeFormEnctype}>
+                        ^{unsubscribeFormWidget}-->
+            <h3>_{MsgPosts}
+            <p>_{MsgPostSubscriptionsDescription}
+            $if null entrySubscriptionList
+                <p>_{MsgNoSubscription}
+            $else
+                <ul>
+                    $forall (Entity subscriptionId subscription, Entity entryId entry)<- zip entrySubscriptionList entryList
+                        <li>
+                          $maybe authorId <- entryUserId entry  
+                            <a href=@{EntryR authorId entryId}>#{preEscapedToMarkup $ entryOutputTitle entry}
+                            $maybe key <- entrySubscriptionKey subscription
+                                <ul .entry-menu.inline-menu>
+                                    <li>
+                                        <a .unsubscribe href=@{EditEntrySubscriptionR subscriptionId} data-key=#{key}>_{MsgUnsubscribe}
+                            $nothing
+                                <ul .entry-menu.inline-menu>
+                                    <li>
+                                        <a .unsubscribe href=@{EditEntrySubscriptionR subscriptionId} data-key="">_{MsgUnsubscribe}
+            <form .hidden #unsubscribe-form action="" method=post enctype=#{unsubscribeFormEnctype}>
+                ^{unsubscribeFormWidget}
+
                                     
         |]
         toWidget [julius|

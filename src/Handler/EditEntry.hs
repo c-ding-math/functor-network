@@ -19,8 +19,7 @@ data EntryInput=EntryInput
     , preamble:: Maybe Textarea
     , inputFormat::Format
     , content::Textarea 
-    , citation:: Maybe Textarea
-    , tags::Text}
+    , citation:: Maybe Textarea}
 
 entryForm::Maybe EntryInput -> Html -> MForm Handler (FormResult EntryInput, Widget)
 entryForm inputs=renderBootstrap3 BootstrapBasicForm $ EntryInput
@@ -28,8 +27,7 @@ entryForm inputs=renderBootstrap3 BootstrapBasicForm $ EntryInput
     <*> aopt textareaField preambleSettings (preamble <$> inputs)
     <*> areq (selectFieldList inputFormats) "Content" (inputFormat <$> inputs)
     <*> areq textareaField editorSettings  (content  <$> inputs)
-    <*> aopt textareaField citationSettings (citation  <$> inputs)
-    <*> areq textField  tagsSetting (tags <$> inputs) where  
+    <*> aopt textareaField citationSettings (citation  <$> inputs) where  
         inputFormats = [("Markdown", Format "md"), ("LaTeX", Format "tex")]::[(Text, Format)] 
         editorSettings = FieldSettings
             { fsLabel = ""
@@ -55,21 +53,27 @@ entryForm inputs=renderBootstrap3 BootstrapBasicForm $ EntryInput
             , fsId = Nothing
             , fsName = Just "title"
             , fsAttrs =[ ("class", "form-control"), ("placeholder", "your title")]}
-        tagsSetting=FieldSettings 
-            { fsLabel = "Keywords"
-            , fsTooltip = Nothing
-            , fsId = Nothing
-            , fsName = Just "tags"
-            , fsAttrs =[ ("class", "form-control"), ("placeholder", "your keywords, separated by commas")]}
 
 getNewEntryR:: Handler Html
 getNewEntryR =  do
-    (_,user) <- requireAuthPair
+    (userId,user) <- requireAuthPair
     formatParam <- lookupGetParam "format"
     let format = case formatParam of
             Just "tex" -> Format "tex"
             _ -> Format "md"
-    (entryWidget, entryEnctype) <- generateFormPost $ entryForm $ Just $ EntryInput "" (userDefaultPreamble user) format "" (userDefaultCitation user) "" 
+    entryInput <- runDB $ do 
+        mEntry <- selectFirst [EntryUserId ==. Just userId,EntryType==.Standard] [Desc EntryInserted]
+        mSmaplePost<- case mEntry of
+            Just _ -> return Nothing
+            Nothing -> do 
+                case format of
+                    Format "tex" -> selectFirst [EntryInputTitle==."a sample post written in latex",EntryType==.Page0,EntryStatus==.Publish] [Desc EntryInserted]  
+                    _ -> selectFirst [EntryInputTitle==."a sample post written in markdown",EntryType==.Page0,EntryStatus==.Publish] [Desc EntryInserted]
+        case mSmaplePost of
+            Just (Entity _ entry) -> return $ EntryInput "" (entryInputPreamble entry) format (entryInputBody entry) (entryInputCitation entry)
+            Nothing -> return $ EntryInput "" (userDefaultPreamble user) format "" (userDefaultCitation user)
+    (entryWidget, entryEnctype) <- generateFormPost $ entryForm $ Just entryInput
+    --(entryWidget, entryEnctype) <- generateFormPost $ entryForm $ Just $ EntryInput "" (userDefaultPreamble user) format "" (userDefaultCitation user) "" 
     defaultLayout $ do
         setTitleI MsgEdit
         [whamlet|
@@ -84,10 +88,10 @@ getNewEntryR =  do
 getEditEntryR :: EntryId -> Handler Html
 getEditEntryR entryId = do
     --userId <- requireAuthId
-    (entry, entryTags)<-runDB $ do    
+    entry<-runDB $ do    
         entry<-get404 entryId
         if entryType entry==Standard
-            then return (entry,entryInputTags entry)
+            then return entry
             else notFound
  
     formatParam <- lookupGetParam "format"
@@ -95,7 +99,7 @@ getEditEntryR entryId = do
             Just "tex" -> Format "tex"
             Just "md" -> Format "md"
             _ -> entryInputFormat entry
-    (entryWidget, entryEnctype) <- generateFormPost $ entryForm $ Just $ EntryInput (entryInputTitle entry) (entryInputPreamble entry) format (entryInputBody entry) (entryInputCitation entry) (listToInput entryTags) 
+    (entryWidget, entryEnctype) <- generateFormPost $ entryForm $ Just $ EntryInput (entryInputTitle entry) (entryInputPreamble entry) format (entryInputBody entry) (entryInputCitation entry)
     defaultLayout $ do
         setTitleI MsgEdit
         [whamlet|
@@ -135,15 +139,14 @@ postNewEntryR = do
             entryAction <- lookupPostParam "action"        
             currentTime <- liftIO getCurrentTime
             userDir<-userTemporaryDirectory
-            (titleHtml,bodyHtml,tagHtmls) <- liftIO $ do
+            (titleHtml,bodyHtml) <- liftIO $ do
                 let (parser,parserSimple)=  case inputFormat formData of
                         Format "tex" -> (texToHtml,texToHtmlSimple)
                         _ -> (mdToHtml,mdToHtmlSimple)               
                 titleHtml <-parse userDir parserSimple (title formData) --liftIO $ mdToHtmlSimple $ title formData
                 bodyHtml <- parse userDir parser editorData
-                tagHtmls <- mapM (parse userDir parserSimple) (inputToList (tags formData))
-                return (titleHtml,bodyHtml,tagHtmls)
-            --tagsHtml <- liftIO $ mdToHtml_tags $ getTags $ tags formData
+                return (titleHtml,bodyHtml)
+            
             urlRenderParams<- getUrlRenderParams
             case entryAction of
                 Just "publish"-> do
@@ -162,13 +165,11 @@ postNewEntryR = do
                         ,entryUpdated=currentTime
                         ,entryStatus=Publish
                         ,entryLocked=False
-                        ,entryInputTags=(inputToList (tags formData))
-                        ,entryOutputTags=tagHtmls
                         }
                     subscribers <- runDB $ selectList [UserSubscriptionUserId ==. userId, UserSubscriptionVerified ==. True] []
                     forM_ subscribers $ \(Entity subscriptionId subscription) -> do
                         
-                        let unsubscribeUrl= urlRenderParams (UserSubscriptionR subscriptionId) $ case userSubscriptionKey subscription of
+                        let unsubscribeUrl= urlRenderParams (EditUserSubscriptionR subscriptionId) $ case userSubscriptionKey subscription of
                                 Just key -> [("key", key)] 
                                 Nothing -> []
                             entryUrl= urlRenderParams (EntryR userId entryId) []
@@ -187,11 +188,11 @@ To unsubscribe, please visit #{unsubscribeUrl}.
                             emailHtml= [shamlet|
 <p>The author #{userName user} you subscribed to has published a new post:
 <p>#{title formData}
-<p><a href=#{entryUrl}>Go to view</a><span> | </span><a href=#{unsubscribeUrl}>Unsubscribe</a>    
+<p><a href=#{entryUrl}>Go to view</a><span> | </span><a href=#{unsubscribeUrl}>Manage subscriptions</a>    
 <p>#{appName}
                             |]
                         sendSystemEmail (userSubscriptionEmail subscription) subject emailText emailHtml
-                    setMessage $ [hamlet|Your blog post, <a href=@{EntryR userId entryId}>#{title formData}</a>, has been published. <a class=view href=@{EntryR userId entryId}>View</a>|] urlRenderParams
+                    setMessage $ [hamlet|Your blog post, <a class=alert-link href=@{EntryR userId entryId}>#{title formData}</a>, has been published. <a class='view alert-link' href=@{EntryR userId entryId}>View</a>|] urlRenderParams
                     redirect $ EditEntryR entryId
                 _-> do 
                     entryId<-runDB $ insert $ Entry   
@@ -209,10 +210,8 @@ To unsubscribe, please visit #{unsubscribeUrl}.
                         ,entryUpdated=currentTime
                         ,entryStatus=Draft
                         ,entryLocked=False
-                        ,entryInputTags=(inputToList (tags formData))
-                        ,entryOutputTags=tagHtmls
                         }
-                    setMessage $ [hamlet|Your blog post, <a href=@{EntryR userId entryId}>#{title formData}</a>, has been saved. <a class=view href=@{EntryR userId entryId}>View</a>|] urlRenderParams
+                    setMessage $ [hamlet|Your blog post, <a class=alert-link href=@{EntryR userId entryId}>#{title formData}</a>, has been saved. <a class='view alert-link' href=@{EntryR userId entryId}>View</a>|] urlRenderParams
                     redirect $ EditEntryR entryId
         FormMissing -> do
             setMessageI MsgFormMissing
@@ -239,14 +238,13 @@ postEditEntryR  entryId = do
             entryAction <- lookupPostParam "action"        
             currentTime <- liftIO getCurrentTime
             userDir<-userTemporaryDirectory
-            (titleHtml,bodyHtml,tagHtmls) <- liftIO $ do
+            (titleHtml,bodyHtml) <- liftIO $ do
                 let (parser,parserSimple)=  case inputFormat formData of
                         Format "tex" -> (texToHtml,texToHtmlSimple)
                         _ -> (mdToHtml,mdToHtmlSimple)
                 titleHtml <-parse userDir parserSimple (title formData) --liftIO $ mdToHtmlSimple $ title formData
                 bodyHtml <- parse userDir parser editorData
-                tagHtmls <- mapM (parse userDir parserSimple) (inputToList (tags formData))
-                return (titleHtml,bodyHtml,tagHtmls)
+                return (titleHtml,bodyHtml)
             urlRenderParams<- getUrlRenderParams
             
             case entryAction of
@@ -259,7 +257,7 @@ postEditEntryR  entryId = do
                     when (entryInserted entry == entryUpdated entry) $ do
                         subscribers <- runDB $ selectList [UserSubscriptionUserId ==. userId, UserSubscriptionVerified ==. True] []
                         forM_ subscribers $ \(Entity subscriptionId subscription) -> do
-                            let unsubscribeUrl= urlRenderParams (UserSubscriptionR subscriptionId) $ case userSubscriptionKey subscription of
+                            let unsubscribeUrl= urlRenderParams (EditUserSubscriptionR subscriptionId) $ case userSubscriptionKey subscription of
                                     Just key -> [("key", key)] 
                                     Nothing -> []
                                 entryUrl= urlRenderParams (EntryR userId entryId) []
@@ -276,7 +274,7 @@ To unsubscribe, please visit #{unsubscribeUrl}.
                                 emailHtml= [shamlet|
 <p>The author #{userName user} you subscribed to has published a new post:
 <p>#{title formData}
-<p><a href=#{entryUrl}>Go to view</a><span> | </span><a href=#{unsubscribeUrl}>Unsubscribe</a>
+<p><a href=#{entryUrl}>Go to view</a><span> | </span><a href=#{unsubscribeUrl}>Manage subscriptions</a>
 <p>#{appName}
                                 |]
                             sendSystemEmail (userSubscriptionEmail subscription) subject emailText emailHtml
@@ -292,10 +290,8 @@ To unsubscribe, please visit #{unsubscribeUrl}.
                         ,EntryOutputBody=.bodyHtml
                         ,EntryInputCitation=.(citation formData)
                         ,EntryUpdated=.currentTime
-                        ,EntryInputTags=.(inputToList (tags formData))
-                        ,EntryOutputTags=.tagHtmls
                         ]
-                    setMessage $ [hamlet|Your blog post, <a href=@{EntryR userId entryId}>#{title formData}</a>, has been published. <a class=view href=@{EntryR userId entryId}>View</a>|] urlRenderParams --Message can't be too long, use title text instead of titleHtml
+                    setMessage $ [hamlet|Your blog post, <a class=alert-link href=@{EntryR userId entryId}>#{title formData}</a>, has been published. <a class='view alert-link' href=@{EntryR userId entryId}>View</a>|] urlRenderParams --Message can't be too long, use title text instead of titleHtml
                     redirect $ EditEntryR entryId
                 _-> do 
                     
@@ -315,10 +311,8 @@ To unsubscribe, please visit #{unsubscribeUrl}.
                             ,EntryOutputBody=.bodyHtml
                             ,EntryInputCitation=.(citation formData)
                             ,EntryUpdated=.updateTime
-                            ,EntryInputTags=.(inputToList (tags formData))
-                            ,EntryOutputTags=.tagHtmls
                             ]
-                    setMessage $ [hamlet|Your blog post, <a href=@{EntryR userId entryId}>#{title formData}</a>, has been saved. <a class=view href=@{EntryR userId entryId}>View</a>|] urlRenderParams
+                    setMessage $ [hamlet|Your blog post, <a class=alert-link href=@{EntryR userId entryId}>#{title formData}</a>, has been saved. <a class='view alert-link' href=@{EntryR userId entryId}>View</a>|] urlRenderParams
                     redirect $ EditEntryR entryId
         FormMissing -> do          
             setMessageI MsgFormMissing

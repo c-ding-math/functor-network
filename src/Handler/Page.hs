@@ -17,10 +17,10 @@ getPageR userId _ = do
             defaultLayout $ do
                 setTitleI MsgAbout
                 [whamlet|
-<div .entry>
+<article .entry>
     <h1>_{MsgAbout}
     <div .entry-content>
-        <article>
+        <div .entry-content-wrapper>
             <p>
                 <img src=@{StaticR $ StaticRoute ["icons","user-photo.png"] []} title="Avatar" class="float-right" style="height:6em;">
             <h3 id="basic-information">Basic Information
@@ -37,10 +37,10 @@ getPageR userId _ = do
             defaultLayout $ do 
                 setTitleI MsgAbout
                 [whamlet|
-<div .entry :entryStatus entry == Draft:.draft>
+<article .entry :entryStatus entry == Draft:.draft>
     <h1>_{MsgAbout}
     <div .entry-content>
-        <article>#{preEscapedToMarkup (entryOutputBody entry)}
+        <div .entry-content-wrapper>#{preEscapedToMarkup (entryOutputBody entry)}
     $if mCurrentUserId == Just userId
         <ul .entry-menu>
             <li>

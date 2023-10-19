@@ -197,14 +197,14 @@ instance Yesod App where
                             , menuItemAccessCallback = True
                             }
                         , FooterRight $ MenuItem
-                            { menuItemLabel = "Version 20230922"
+                            { menuItemLabel = "Version 2023-10-17"
                             , menuItemRoute = Page0R "Changelog"
                             , menuItemAccessCallback = True
                             }
                         ]
                     True | otherwise-> 
                         [ FooterLeft $ MenuItem
-                            { menuItemLabel = "About Author"
+                            { menuItemLabel = "About the author"
                             , menuItemRoute = aboutRoute
                             , menuItemAccessCallback = True
                             }
@@ -301,12 +301,14 @@ instance Yesod App where
     isAuthorized (PageR _ _) _ = return Authorized
     --isAuthorized (EntriesR _) _ = return Authorized
     isAuthorized (EntryR _ _) _ = return Authorized
-    isAuthorized (TagR _)_ = return Authorized
     isAuthorized (CommentsR _) _ = return Authorized
     isAuthorized (Page0R _) _ = return Authorized
     isAuthorized (EditHelpR _) _ = return Authorized
     isAuthorized (ParserR _ _) _ = return Authorized
-    isAuthorized (UserSubscriptionR _) _ = return Authorized
+    isAuthorized (EditUserSubscriptionR _) _ = return Authorized
+    isAuthorized (NewUserSubscriptionR _) _ = return Authorized
+    isAuthorized (EditEntrySubscriptionR _) _ = return Authorized
+    isAuthorized (NewEntrySubscriptionR _) _ = return Authorized
     isAuthorized Entries0R _ = return Authorized
     isAuthorized FeedbackR _ = return Authorized
 
@@ -392,7 +394,6 @@ instance YesodBreadcrumbs App where
             return (siteName, Just Home0R)
         PageR pathPiece _-> parentLink pathPiece
         -- EntriesR pathPiece -> parentLink pathPiece
-        --TagR pathPiece _-> parentLink pathPiece
         Home0R -> return ("Home", Nothing)
         AuthR _ -> return ("Home", Just Home0R)
         _ -> return ("home", Nothing)
@@ -430,6 +431,18 @@ instance YesodAuth App where
     -- Override the above two destinations when a Referer: header is present
     redirectToReferer :: App -> Bool
     redirectToReferer _ = True
+    
+    --onLogin :: (MonadHandler m, master ~ HandlerSite m) => m () 
+    onLogin = do
+        muid <- maybeAuthId
+        case muid of 
+            Just uid -> do
+                urlRenderParam <- getUrlRenderParams
+                addMessage "success" $ [hamlet|
+                    You are now logged in.
+                    <a .view.alert-link href=@{HomeR uid}>Home
+                |] urlRenderParam 
+            _ -> addMessage "success" "You are now logged in."
 
     authenticate :: (MonadHandler m, HandlerSite m ~ App)
                  => Creds App -> m (AuthenticationResult App)
@@ -893,6 +906,26 @@ instance YesodAuthEmail App where
 
                 |]
 
+    -- | Response after sending a confirmation email.
+    confirmationEmailSentResponse :: Text -> AuthHandler site TypedContent
+    confirmationEmailSentResponse identifier = do
+        mr <- getMessageRender
+        selectRep $ do
+            provideJsonMessage (mr msg)
+            provideRep $ authLayout $ do
+              setTitleI Msg.ConfirmationEmailSentTitle
+              [whamlet|
+                <p>A verification email has been sent to #{identifier}. Please click the link in the email to verify your account.
+                <p>Receive no email? There are some steps you can take:
+                <ul>
+                    <li> Wait a minute.
+                    <li> Make sure you typed your email address correctly.
+                    <li> With your email provider, add our domain <code>functor.network</code> to your whitelist and try again.
+                    <li> Send an email to <a href="mailto:feedback@functor.network">feedback@functor.network</a> and we will help you out.
+              |]
+      where
+        msg = Msg.ConfirmationEmailSent identifier
+
     needOldPassword _ =return False
 
     setPasswordHandler needOld = do
@@ -1077,7 +1110,6 @@ routeUserEntity (Just route)
         CommentsR userId -> returnEntityIfExist userId
         --EntriesR userId -> returnEntityIfExist userId
         EntryR userId _ -> returnEntityIfExist userId
-        --TagR userId _ -> returnEntityIfExist userId
         _ -> do
             (userId, user) <- requireAuthPair
             return $ Just (Entity userId user)

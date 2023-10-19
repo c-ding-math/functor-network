@@ -3,10 +3,11 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 module Handler.EditComment where
 
+import Import
 import Yesod.Form.Bootstrap3
 import Handler.Parser(parse,userTemporaryDirectory)
 import Parse.Parser(mdToHtml,texToHtml,EditorData(..))
-import Import
+import Text.Shakespeare.Text
 
 deleteEditCommentR :: EntryId -> Handler ()
 deleteEditCommentR commentId = runDB $ do
@@ -98,19 +99,45 @@ postEditCommentR entryId = do
                         ,entryInputCitation=(citation newCommentFormData)
                         ,entryInserted=currentTime
                         ,entryUpdated=currentTime
-                        --,entryStuck=Just currentTime
                         ,entryStatus=Publish
                         ,entryLocked=False
-                        ,entryInputTags=[]
-                        ,entryOutputTags=[]
                         }
                 
             commentId <- runDB $ do
                 commentId<-insert commentData
                 insert_ $ EntryTree commentId entryId
                 return commentId
-            
-            setMessage $ [hamlet|<a href=#entry-#{toPathPiece commentId}>Your comment</a> has been published. <a class=view href=#entry-#{toPathPiece commentId}>View</a>|] urlRenderParams
+
+            rootEntry <- runDB $ get404 rootEntryId
+            subscribers <- runDB $ selectList [EntrySubscriptionEntryId ==. rootEntryId, EntrySubscriptionVerified ==. True] []
+            forM_ subscribers $ \(Entity subscriptionId subscription) -> do
+                
+                let unsubscribeUrl= urlRenderParams (EditEntrySubscriptionR subscriptionId) $ case entrySubscriptionKey subscription of
+                        Just key -> [("key", key)] 
+                        Nothing -> []
+                    entryUrl= urlRenderParams (EntryR rootEntryAuthorId rootEntryId) [] <> "#entry-" <> toPathPiece commentId
+                    subject= "New comment on \"" <> entryInputTitle rootEntry <> "\""
+                    emailText= [stext|
+The following post you subscribed to received a new comment:
+
+#{entryInputTitle rootEntry}
+
+You can view the commetn at #{entryUrl}.
+
+To unsubscribe, please visit #{unsubscribeUrl}.
+
+#{appName}
+                    |]
+                    emailHtml= [shamlet|
+<p>The following post you subscribed to received a new comment:
+<p>#{entryInputTitle rootEntry}
+<p><a href=#{entryUrl}>Go to view</a><span> | </span><a href=#{unsubscribeUrl}>Manage subscriptions</a>    
+<p>#{appName}
+                    |]
+                sendSystemEmail (entrySubscriptionEmail subscription) subject emailText emailHtml
+                        
+
+            setMessage $ [hamlet|<a href=#entry-#{toPathPiece commentId}>Your comment</a> has been published. <a class='view alert-link' href=#entry-#{toPathPiece commentId}>View</a>|] urlRenderParams
             redirect $ EntryR rootEntryAuthorId rootEntryId :#: ("entry-" <> toPathPiece commentId)
 
         FormMissing -> do
@@ -123,6 +150,7 @@ postEditCommentR entryId = do
 deleteEntryRecursive :: EntryId -> ReaderT SqlBackend (HandlerFor App) ()
 deleteEntryRecursive entryId = do
     children<-getChildIds entryId 
+    deleteWhere [EntrySubscriptionEntryId <-. children++[entryId]]
     deleteWhere [EntryTreeNode <-. children++[entryId]]
     deleteWhere [EntryId <-. children++[entryId]]
     return ()

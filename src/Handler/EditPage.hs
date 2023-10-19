@@ -146,11 +146,9 @@ postEditPageR title = do
                                     --,entryStuck=Just currentTime
                                     ,entryStatus=Publish
                                     ,entryLocked=False
-                                    ,entryInputTags=[]
-                                    ,entryOutputTags=[]
                                     }
 
-                                setMessage $ [hamlet|<a href=@{PageR userId title}>Your profile page</a> has been updated. <a class=view href=@{PageR userId title}>View</a>|] urlRenderParams
+                                setMessage $ [hamlet|<a .alert-link href=@{PageR userId title}>Your profile page</a> has been updated. <a class='view alert-link' href=@{PageR userId title}>View</a>|] urlRenderParams
                                    
                                 redirect $ EditPageR title
                             Just (Entity entryId _) -> do
@@ -165,7 +163,7 @@ postEditPageR title = do
                                     ,EntryUpdated=.currentTime
                                     ]
 
-                                setMessage $ [hamlet|<a href=@{PageR userId title}>Your profile page</a> has been updated. <a class=view href=@{PageR userId title}>View</a>|] urlRenderParams
+                                setMessage $ [hamlet|<a .alert-link href=@{PageR userId title}>Your profile page</a> has been updated. <a class='view alert-link' href=@{PageR userId title}>View</a>|] urlRenderParams
                                 
                                 redirect $ EditPageR title
 
@@ -187,11 +185,9 @@ postEditPageR title = do
                                         --,entryStuck=Just currentTime
                                         ,entryStatus=Draft
                                         ,entryLocked=False
-                                        ,entryInputTags=[]
-                                        ,entryOutputTags=[]
                                         }
 
-                                    setMessage $ [hamlet|Your page, <a href=@{PageR userId title}>#{title}</a>, has been saved. <a class=view href=@{PageR userId title}>View</a>|] urlRenderParams
+                                    setMessage $ [hamlet|Your page, <a .alert-link href=@{PageR userId title}>#{title}</a>, has been saved. <a class='view alert-link' href=@{PageR userId title}>View</a>|] urlRenderParams
                                     
                                     redirect $ EditPageR title
 
@@ -207,7 +203,7 @@ postEditPageR title = do
                                         ,EntryUpdated=.currentTime
                                         ]
 
-                                    setMessage $ [hamlet|Your page, <a href=@{PageR userId title}>#{title}</a>, has been saved. <a class=view href=@{PageR userId title}>View</a>|] urlRenderParams
+                                    setMessage $ [hamlet|Your page, <a .alert-link href=@{PageR userId title}>#{title}</a>, has been saved. <a class='view alert-link' href=@{PageR userId title}>View</a>|] urlRenderParams
                                     
                                     redirect $ EditPageR title
 

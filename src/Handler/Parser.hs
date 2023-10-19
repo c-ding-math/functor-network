@@ -6,6 +6,7 @@
 module Handler.Parser (
     userTemporaryDirectory,
     parse,
+    jqueryUiWidget,
     markItUpWidget,
     postParserR
 )where
@@ -41,13 +42,16 @@ postParserR inputFormat outputFormat = do
             "\n"->""
             x->x
 
+jqueryUiWidget :: Widget
+jqueryUiWidget = do
+    addScript $ StaticR scripts_jquery_ui_jquery_ui_min_js
+    addStylesheet $ StaticR scripts_jquery_ui_jquery_ui_min_css
+    addStylesheet $ StaticR scripts_jquery_ui_jquery_ui_structure_min_css
+    addStylesheet $ StaticR scripts_jquery_ui_jquery_ui_additional_css
+
 markItUpWidget ::Format->Format-> Widget
 markItUpWidget inputFormat _=    do    --addScriptRemote "https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"
-        addScript $ StaticR scripts_jquery_ui_jquery_ui_min_js
-        addStylesheet $ StaticR scripts_jquery_ui_jquery_ui_min_css
-        addStylesheet $ StaticR scripts_jquery_ui_jquery_ui_additional_css
-        addStylesheet $ StaticR scripts_jquery_ui_jquery_ui_structure_min_css
-        --addStylesheet $ StaticR scripts_jquery_ui_dialog_css
+        jqueryUiWidget
 
         addStylesheet $ StaticR scripts_markItUp_markitup_skins_my_style_css
         addScript $ StaticR scripts_markItUp_markitup_jquery_markitup_js
@@ -65,7 +69,7 @@ $(document).ready(function(){
     var textarea=$("textarea.editor");
     var extraSettings={
         onCtrlEnter: {keepDefault:false,},
-        previewInElement:'.markItUpFooter article', 
+        previewInElement:'.markItUpFooter .entry-content-wrapper', 
         previewParserPath: "@{parserPath}",
         previewAutoRefresh:false,     
         previewParser: function(content) {
@@ -84,11 +88,11 @@ $(document).ready(function(){
     var childrenToWrap = parent.children().not(':first-child');
     var wrapperDiv = $('<div>').attr('class', 'markItUpWrapper');
     childrenToWrap.wrapAll(wrapperDiv);  
-    var previewArea = $('<article/>',{});  
+    var previewArea = $('<div/>',{class:'entry-content-wrapper'});  
     previewArea.appendTo(parent.find('.markItUpFooter'));
 
     //update preview on Ctrl + Enter
-    textarea.attr("placeholder","Your content goes here. Press [Ctrl + Enter] to update preview");
+    textarea.attr("placeholder","Your content goes here. Use shortcut [Ctrl + Enter] to update preview.");
     textarea.keyup(function(e){
 		var updatePreviewButton = $(this).closest(".markItUp").find(".markItUpHeader .preview a[accesskey='0']").closest("li");
 		if ((e.keyCode == 10 || e.keyCode == 13) && (e.ctrlKey || e.metaKey)) {

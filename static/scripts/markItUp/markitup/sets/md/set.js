@@ -75,7 +75,7 @@ editorSettings = {
 			},
 			{name:'Equation reference', key:"5", openWith:'\\eqref{', closeWith:'}',placeHolder:'equation label'},
 			{
-				name:'Theorem-like environment', key:"6",
+				name:'Theorem', key:"6",
 				replaceWith:function(markItUp){markIt.markdownTheorem(markItUp);return false;},
 				openBlockWith:function(markItUp){return markIt.markdownBlock(markItUp).openBlockWith;},
 				closeBlockWith:function(markItUp){return markIt.markdownBlock(markItUp).closeBlockWith;},

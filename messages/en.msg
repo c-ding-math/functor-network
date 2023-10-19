@@ -27,6 +27,7 @@ Site: Site
 Profile: Profile
 User: User
 Users: Members
+ActiveUsers: Active members
 UnregisteredUser: [Unregistered]
 Anonymous: Anonymous
 Name: Name
@@ -105,7 +106,6 @@ NewComment: Add a comment
 Comment: Comment
 Comments: Comments
 CommentPublished: Comment published
-LoginToComment: You must be logged in to comment
 CommentDeleted: Comment deleted
 Reply: Reply
 
@@ -123,17 +123,25 @@ Subscribe: Subscribe
 AlreadySubscribed email@Text: You have already subscribed via email #{email}.
 SubscriptionConfirmationSent email@Text: A confirmation email has been sent to #{email}. Please click the link in the email to confirm your subscription.
 UserSubscriptionConfirmation email@Text: Your subscription via email #{email} has been confirmed. You will receive an email notification when the author publishes a new post.
+EntrySubscriptionConfirmation email@Text: Your subscription via email #{email} has been confirmed. You will receive an email notification when the post receives a new comment.
 Unsubscribe: Unsubscribe
 UnsubscribeAll: Unsubscribe all
 SubscribeToUser: Please enter your email address below. You will receive an email notification when the author publishes a new post.
+SubscribeToEntry: Please enter your email address below. You will receive an email notification when the post receives a new comment.
 UserSubscriptionsDescription: You are subscribed to the following members. You will receive an email notification when they publish a new post.
+PostSubscriptionsDescription: You are subscribed to the following posts. You will receive an email notification when they receive a new comment.
 NoSubscription: No subscription found.
 EmailSubscriptions: Email subscriptions
 EmailAddress: Email address
 SubscriptionVerified: Your subscription has been verified.
 SubscriptionDeleted: Subscription deleted
+VerificationEmailSent email@Text: A verification email has been sent to #{email}. Please click the link in the email to verify your account.
 
 Feedback: Feedback
 FeedbackSentDescription: Your feedback has been sent. Thank you!
 Send: Send
 SendAFeedback: Send a feedback
+
+Search: Search
+SearchReultsFor query@Text: Search results for "#{query}"
+PostsContaining query@Text: Posts containing "#{query}"

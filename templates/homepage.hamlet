@@ -3,8 +3,8 @@
         <div .row>
             <h1 .header>
                 #{appName}
-                <p>a blog platform for mathematicians
             <h2>
+                a blog platform for mathematicians
                 
             $maybe uid <- maybeUserId
                 <a href=@{HomeR uid} .btn.btn-info.btn-lg>

@@ -46,8 +46,6 @@ Entry
     updated UTCTime default=CURRENT_TIME
     status EntryStatus
     locked Bool -- if locked, comments are not allowed
-    inputTags [Text]
-    outputTags [Text]
 
 EntryTree
     node EntryId
@@ -68,4 +66,13 @@ UserSubscription
     key Text Maybe
     verified Bool
     UniqueUserSubscription email userId
+    deriving Show
+
+EntrySubscription
+    email Text
+    entryId EntryId
+    inserted UTCTime
+    key Text Maybe
+    verified Bool
+    UniqueEntrySubscription email entryId
     deriving Show

@@ -37,11 +37,11 @@ getFeedbackR = do
     defaultLayout $ do
         setTitleI MsgFeedback
         [whamlet|
-<div .entry>
+<article .entry>
   <h1>_{MsgFeedback}
   <div .entry-content>
     $maybe (Entity _ entry)<-mFeedbackDescription
-        <article>#{preEscapedToMarkup(entryOutputBody entry)}
+        <div .entry-content-wrapper>#{preEscapedToMarkup(entryOutputBody entry)}
     $nothing
         _{MsgComingSoon}
 <section .new-comment>
@@ -58,14 +58,14 @@ postFeedbackR = do
     ((result, _), _) <- runFormPost $ feedbackForm Nothing
     case result of
         FormSuccess feedback -> do
-            master <- getYesod
-            let systemEmailUser=appEmailUser $ appSettings master
+            
+            let feedbackEmailAddress ="feedback@functor.network"
                 emailSubject = subject feedback
                 emailText = [stext|#{unTextarea(body feedback)}|]
                 emailHtml = [shamlet|
 #{unTextarea(body feedback)}
 |]
-            sendSystemEmail systemEmailUser emailSubject emailText emailHtml
+            sendSystemEmail feedbackEmailAddress emailSubject emailText emailHtml
             defaultLayout $ do
                 setTitleI MsgFeedback
                 [whamlet|
