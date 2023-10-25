@@ -70,8 +70,8 @@ getEditPageR title = do
 
 ### Basic Information
 
-**Name**: #{userName user}\
-**Homepage**: [#{urlRender (HomeR userId)}](#{urlRender (HomeR userId)})
+- **Name**: #{userName user}
+- **Homepage**: [#{urlRender (HomeR userId)}](#{urlRender (HomeR userId)})
 |]::Text)
                     generateFormPost $ pageForm $ Just $ EntryInput (userDefaultPreamble user) format defaultAboutInput (userDefaultCitation user)
             defaultLayout $ do

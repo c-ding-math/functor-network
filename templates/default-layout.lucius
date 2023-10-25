@@ -130,6 +130,7 @@ footer .container ul li {
 .footer-middle {
   text-align: center;
   flex: 0 0 1em;
+  display:none;
 }
 
 footer .container a, footer .container a:hover, footer .container a:active, footer .container a:focus {

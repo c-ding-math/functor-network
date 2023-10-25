@@ -134,7 +134,7 @@ getEntryR authorId entryId = do
         $nothing
             <h3 #comment>_{MsgNewComment}
             <p>
-                You must <a href=@{AuthR LoginR}>sign in</a> to post a comment
+                You must <a href=@{AuthR LoginR}>sign in</a> to post a comment.
                 
         |]
         markItUpWidget format (Format "html")

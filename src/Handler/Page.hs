@@ -24,8 +24,9 @@ getPageR userId _ = do
             <p>
                 <img src=@{StaticR $ StaticRoute ["icons","user-photo.png"] []} title="Avatar" class="float-right" style="height:6em;">
             <h3 id="basic-information">Basic Information
-            <p><strong>Name</strong>: #{userName author}<br>
-                <strong>Homepage</strong>: 
+            <ul>
+                <li><strong>Name</strong>: #{userName author}
+                <li><strong>Homepage</strong>: 
                     <a href=@{HomeR userId}>@{HomeR userId}
     $if mCurrentUserId == Just userId
         <ul .entry-menu>

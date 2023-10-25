@@ -66,10 +66,10 @@ $else
             $forall MenuItem label route _ <- footerLeftFilteredMenuItems  
                 <li>
                     <a href="@{route}">#{label}
-        <!--<ul .footer-middle>
+        <ul .footer-middle>
             $forall MenuItem label route _ <- footerMiddleFilteredMenuItems
                 <li>
-                    <a href="@{route}">#{label}-->
+                    <a href="@{route}">#{label}
         <ul .footer-right>
             $forall MenuItem label route _ <- footerRightFilteredMenuItems
                 <li>

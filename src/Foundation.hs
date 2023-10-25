@@ -225,12 +225,7 @@ instance Yesod App where
                             }
                         ]
                     False -> 
-                        [ NavbarLeft $ MenuItem
-                            { menuItemLabel = "Posts"
-                            , menuItemRoute = Entries0R
-                            , menuItemAccessCallback = True
-                            }
-                        , NavbarLeft $ MenuItem
+                        [ FooterMiddle $ MenuItem
                             { menuItemLabel = "Members"
                             , menuItemRoute = UsersR
                             , menuItemAccessCallback = True

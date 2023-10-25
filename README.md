@@ -1,6 +1,6 @@
 ## About the project
 
-This is the source code for the [Functor Network](https://www.functor.network) - a blog platform for mathematicians. The term "mathematician" here is used in a broad sense, encompassing people studying math at any level, as well as professionals in related fields. While we provide special support for mathematicians, anyone can register a blog site on our platform and express themselves on a variety of topics, whether they're related to math or not.
+This is the source code for the [Functor Network](https://functor.network) - a blog platform for mathematicians. The term "mathematician" here is used in a broad sense, encompassing people studying math at any level, as well as professionals in related fields. While we provide special support for mathematicians, anyone can register a blog site on our platform and express themselves on a variety of topics, whether they're related to math or not.
 
 ## Features
 

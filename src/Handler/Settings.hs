@@ -118,7 +118,7 @@ getSettingsR = do
                         $else
                             <ul>
                                 $forall Entity googleId google<-googles
-                                    <li>#{loginIdent google}
+                                    <li>#{drop 11 (loginIdent google)}@Google
                                         <ul .entry-menu.inline-menu>
                                             <li>
                                                 <a href=@{LoginSettingR googleId}>delete

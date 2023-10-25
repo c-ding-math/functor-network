@@ -62,13 +62,14 @@ getEditHelpR "syntax" = do
     defaultLayout $ do
         setTitle "Edit Help"
         [whamlet|
-<div .entry>
+<article .entry>
   <h1>#{title}
   <div .entry-content>
-    $maybe (Entity _ entry)<-maybeSyntax
-        <article>#{preEscapedToMarkup(entryOutputBody entry)}
-    $nothing
-        _{MsgComingSoon}
+    <div .entry-content-wrapper>
+        $maybe (Entity _ entry)<-maybeSyntax
+            #{preEscapedToMarkup(entryOutputBody entry)}
+        $nothing
+            <p>_{MsgComingSoon}
 <section .new-comment>
             <h3 #editor>Editor Demo
             <form .editor-demo>
@@ -99,13 +100,14 @@ getEditHelpR "editor" = do
     defaultLayout $ do
         setTitle "Edit Help"
         [whamlet|
-<div .entry>
+<article .entry>
   <h1>#{title}
   <div .entry-content>
-    $maybe (Entity _ entry)<-maybeSyntax
-        <article>#{preEscapedToMarkup(entryOutputBody entry)}
-    $nothing
-        _{MsgComingSoon}
+    <div .entry-content-wrapper>
+        $maybe (Entity _ entry)<-maybeSyntax
+            #{preEscapedToMarkup(entryOutputBody entry)}
+        $nothing
+            <p>_{MsgComingSoon}
 <section .new-comment>
             <h3 #editor>Editor Demo
             <form .editor-demo>
