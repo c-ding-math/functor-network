@@ -14,9 +14,7 @@ getEntries0R :: Handler Html
 getEntries0R = do
     entryList<-runDB $ selectList [EntryType==.Standard,EntryStatus==.Publish] [Desc EntryInserted]
     mAuthors<-runDB $ do
-        mapM (\x->case entryUserId $ entityVal x of
-            Just authorId -> get authorId
-            Nothing -> return Nothing) entryList 
+        mapM (\x-> get $ entryUserId $ entityVal x) entryList 
         
 
     defaultLayout $ do
@@ -34,16 +32,15 @@ getEntries0R = do
                     <ul>
                         $forall (Entity entryId entry, mAuthor)<- zip entryList mAuthors
 
-                            $maybe authorId <- entryUserId entry
                                 <li :entryStatus entry == Draft:.draft>
                                     <div .entry-meta>
                                         <span .by>
                                             $maybe author<-mAuthor      
-                                                <a href=@{PageR authorId "About"}>#{userName $ author}
+                                                <a href=@{PageR (entryUserId entry) "About"}>#{userName $ author}
                                             $nothing 
                                                 _{MsgUnregisteredUser}
                                         <span .at>#{formatDateStr (entryInserted entry)}
-                                    <a href=@{EntryR authorId entryId}>
+                                    <a href=@{EntryR (entryUserId entry) entryId}>
                                         <h3 .entry-title>#{preEscapedToMarkup(scaleHeader 3 (entryOutputTitle entry))}
                         
         |]

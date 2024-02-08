@@ -79,8 +79,8 @@ getSubscriptions address = do
                 <ul>
                     $forall (Entity subscriptionId subscription, Entity entryId entry)<- zip entrySubscriptionList entryList
                         <li>
-                          $maybe authorId <- entryUserId entry  
-                            <a href=@{EntryR authorId entryId}>#{preEscapedToMarkup $ entryOutputTitle entry}
+                          
+                            <a href=@{EntryR (entryUserId entry) entryId}>#{preEscapedToMarkup $ entryOutputTitle entry}
                             $maybe key <- entrySubscriptionKey subscription
                                 <ul .entry-menu.inline-menu>
                                     <li>

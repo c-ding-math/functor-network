@@ -17,16 +17,12 @@ getEntryR authorId entryId = do
     maybeUser<-maybeAuth
     (entry,mEntryAuthor,comments,mCommentAuthors,mCommentParentIds,mCommentParentAuthors)<-runDB $ do
         entry<-get404 entryId
-        if (entryUserId entry==Just authorId) && (entryStatus entry==Publish || isAdministrator maybeUserId entry) && (entryType entry==Standard)
+        if (entryUserId entry==authorId) && (entryStatus entry==Publish || isAdministrator maybeUserId entry) && (entryType entry==Standard)
           then do
-            mEntryAuthor<- case entryUserId entry of
-                Just userId -> selectFirst [UserId==.userId] []
-                Nothing -> return Nothing
+            mEntryAuthor<- selectFirst [UserId==.entryUserId entry] []
             commentIds<- getChildIds entryId
             comments<-selectList [EntryId <-. commentIds, EntryStatus==.Publish, EntryType==.Comment][Asc EntryInserted]     
-            mCommentAuthors<-mapM (\x-> case entryUserId $ entityVal x of
-                Just userId -> selectFirst [UserId==.userId] []
-                Nothing -> return Nothing ) comments
+            mCommentAuthors<-mapM (\x-> selectFirst [UserId==.entryUserId (entityVal x)] []) comments
             mCommentParentIds<-mapM (\comment -> do
                 mEntryTree<-selectFirst [EntryTreeNode==.entityKey comment] [] 
                 case mEntryTree of
@@ -40,9 +36,7 @@ getEntryR authorId entryId = do
                         mParentComment<-get parentId
                         case mParentComment of
                             Just parentComment -> do
-                                mCommentParentAuthor<- case entryUserId parentComment of
-                                    Just userId -> selectFirst [UserId==.userId] []
-                                    Nothing -> return Nothing
+                                mCommentParentAuthor<- selectFirst [UserId==.entryUserId parentComment] []
                                 return mCommentParentAuthor
                             Nothing -> return Nothing
                     Nothing -> return Nothing

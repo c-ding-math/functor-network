@@ -28,7 +28,7 @@ getEntriesR authorId = do
 
     (userEntryList,entryList,author,mSeachText)<-runDB $ do
         author<-get404 authorId      
-        entries<- selectList [EntryUserId==.Just authorId, EntryType==.Standard] [Desc EntryInserted]
+        entries<- selectList [EntryUserId==.authorId, EntryType==.Standard] [Desc EntryInserted]
         
         let userEntryList = [x | x<-entries, entryStatus (entityVal x) == Publish||isAdministrator mCurrentUserId (entityVal x)]          
         (entryList, mSeachText)<- case searchFormResult of
@@ -90,9 +90,9 @@ entryListWidget entryList = do
     <div .entries>
         <ul>
             $forall Entity entryId entry<-entryList
-                $maybe authorId <- entryUserId entry
+                
                     <li :entryStatus entry == Draft:.draft data-date=#{formatDateStr (entryInserted entry)}>
-                        <a href=@{EntryR authorId entryId}>
+                        <a href=@{EntryR (entryUserId entry) entryId}>
                             <h3 .entry-title>#{preEscapedToMarkup (scaleHeader 3 (entryOutputTitle entry))}
                         
                             

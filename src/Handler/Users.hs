@@ -12,7 +12,7 @@ getUsersR = do
     
     allUsers<- runDB $ selectList [] [Asc UserInserted]
     users <- runDB $ filterM (\(Entity uid _) -> do
-        entries <- selectList [EntryUserId==.Just uid,EntryStatus==.Publish] [Desc EntryInserted]
+        entries <- selectList [EntryUserId==.uid,EntryStatus==.Publish] [Desc EntryInserted]
         return $ not (null entries)) allUsers
     
     defaultLayout $ do

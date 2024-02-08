@@ -97,9 +97,8 @@ Thank you!
             --redirect $ HomeR authorId
         FormFailure _ -> setMessageI MsgFormFailure
         _ -> setMessageI MsgFormMissing
-    case entryUserId entry of
-        Just authorId -> redirect $ EntryR authorId entryId
-        Nothing -> redirectUltDest Home0R
+
+    redirect $ EntryR (entryUserId entry) entryId
 
 subscribeEntryForm ::Maybe Text -> Form Text 
 subscribeEntryForm mEmail = renderBootstrap3 BootstrapBasicForm $ areq emailField (bfs MsgEmail) mEmail

@@ -26,7 +26,7 @@ entryForm inputs=renderBootstrap3 BootstrapBasicForm $ EntryInput
     <$> areq textField titleSetting (title <$> inputs)
     <*> aopt textareaField preambleSettings (preamble <$> inputs)
     <*> areq (selectFieldList inputFormats) "Content" (inputFormat <$> inputs)
-    <*> areq textareaField editorSettings  (content  <$> inputs)
+    <*> areq textareaField editorSettings (content  <$> inputs)
     <*> aopt textareaField citationSettings (citation  <$> inputs) where  
         inputFormats = [("Markdown", Format "md"), ("LaTeX", Format "tex")]::[(Text, Format)] 
         editorSettings = FieldSettings
@@ -62,7 +62,7 @@ getNewEntryR =  do
             Just "tex" -> Format "tex"
             _ -> Format "md"
     entryInput <- runDB $ do 
-        mEntry <- selectFirst [EntryUserId ==. Just userId,EntryType==.Standard] [Desc EntryInserted]
+        mEntry <- selectFirst [EntryUserId ==.userId,EntryType==.Standard] [Desc EntryInserted]
         mSmaplePost<- case mEntry of
             Just _ -> return Nothing
             Nothing -> do 
@@ -151,7 +151,7 @@ postNewEntryR = do
             case entryAction of
                 Just "publish"-> do
                     entryId<-runDB $ insert $ Entry   
-                        {entryUserId=Just userId
+                        {entryUserId=userId
                         ,entryType=Standard
                         ,entryInputFormat=inputFormat formData
                         ,entryOutputFormat=Format "html"
@@ -196,7 +196,7 @@ To unsubscribe, please visit #{unsubscribeUrl}.
                     redirect $ EditEntryR entryId
                 _-> do 
                     entryId<-runDB $ insert $ Entry   
-                        {entryUserId=Just userId
+                        {entryUserId=userId
                         ,entryType=Standard
                         ,entryInputFormat=inputFormat formData
                         ,entryOutputFormat=Format "html"
@@ -280,7 +280,7 @@ To unsubscribe, please visit #{unsubscribeUrl}.
                             sendSystemEmail (userSubscriptionEmail subscription) subject emailText emailHtml
 
                     runDB $ update entryId                    
-                        [EntryUserId=.Just userId
+                        [EntryUserId=.userId
                         ,EntryStatus=.Publish
                         ,EntryInputTitle=.(title formData)
                         ,EntryOutputTitle=.titleHtml
@@ -301,7 +301,7 @@ To unsubscribe, please visit #{unsubscribeUrl}.
                                 Draft -> entryUpdated entry
                                 _ -> currentTime
                         update entryId                    
-                            [EntryUserId=.Just userId
+                            [EntryUserId=.userId
                             ,EntryStatus=.Draft
                             ,EntryInputTitle=.(title formData)
                             ,EntryOutputTitle=.titleHtml

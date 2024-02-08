@@ -1075,10 +1075,10 @@ instance Administrator Import.NoFoundation.Email where
     isAdministrator maybeUserId email | isJust maybeUserId && maybeUserId == emailUserId email && emailVerified email =  True
     isAdministrator _ _= False
 instance Administrator File where
-    isAdministrator maybeUserId file | isJust maybeUserId && maybeUserId == fileUserId file =  True
+    isAdministrator maybeUserId file | maybeUserId == Just (fileUserId file) =  True
     isAdministrator _ _= False
 instance Administrator Entry where
-    isAdministrator maybeUserId entry | isJust maybeUserId && maybeUserId == entryUserId entry =  True
+    isAdministrator maybeUserId entry | maybeUserId == Just (entryUserId entry) =  True
     isAdministrator _ _= False
 
 isAdmin:: (Administrator a, PersistEntityBackend a ~ SqlBackend)=>Key a->Handler AuthResult

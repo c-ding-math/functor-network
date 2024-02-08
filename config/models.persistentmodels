@@ -32,7 +32,7 @@ Login --via third parties
     UniqueLogin plugin ident
 
 Entry
-    userId UserId Maybe
+    userId UserId
     type EntryType
     inputFormat Format 
     inputTitle Text
@@ -54,7 +54,7 @@ EntryTree
 File 
     filename String
     directory String
-    userId UserId Maybe
+    userId UserId
     inserted UTCTime
     description Text Maybe
     UniqueFile directory filename

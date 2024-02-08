@@ -52,7 +52,7 @@ getEditPage0R :: Text -> Handler Html
 getEditPage0R title = do
     (userId, user)<- requireAuthPair
 
-    mEntry<-runDB $ selectFirst [EntryInputTitle==.title,EntryType==.Page0,EntryUserId==.Just userId] [Desc EntryInserted]
+    mEntry<-runDB $ selectFirst [EntryInputTitle==.title,EntryType==.Page0,EntryUserId==.userId] [Desc EntryInserted]
     formatParam <- lookupGetParam "format"
     let format = case (formatParam,mEntry) of
             (Just "tex",_) -> Format "tex"
@@ -92,7 +92,7 @@ getEditPage0R title = do
 postEditPage0R :: Text -> Handler Html
 postEditPage0R title = do
     userId <- requireAuthId
-    mEntry<-runDB $ selectFirst [EntryInputTitle==.title,EntryType==.Page0,EntryUserId==.Just userId] [Desc EntryInserted]
+    mEntry<-runDB $ selectFirst [EntryInputTitle==.title,EntryType==.Page0,EntryUserId==.userId] [Desc EntryInserted]
     ((res, _), _) <- runFormPost $ pageForm Nothing
     case res of 
         FormSuccess formData->  do
@@ -122,7 +122,7 @@ postEditPage0R title = do
                 Just "publish"-> case mEntry of 
                     Nothing -> do
                         _<-runDB $ insert $ Entry   
-                            {entryUserId=Just userId
+                            {entryUserId=userId
                             ,entryType=Page0
                             ,entryInputFormat=(inputFormat formData)
                             ,entryOutputFormat=Format "html"
@@ -144,7 +144,7 @@ postEditPage0R title = do
                         redirect $ EditPage0R title
                     Just (Entity entryId _) -> do
                         runDB $ update entryId
-                            [EntryUserId=.Just  userId
+                            [EntryUserId=.userId
                             ,EntryStatus=.Publish
                             ,EntryInputPreamble=.(preamble formData)
                             ,EntryInputFormat=.(inputFormat formData)
@@ -160,7 +160,7 @@ postEditPage0R title = do
                 Just "draft"-> case mEntry of 
                         Nothing -> do
                             _<-runDB $ insert $ Entry   
-                                {entryUserId=Just userId
+                                {entryUserId=userId
                                 ,entryType=Page0
                                 ,entryInputFormat=(inputFormat formData)
                                 ,entryOutputFormat=Format "html"
@@ -183,7 +183,7 @@ postEditPage0R title = do
 
                         Just (Entity entryId _) -> do
                             runDB $ update entryId
-                                [EntryUserId=.Just  userId
+                                [EntryUserId=.userId
                                 ,EntryStatus=.Draft
                                 ,EntryInputPreamble=.(preamble formData)
                                 ,EntryInputFormat=.(inputFormat formData)
