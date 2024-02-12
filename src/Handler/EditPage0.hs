@@ -52,7 +52,7 @@ getEditPage0R :: Text -> Handler Html
 getEditPage0R title = do
     (userId, user)<- requireAuthPair
 
-    mEntry<-runDB $ selectFirst [EntryInputTitle==.title,EntryType==.Page0,EntryUserId==.userId] [Desc EntryInserted]
+    mEntry<-runDB $ selectFirst [EntryInputTitle==.title,EntryType==.Page,EntryUserId==.userId] [Desc EntryInserted]
     formatParam <- lookupGetParam "format"
     let format = case (formatParam,mEntry) of
             (Just "tex",_) -> Format "tex"
@@ -92,7 +92,7 @@ getEditPage0R title = do
 postEditPage0R :: Text -> Handler Html
 postEditPage0R title = do
     userId <- requireAuthId
-    mEntry<-runDB $ selectFirst [EntryInputTitle==.title,EntryType==.Page0,EntryUserId==.userId] [Desc EntryInserted]
+    mEntry<-runDB $ selectFirst [EntryInputTitle==.title,EntryType==.Page,EntryUserId==.userId] [Desc EntryInserted]
     ((res, _), _) <- runFormPost $ pageForm Nothing
     case res of 
         FormSuccess formData->  do
@@ -123,7 +123,7 @@ postEditPage0R title = do
                     Nothing -> do
                         _<-runDB $ insert $ Entry   
                             {entryUserId=userId
-                            ,entryType=Page0
+                            ,entryType=Page
                             ,entryInputFormat=(inputFormat formData)
                             ,entryOutputFormat=Format "html"
                             ,entryInputTitle=title
@@ -161,7 +161,7 @@ postEditPage0R title = do
                         Nothing -> do
                             _<-runDB $ insert $ Entry   
                                 {entryUserId=userId
-                                ,entryType=Page0
+                                ,entryType=Page
                                 ,entryInputFormat=(inputFormat formData)
                                 ,entryOutputFormat=Format "html"
                                 ,entryInputTitle=title

@@ -51,7 +51,7 @@ getEditPageR title = do
     (userId, user)<- requireAuthPair
     case title of  
         "About" -> do
-            mEntry<-runDB $ selectFirst [EntryInputTitle==.title, EntryType==.Page, EntryUserId==.userId] [Desc EntryInserted]
+            mEntry<-runDB $ selectFirst [EntryInputTitle==.title, EntryType==.UserPage, EntryUserId==.userId] [Desc EntryInserted]
             formatParam <- lookupGetParam "format"
             let format = case (formatParam,mEntry) of
                     (Just "tex",_) -> Format "tex"
@@ -101,7 +101,7 @@ postEditPageR title = do
     userId <- requireAuthId
     case title of
         "About" -> do
-            mEntry<-runDB $ selectFirst [EntryInputTitle==.title, EntryType==.Page, EntryUserId==.userId] [Desc EntryInserted]
+            mEntry<-runDB $ selectFirst [EntryInputTitle==.title, EntryType==.UserPage, EntryUserId==.userId] [Desc EntryInserted]
             ((res, _), _) <- runFormPost $ pageForm Nothing
             case res of 
                 FormSuccess formData->  do
@@ -132,7 +132,7 @@ postEditPageR title = do
                             Nothing -> do
                                 _<-runDB $ insert $ Entry   
                                     {entryUserId=userId
-                                    ,entryType=Page
+                                    ,entryType=UserPage
                                     ,entryInputFormat=(inputFormat formData)
                                     ,entryOutputFormat=Format "html"
                                     ,entryInputTitle=title
@@ -171,7 +171,7 @@ postEditPageR title = do
                                 Nothing -> do
                                     _<-runDB $ insert $ Entry   
                                         {entryUserId=userId
-                                        ,entryType=Page
+                                        ,entryType=UserPage
                                         ,entryInputFormat=(inputFormat formData)
                                         ,entryOutputFormat=Format "html"
                                         ,entryInputTitle=title

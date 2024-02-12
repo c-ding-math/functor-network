@@ -32,7 +32,7 @@ feedbackForm feedback = renderBootstrap3 BootstrapBasicForm $ Feedback
 
 getFeedbackR :: Handler Html
 getFeedbackR = do
-    mFeedbackDescription<-runDB $ selectFirst [EntryInputTitle==."Feedback",EntryType==.Page0,EntryStatus==.Draft] [Desc EntryInserted]
+    mFeedbackDescription<-runDB $ selectFirst [EntryInputTitle==."Feedback",EntryType==.Page,EntryStatus==.Draft] [Desc EntryInserted]
     (feedbackWidget, feedbackEnctype) <- generateFormPost $ feedbackForm $ Just $ Feedback "Feedback" $ Textarea ""
     defaultLayout $ do
         setTitleI MsgFeedback

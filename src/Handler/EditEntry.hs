@@ -11,7 +11,7 @@ import Yesod.Form.Bootstrap3
 import Handler.EditComment(deleteEntryRecursive)
 import Handler.Parser(parse,markItUpWidget,userTemporaryDirectory)
 import Parse.Parser(mdToHtml,mdToHtmlSimple,texToHtml,texToHtmlSimple,EditorData(..))
-import qualified Data.Text as T
+
 import Text.Shakespeare.Text
 
 data EntryInput=EntryInput
@@ -62,13 +62,13 @@ getNewEntryR =  do
             Just "tex" -> Format "tex"
             _ -> Format "md"
     entryInput <- runDB $ do 
-        mEntry <- selectFirst [EntryUserId ==.userId,EntryType==.Standard] [Desc EntryInserted]
+        mEntry <- selectFirst [EntryUserId ==.userId,EntryType==.UserPost] [Desc EntryInserted]
         mSmaplePost<- case mEntry of
             Just _ -> return Nothing
             Nothing -> do 
                 case format of
-                    Format "tex" -> selectFirst [EntryInputTitle==."a sample post written in latex",EntryType==.Page0,EntryStatus==.Publish] [Desc EntryInserted]  
-                    _ -> selectFirst [EntryInputTitle==."a sample post written in markdown",EntryType==.Page0,EntryStatus==.Publish] [Desc EntryInserted]
+                    Format "tex" -> selectFirst [EntryInputTitle==."a sample post written in latex",EntryType==.Page,EntryStatus==.Publish] [Desc EntryInserted]  
+                    _ -> selectFirst [EntryInputTitle==."a sample post written in markdown",EntryType==.Page,EntryStatus==.Publish] [Desc EntryInserted]
         case mSmaplePost of
             Just (Entity _ entry) -> return $ EntryInput "" (entryInputPreamble entry) format (entryInputBody entry) (entryInputCitation entry)
             Nothing -> return $ EntryInput "" (userDefaultPreamble user) format "" (userDefaultCitation user)
@@ -90,7 +90,7 @@ getEditEntryR entryId = do
     --userId <- requireAuthId
     entry<-runDB $ do    
         entry<-get404 entryId
-        if entryType entry==Standard
+        if entryType entry==UserPost
             then return entry
             else notFound
  
@@ -152,7 +152,7 @@ postNewEntryR = do
                 Just "publish"-> do
                     entryId<-runDB $ insert $ Entry   
                         {entryUserId=userId
-                        ,entryType=Standard
+                        ,entryType=UserPost
                         ,entryInputFormat=inputFormat formData
                         ,entryOutputFormat=Format "html"
                         ,entryInputTitle=(title formData)
@@ -197,7 +197,7 @@ To unsubscribe, please visit #{unsubscribeUrl}.
                 _-> do 
                     entryId<-runDB $ insert $ Entry   
                         {entryUserId=userId
-                        ,entryType=Standard
+                        ,entryType=UserPost
                         ,entryInputFormat=inputFormat formData
                         ,entryOutputFormat=Format "html"
                         ,entryInputTitle=(title formData)
@@ -323,9 +323,4 @@ To unsubscribe, please visit #{unsubscribeUrl}.
                     <p>#{error}
                 |]
             redirect $ EditEntryR entryId
-            
-listToInput::[Text]->Text
-listToInput =(intercalate ", ")
 
-inputToList::Text->[Text]
-inputToList =(filter (not . null)) . (map T.strip) . (T.splitOn ",") 

@@ -22,11 +22,7 @@ import Database.Persist.Quasi
 -- at:
 -- http://www.yesodweb.com/book/persistent/
 
-data RoleType =  SuperAdministrator | Administrator 
-    deriving (Show, Read, Eq)
-derivePersistField "RoleType"
-
-data EntryType =  Standard | Page | Comment | Page0
+data EntryType =  Post | Page | Comment | UserPage | UserPost 
     deriving (Show, Read, Eq)
 derivePersistField "EntryType"
 
@@ -39,11 +35,6 @@ data Format = Format Text
 instance FromJSON Format where
 instance ToJSON Format where
 derivePersistField "Format"
-
-instance Ord RoleType where
-    compare SuperAdministrator Administrator = GT
-    compare Administrator SuperAdministrator = LT
-    compare _ _ = EQ
 
 share [mkPersist sqlSettings, mkMigrate "migrateAll"]
     $(persistFileWith lowerCaseSettings "config/models.persistentmodels")

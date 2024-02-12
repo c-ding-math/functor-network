@@ -12,7 +12,7 @@ import Parse.Parser (scaleHeader)
 
 getEntries0R :: Handler Html
 getEntries0R = do
-    entryList<-runDB $ selectList [EntryType==.Standard,EntryStatus==.Publish] [Desc EntryInserted]
+    entryList<-runDB $ selectList [EntryType==.UserPost,EntryStatus==.Publish] [Desc EntryInserted]
     mAuthors<-runDB $ do
         mapM (\x-> get $ entryUserId $ entityVal x) entryList 
         

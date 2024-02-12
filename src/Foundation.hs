@@ -482,6 +482,7 @@ instance YesodAuth App where
                                     ,userInserted=currentTime
                                     --,userModified=currentTime
                                     --,userAvatar=Nothing
+                                    ,userDefaultFormat=Format "md"
                                     ,userDefaultPreamble=Just (Textarea "\\usepackage{amsmath, amssymb, amsfonts}\n\\newcommand{\\NN}{\\mathbb{N}}")
                                     ,userDefaultCitation=Nothing
                                     }
@@ -620,6 +621,7 @@ instance YesodAuthEmail App where
                                 ,userInserted=currentTime
                                 --,userModified=currentTime
                                 --,userAvatar=Nothing
+                                ,userDefaultFormat=Format "md"
                                 ,userDefaultPreamble=Just (Textarea "\\usepackage{amsmath, amssymb, amsfonts}\n\\newcommand{\\NN}{\\mathbb{N}}")
                                 ,userDefaultCitation=Nothing
                                 }

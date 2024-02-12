@@ -14,8 +14,8 @@ getHome0R :: Handler Html
 getHome0R = do
     maybeUserId<-maybeAuthId
     --maybeIntroduction<-runDB $ selectFirst [EntryInputTitle==."What is Functor Network",EntryType==.Page0,EntryStatus==.Draft] [Desc EntryInserted]
-    maybeFeatures<-runDB $ selectFirst [EntryInputTitle==."Features",EntryType==.Page0,EntryStatus==.Draft] [Desc EntryInserted]
-    maybeScreenshots<-runDB $ selectFirst [EntryInputTitle==."Screenshots",EntryType==.Page0,EntryStatus==.Draft] [Desc EntryInserted]
+    maybeFeatures<-runDB $ selectFirst [EntryInputTitle==."Features",EntryType==.Page,EntryStatus==.Draft] [Desc EntryInserted]
+    maybeScreenshots<-runDB $ selectFirst [EntryInputTitle==."Screenshots",EntryType==.Page,EntryStatus==.Draft] [Desc EntryInserted]
 
     defaultLayout $ do  
         --aDomId <- newIdent

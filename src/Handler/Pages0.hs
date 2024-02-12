@@ -9,7 +9,7 @@ import Handler.Entries (entryListWidget)
 getPages0R :: Handler Html
 getPages0R = do
     entryList<-runDB $ do     
-        entries<- selectList [EntryType==.Page0] [Desc EntryInserted]
+        entries<- selectList [EntryType==.Page] [Desc EntryInserted]
         return $ entries
     --(widget, enctype)<-generateFormPost preEntryForm
     defaultLayout $ do

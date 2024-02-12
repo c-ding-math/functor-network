@@ -28,7 +28,7 @@ getEntriesR authorId = do
 
     (userEntryList,entryList,author,mSeachText)<-runDB $ do
         author<-get404 authorId      
-        entries<- selectList [EntryUserId==.authorId, EntryType==.Standard] [Desc EntryInserted]
+        entries<- selectList [EntryUserId==.authorId, EntryType==.UserPost] [Desc EntryInserted]
         
         let userEntryList = [x | x<-entries, entryStatus (entityVal x) == Publish||isAdministrator mCurrentUserId (entityVal x)]          
         (entryList, mSeachText)<- case searchFormResult of

@@ -17,7 +17,7 @@ getEntryR authorId entryId = do
     maybeUser<-maybeAuth
     (entry,mEntryAuthor,comments,mCommentAuthors,mCommentParentIds,mCommentParentAuthors)<-runDB $ do
         entry<-get404 entryId
-        if (entryUserId entry==authorId) && (entryStatus entry==Publish || isAdministrator maybeUserId entry) && (entryType entry==Standard)
+        if (entryUserId entry==authorId) && (entryStatus entry==Publish || isAdministrator maybeUserId entry) && (entryType entry==UserPost)
           then do
             mEntryAuthor<- selectFirst [UserId==.entryUserId entry] []
             commentIds<- getChildIds entryId
