@@ -43,3 +43,4 @@
 !/#Text PageR GET
 !/user/#UserId/#Text UserPageR GET !user
 
+/maintenance MaintenanceR GET POST

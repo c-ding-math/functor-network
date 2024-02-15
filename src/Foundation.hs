@@ -131,6 +131,7 @@ instance Yesod App where
 
     defaultLayout :: Widget -> Handler Html
     defaultLayout widget = do
+        mMaintenance<-runDB $ selectFirst [] [Desc MaintenanceFrom]
         master <- getYesod
         mmsg <- getMessage
 
@@ -325,7 +326,8 @@ instance Yesod App where
 
     -- app administrator routes
     isAuthorized (EditPageR _ ) _ = isAppAdministrator
-    isAuthorized (PagesR) _ = isAppAdministrator
+    isAuthorized PagesR _ = isAppAdministrator
+    isAuthorized MaintenanceR _ = isAppAdministrator
     
     -- This function creates static content files in the static folder
     -- and names them based on a hash of their content. This allows

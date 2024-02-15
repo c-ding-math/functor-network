@@ -76,3 +76,8 @@ EntrySubscription
     verified Bool
     UniqueEntrySubscription email entryId
     deriving Show
+
+Maintenance
+    from UTCTime
+    duration Int
+    deriving Show

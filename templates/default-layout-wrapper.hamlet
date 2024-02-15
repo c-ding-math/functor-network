@@ -107,4 +107,7 @@ $newline never
           if (localStorage.getItem('cookie_consent') != 'true') {
             document.getElementById('privacy-dialog').style.display = 'block';
           }
-    
+    $maybe maintenance <- mMaintenance
+      <div style="position: fixed; top: 0; left: 0; right: 0; background-color: #f8d7da; color: #721c24; padding: 0.5em; text-align: center; z-index: 1000;">
+        <h1>Site maintenance
+        <p>Our platform is currently undergoing maintenance. We apologize for any inconvenience. Please check back later.

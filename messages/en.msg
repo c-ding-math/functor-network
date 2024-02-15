@@ -47,10 +47,10 @@ EmailNotification: Email notification
 NotifyMeViaEmail: Notify me via email when I receive a comment or reply.
 NewEmail: Add a new email
 Editor: Editor
-DefaultFormat: Default Post Format
-DefaultPreamble: Default LaTeX Preamble
+DefaultFormat: Default post format
+DefaultPreamble: Default LaTeX preamble
 Preamble: LaTeX Preamble
-DefaultCitation: Default Citation
+DefaultCitation: Default citation
 Citation: Citation
 Edit: Edit
 View: View
@@ -101,8 +101,6 @@ RecentEntries: Recent posts
 RecentComments: Recent comments
 RecentCommentsOn: Recent comments on
 NoPost: No post found.
-Tag: Keyword
-Tags: Keywords
 ViewAll: View all
 Home: Home
 
