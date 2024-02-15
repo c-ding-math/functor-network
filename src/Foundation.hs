@@ -142,8 +142,8 @@ instance Yesod App where
         -- Get the breadcrumbs, as defined in the YesodBreadcrumbs instance.
         (title, parents) <- breadcrumbs
         (homeTitle, homeRoute, aboutRoute)<- case mAuthorEntity of
-            Just (Entity userId user) -> return (userName user, HomeR userId, PageR userId "About")
-            Nothing -> return (appName, Home0R, Page0R "About")
+            Just (Entity userId user) -> return (userName user, UserHomeR userId, UserPageR userId "About")
+            Nothing -> return (appName, HomeR, PageR "About")
 
         -- Define the menu items of the header.
         let mUserRoutePath = entityKey <$> mAuthorEntity
@@ -152,7 +152,7 @@ instance Yesod App where
                     Just uid | mUserRoutePath == muid->
                         [ NavbarRight $ MenuItem
                             { menuItemLabel = "Posts"
-                            , menuItemRoute = HomeR uid
+                            , menuItemRoute = UserHomeR uid
                             , menuItemAccessCallback = True
                             }
                         , NavbarRight $ MenuItem
@@ -174,7 +174,7 @@ instance Yesod App where
                     Just uid | otherwise ->
                         [ NavbarRight $ MenuItem
                             { menuItemLabel = "Home"
-                            , menuItemRoute = HomeR uid
+                            , menuItemRoute = UserHomeR uid
                             , menuItemAccessCallback = True
                             }
                         ]
@@ -198,7 +198,7 @@ instance Yesod App where
                             }
                         , FooterRight $ MenuItem
                             { menuItemLabel = "Version 2023-10-17"
-                            , menuItemRoute = Page0R "Changelog"
+                            , menuItemRoute = PageR "Changelog"
                             , menuItemAccessCallback = True
                             }
                         ]
@@ -215,12 +215,12 @@ instance Yesod App where
                             }
                         , FooterRight $ MenuItem
                             { menuItemLabel = "Privacy"
-                            , menuItemRoute = Page0R "Privacy Policy"
+                            , menuItemRoute = PageR "Privacy Policy"
                             , menuItemAccessCallback = True
                             }
                         , FooterRight $ MenuItem
                             { menuItemLabel = "Functor Network"
-                            , menuItemRoute = Home0R
+                            , menuItemRoute = HomeR
                             , menuItemAccessCallback = True
                             }
                         ]
@@ -232,12 +232,12 @@ instance Yesod App where
                             }
                         , FooterLeft $ MenuItem
                             { menuItemLabel = "About"
-                            , menuItemRoute = Page0R "About"
+                            , menuItemRoute = PageR "About"
                             , menuItemAccessCallback = True
                             }
                         , FooterLeft $ MenuItem
                             { menuItemLabel = "Privacy"
-                            , menuItemRoute = Page0R "Privacy Policy"
+                            , menuItemRoute = PageR "Privacy Policy"
                             , menuItemAccessCallback = True
                             }
                         , FooterLeft $ MenuItem
@@ -287,44 +287,45 @@ instance Yesod App where
         -> Handler AuthResult
     -- Routes not requiring authentication.
     isAuthorized (AuthR _) _ = return Authorized
-    isAuthorized Home0R _ = return Authorized
+    isAuthorized HomeR _ = return Authorized
     isAuthorized FaviconR _ = return Authorized
     isAuthorized RobotsR _ = return Authorized
     isAuthorized (StaticR _) _ = return Authorized
     isAuthorized UsersR _ = return Authorized
-    isAuthorized (HomeR _) _ = return Authorized
-    isAuthorized (PageR _ _) _ = return Authorized
+    isAuthorized (UserHomeR _) _ = return Authorized
+    isAuthorized (UserPageR _ _) _ = return Authorized
     --isAuthorized (EntriesR _) _ = return Authorized
-    isAuthorized (EntryR _ _) _ = return Authorized
+    isAuthorized (UserEntryR _ _) _ = return Authorized
     isAuthorized (CommentsR _) _ = return Authorized
-    isAuthorized (Page0R _) _ = return Authorized
+    isAuthorized (PageR _) _ = return Authorized
     isAuthorized (EditHelpR _) _ = return Authorized
     isAuthorized (ParserR _ _) _ = return Authorized
     isAuthorized (EditUserSubscriptionR _) _ = return Authorized
     isAuthorized (NewUserSubscriptionR _) _ = return Authorized
     isAuthorized (EditEntrySubscriptionR _) _ = return Authorized
     isAuthorized (NewEntrySubscriptionR _) _ = return Authorized
-    isAuthorized Entries0R _ = return Authorized
+    isAuthorized EntriesR _ = return Authorized
     isAuthorized FeedbackR _ = return Authorized
 
     -- Routes requiring authentication.
-    isAuthorized (EditPageR _) _ = isAuthenticated
+    isAuthorized (EditUserPageR _) _ = isAuthenticated
     isAuthorized SettingsR _ = isAuthenticated
+    isAuthorized AccountR _ = isAuthenticated
     isAuthorized FilesR _ = isAuthenticated
     --isAuthorized (ParserR _ _) _ = isAuthenticated
     isAuthorized (EditCommentR _) _ = isAuthenticated
-    isAuthorized NewEntryR _ = isAuthenticated
+    isAuthorized NewUserEntryR _ = isAuthenticated
 
     -- owner routes
-    isAuthorized (EditEntryR entryId) _ = isAdmin entryId
+    isAuthorized (EditUserEntryR entryId) _ = isAdmin entryId
     isAuthorized (LoginSettingR x) _ = isAdmin x
     isAuthorized (EmailSettingR x) _ = isAdmin x
     isAuthorized (FileR x) _ = isAdmin x
     isAuthorized (SubscriptionsR x) _ = isAdmin x
 
     -- app administrator routes
-    isAuthorized (EditPage0R _ ) _ = isAppAdministrator
-    isAuthorized (Pages0R) _ = isAppAdministrator
+    isAuthorized (EditPageR _ ) _ = isAppAdministrator
+    isAuthorized (PagesR) _ = isAppAdministrator
     
     -- This function creates static content files in the static folder
     -- and names them based on a hash of their content. This allows
@@ -381,16 +382,16 @@ instance YesodBreadcrumbs App where
         -> Handler (Text, Maybe (Route App))
     
     breadcrumb route = case route of
-        HomeR pathPiece -> do
+        UserHomeR pathPiece -> do
             maybeUser <- runDB $ get pathPiece
             let siteName = case maybeUser of
                     Just user -> userName user
                     _ -> "Anonymous User"
-            return (siteName, Just Home0R)
-        PageR pathPiece _-> parentLink pathPiece
+            return (siteName, Just HomeR)
+        UserPageR pathPiece _-> parentLink pathPiece
         -- EntriesR pathPiece -> parentLink pathPiece
-        Home0R -> return ("Home", Nothing)
-        AuthR _ -> return ("Home", Just Home0R)
+        HomeR -> return ("Home", Nothing)
+        AuthR _ -> return ("Home", Just HomeR)
         _ -> return ("home", Nothing)
 
       where
@@ -398,8 +399,8 @@ instance YesodBreadcrumbs App where
         parentLink pathPiece = do
             maybeUser <- runDB $ get pathPiece
             return $ case maybeUser of
-                Just user -> (userName user, Just (HomeR pathPiece))
-                _ -> ("Anonymous User", Just (HomeR pathPiece))
+                Just user -> (userName user, Just (UserHomeR pathPiece))
+                _ -> ("Anonymous User", Just (UserHomeR pathPiece))
             
 
 -- How to run database actions.
@@ -422,7 +423,7 @@ instance YesodAuth App where
     loginDest _ = SettingsR
     -- Where to send a user after logout
     logoutDest :: App -> Route App
-    logoutDest _ = Home0R
+    logoutDest _ = HomeR
     -- Override the above two destinations when a Referer: header is present
     redirectToReferer :: App -> Bool
     redirectToReferer _ = True
@@ -435,7 +436,7 @@ instance YesodAuth App where
                 urlRenderParam <- getUrlRenderParams
                 addMessage "success" $ [hamlet|
                     You are now logged in.
-                    <a .view.alert-link href=@{HomeR uid}>Home
+                    <a .view.alert-link href=@{UserHomeR uid}>Home
                 |] urlRenderParam 
             _ -> addMessage "success" "You are now logged in."
 
@@ -476,7 +477,8 @@ instance YesodAuth App where
                             Nothing -> do 
                                 --let uIdent = ident <> "@" <> plugin
                                 uid<-insert $ User
-                                    {userName=msgRender MsgAnonymous
+                                    {userName=""
+                                    ,userAbout=""
                                     ,userPassword=Nothing
                                     --,userIdent=uIdent
                                     ,userInserted=currentTime
@@ -486,6 +488,8 @@ instance YesodAuth App where
                                     ,userDefaultPreamble=Just (Textarea "\\usepackage{amsmath, amssymb, amsfonts}\n\\newcommand{\\NN}{\\mathbb{N}}")
                                     ,userDefaultCitation=Nothing
                                     }
+                                urlRender<-getUrlRender
+                                update uid [UserName=.(msgRender MsgUser <> " " <> (toPathPiece uid)),UserAbout=.(urlRender $ UserPageR uid "About")]
                                 case plugin of
                                     "google" -> do
                                         case Yesod.Auth.Extra.googleUserName <$> Yesod.Auth.OAuth2.getUserResponseJSON creds of
@@ -529,7 +533,7 @@ instance YesodAuth App where
 instance YesodAuthEmail App where
     type AuthEmailId App = EmailId
 
-    afterPasswordRoute _ = Home0R
+    afterPasswordRoute _ = HomeR
 
     addUnverified email verkey = liftHandler $ runDB $ do
         maybeUserId<-maybeAuthId
@@ -611,11 +615,13 @@ instance YesodAuthEmail App where
         maybeEmail <- get lid
         currentTime<-liftIO getCurrentTime
         msgRender<-getMessageRender
+        
         case maybeEmail of 
             Just email -> do
                 let insertNewUser = do
                         newUserId<-insert $ User 
-                                {userName=msgRender MsgAnonymous
+                                {userName=""
+                                ,userAbout=""
                                 ,userPassword=Nothing
                                 --,userIdent=emailAddress email
                                 ,userInserted=currentTime
@@ -625,6 +631,8 @@ instance YesodAuthEmail App where
                                 ,userDefaultPreamble=Just (Textarea "\\usepackage{amsmath, amssymb, amsfonts}\n\\newcommand{\\NN}{\\mathbb{N}}")
                                 ,userDefaultCitation=Nothing
                                 }
+                        urlRender<-getUrlRender
+                        update newUserId [UserName=.(msgRender MsgUser <> " " <> toPathPiece newUserId), UserAbout=.(urlRender $ UserPageR newUserId "About")]
                         
                         return newUserId
                         {-case newUser of
@@ -707,7 +715,7 @@ instance YesodAuthEmail App where
                                 
                                 <label>
                                     <input type=checkbox name=agree-required>
-                                    I agree to the <a href="@{Page0R "Terms of Use"}">Terms of Use</a> and <a href="@{Page0R "Privacy Policy"}">Privacy Policy</a>                               
+                                    I agree to the <a href="@{PageR "Terms of Use"}">Terms of Use</a> and <a href="@{PageR "Privacy Policy"}">Privacy Policy</a>                               
                                 <button .btn .btn-primary disabled>_{Msg.Register}
                                 
                     |]
@@ -1102,11 +1110,11 @@ routeUserEntity :: Maybe (Route App) -> Handler (Maybe (Entity User))
 routeUserEntity Nothing= return Nothing
 routeUserEntity (Just route) 
     | "user" `member` routeAttrs route = case route of 
-        HomeR userId -> returnEntityIfExist userId
-        PageR userId _ -> returnEntityIfExist userId
+        UserHomeR userId -> returnEntityIfExist userId
+        UserPageR userId _ -> returnEntityIfExist userId
         CommentsR userId -> returnEntityIfExist userId
         --EntriesR userId -> returnEntityIfExist userId
-        EntryR userId _ -> returnEntityIfExist userId
+        UserEntryR userId _ -> returnEntityIfExist userId
         _ -> do
             (userId, user) <- requireAuthPair
             return $ Just (Entity userId user)

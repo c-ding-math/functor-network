@@ -38,7 +38,7 @@
 <!-- Page Contents -->
 
 <div .container>
-    $if not $ Just Home0R == mcurrentRoute
+    $if not $ Just HomeR == mcurrentRoute
         <ul .breadcrumb>
             $forall bc <- parents
                 <li>
@@ -50,7 +50,7 @@
       <div .alert.alert-info #message>#{msg}
 
 
-$if (Just Home0R == mcurrentRoute)
+$if (Just HomeR == mcurrentRoute)
     ^{widget}
 $else
     <div .container>
@@ -65,7 +65,12 @@ $else
         <ul .footer-left>
             $forall MenuItem label route _ <- footerLeftFilteredMenuItems  
                 <li>
-                    <a href="@{route}">#{label}
+                    $if label == "About the author"
+                        $maybe Entity _ author <- mAuthorEntity
+                            <a href=#{userAbout author}>#{label}
+                    $else
+                        <a href="@{route}">#{label}
+                    
         <ul .footer-middle>
             $forall MenuItem label route _ <- footerMiddleFilteredMenuItems
                 <li>

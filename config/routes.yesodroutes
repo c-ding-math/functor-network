@@ -7,23 +7,24 @@
 /favicon.ico FaviconR GET
 /robots.txt RobotsR GET
 
-/ Home0R GET POST
-/entries Entries0R GET
+/ HomeR GET POST
+/entries EntriesR GET
 /feedback FeedbackR GET POST
 /parser/input/#Text/output/#Text ParserR POST
 /help/#Text EditHelpR GET
 /users UsersR GET
-/user/#UserId HomeR GET !user
+/user/#UserId UserHomeR GET !user
 
 --/user/#UserId/entries EntriesR GET !user
-/entry NewEntryR GET POST !user !login
-/user/#UserId/entry/#EntryId EntryR GET !user
-/entry/#EntryId/edit EditEntryR GET POST !user !admin
+/entry NewUserEntryR GET POST !user !login
+/user/#UserId/entry/#EntryId UserEntryR GET !user
+/entry/#EntryId/edit EditUserEntryR GET POST !user !admin
 
 /files FilesR GET POST !user !login
 /file/#FileId FileR DELETE !admin
 
 /settings SettingsR GET POST !user !login
+/setting/account AccountR GET POST !user !login
 /setting/email/#EmailId EmailSettingR GET POST !user !admin
 /setting/login/#LoginId LoginSettingR GET POST !user !admin
 
@@ -33,15 +34,12 @@
 /subscription/entry/#EntrySubscriptionId EditEntrySubscriptionR GET POST
 /subscribe/entry/#EntryId NewEntrySubscriptionR POST
 
-
 /comment/#EntryId/edit EditCommentR POST DELETE !login 
 /user/#UserId/comments CommentsR GET !user
 
-
-/page0/#Text/edit EditPage0R GET POST
-/page/#Text/edit EditPageR GET POST !user
-/pages0 Pages0R GET
-!/#Text Page0R GET
-!/user/#UserId/#Text PageR GET !user
-
+/edit/#Text EditPageR GET POST
+/page/#Text/edit EditUserPageR GET POST !user
+/pages PagesR GET
+!/#Text PageR GET
+!/user/#UserId/#Text UserPageR GET !user
 

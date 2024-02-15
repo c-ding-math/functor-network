@@ -7,17 +7,17 @@ import Yesod.Form.Bootstrap3
 import Handler.Parser(markItUpWidget)
 
 data EntryInput=EntryInput
-    { preamble:: Maybe Textarea
-    , inputFormat::Format
-    , content::Textarea 
+    { inputFormat::Format
+    , preamble:: Maybe Textarea
+    , body::Maybe Textarea 
     , citation:: Maybe Textarea
     } deriving Show
 
 entryForm::Maybe EntryInput -> Html -> MForm Handler (FormResult EntryInput, Widget)
 entryForm inputs=renderBootstrap3 BootstrapBasicForm $ EntryInput
-    <$> aopt textareaField preambleSettings (preamble <$> inputs)
-    <*> areq (selectFieldList inputFormats) "Format" (inputFormat <$> inputs)
-    <*> areq textareaField editorSettings  (content  <$> inputs)
+    <$> areq (selectFieldList inputFormats) "Format" (inputFormat <$> inputs)
+    <*> aopt textareaField preambleSettings (preamble <$> inputs)
+    <*> aopt textareaField editorSettings  (body  <$> inputs)
     <*> aopt textareaField citationSettings (citation  <$> inputs) where  
         inputFormats = [("Markdown", Format "md"), ("LaTeX", Format "tex")]::[(Text, Format)] 
         editorSettings = FieldSettings
@@ -39,22 +39,21 @@ entryForm inputs=renderBootstrap3 BootstrapBasicForm $ EntryInput
             , fsName = Just "citation"
             , fsAttrs =[("class", "hidden")]}
 
-
 getEditHelpR :: Text -> Handler Html
 getEditHelpR "syntax" = do
     formatParam <- lookupGetParam "format"
     (maybeSyntax, maybeDemo, format, title) <- case formatParam of
             Just "tex" -> do
-                maybeSyntax<-runDB $ selectFirst [EntryInputTitle==."Latex Help",EntryType==.Page,EntryStatus==.Draft] [Desc EntryInserted]
-                maybeDemo <-runDB $ selectFirst [EntryInputTitle==."a sample post written in latex",EntryType==.Page,EntryStatus==.Publish] [Desc EntryInserted]
+                maybeSyntax<-runDB $ selectFirst [EntryTitle==."Latex Help",EntryType==.Page,EntryStatus==.Draft] [Desc EntryInserted]
+                maybeDemo <-runDB $ selectFirst [EntryTitle==."a sample post written in latex",EntryType==.Page,EntryStatus==.Publish] [Desc EntryInserted]
                 return (maybeSyntax, maybeDemo, Format "tex", "Latex Help"::Text)
             _ -> do
-                maybeSyntax<-runDB $ selectFirst [EntryInputTitle==."Markdown Help",EntryType==.Page,EntryStatus==.Draft] [Desc EntryInserted]
-                maybeDemo <-runDB $ selectFirst [EntryInputTitle==."a sample post written in markdown",EntryType==.Page,EntryStatus==.Publish] [Desc EntryInserted]
+                maybeSyntax<-runDB $ selectFirst [EntryTitle==."Markdown Help",EntryType==.Page,EntryStatus==.Draft] [Desc EntryInserted]
+                maybeDemo <-runDB $ selectFirst [EntryTitle==."a sample post written in markdown",EntryType==.Page,EntryStatus==.Publish] [Desc EntryInserted]
                 return (maybeSyntax, maybeDemo, Format "md", "Markdown Help"::Text)
     entryWidget <- case maybeDemo of
         Just (Entity _ entry) -> do
-            (entryWidget, _) <- generateFormPost $ entryForm $ Just $ EntryInput (entryInputPreamble entry) (entryInputFormat entry) (entryInputBody entry) (entryInputCitation entry) 
+            (entryWidget, _) <- generateFormPost $ entryForm $ Just $ EntryInput (entryFormat entry) (entryPreamble entry) (entryBody entry) (entryCitation entry) 
             return entryWidget
         Nothing -> do
             (entryWidget, _) <- generateFormPost $ entryForm Nothing
@@ -67,7 +66,7 @@ getEditHelpR "syntax" = do
   <div .entry-content>
     <div .entry-content-wrapper>
         $maybe (Entity _ entry)<-maybeSyntax
-            #{preEscapedToMarkup(entryOutputBody entry)}
+            #{preEscapedToMarkup(entryBodyHtml entry)}
         $nothing
             <p>_{MsgComingSoon}
 <section .new-comment>
@@ -82,17 +81,17 @@ getEditHelpR "editor" = do
     formatParam <- lookupGetParam "format"
     (maybeSyntax, maybeDemo, format) <- case formatParam of
             Just "tex" -> do
-                maybeSyntax<-runDB $ selectFirst [EntryInputTitle==."Latex Editor Help",EntryType==.Page,EntryStatus==.Draft] [Desc EntryInserted]
-                maybeDemo <-runDB $ selectFirst [EntryInputTitle==."a sample post written in latex",EntryType==.Page,EntryStatus==.Publish] [Desc EntryInserted]
+                maybeSyntax<-runDB $ selectFirst [EntryTitle==."Latex Editor Help",EntryType==.Page,EntryStatus==.Draft] [Desc EntryInserted]
+                maybeDemo <-runDB $ selectFirst [EntryTitle==."a sample post written in latex",EntryType==.Page,EntryStatus==.Publish] [Desc EntryInserted]
                 return (maybeSyntax, maybeDemo, Format "tex")
             _ -> do
-                maybeSyntax<-runDB $ selectFirst [EntryInputTitle==."Markdown Editor Help",EntryType==.Page,EntryStatus==.Draft] [Desc EntryInserted]
-                maybeDemo <-runDB $ selectFirst [EntryInputTitle==."a sample post written in markdown",EntryType==.Page,EntryStatus==.Publish] [Desc EntryInserted]
+                maybeSyntax<-runDB $ selectFirst [EntryTitle==."Markdown Editor Help",EntryType==.Page,EntryStatus==.Draft] [Desc EntryInserted]
+                maybeDemo <-runDB $ selectFirst [EntryTitle==."a sample post written in markdown",EntryType==.Page,EntryStatus==.Publish] [Desc EntryInserted]
                 return (maybeSyntax, maybeDemo, Format "md")
     
     entryWidget <- case maybeDemo of
         Just (Entity _ entry) -> do
-            (entryWidget, _) <- generateFormPost $ entryForm $ Just $ EntryInput (entryInputPreamble entry) (entryInputFormat entry) (entryInputBody entry) (entryInputCitation entry) 
+            (entryWidget, _) <- generateFormPost $ entryForm $ Just $ EntryInput (entryFormat entry) (entryPreamble entry) (entryBody entry) (entryCitation entry) 
             return entryWidget
         Nothing -> do
             (entryWidget, _) <- generateFormPost $ entryForm Nothing
@@ -105,7 +104,7 @@ getEditHelpR "editor" = do
   <div .entry-content>
     <div .entry-content-wrapper>
         $maybe (Entity _ entry)<-maybeSyntax
-            #{preEscapedToMarkup(entryOutputBody entry)}
+            #{preEscapedToMarkup(entryBodyHtml entry)}
         $nothing
             <p>_{MsgComingSoon}
 <section .new-comment>

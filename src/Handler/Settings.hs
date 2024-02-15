@@ -8,10 +8,29 @@ import Import
 import Yesod.Auth.Email (registerR,forgotPasswordR,setpassR)
 import Yesod.Form.Bootstrap3
 
+import Network.HTTP.Conduit (simpleHttp)
+import Text.HTML.DOM (parseLBS)
+import Text.XML.Cursor --(Cursor, attribute, attributeIs, element, fromDocument, ($//), (&//), (&/), content)
+
+checkRelMeLink :: String -> Text ->  IO Bool
+checkRelMeLink url targetUrl = do
+    -- Download the HTML document
+    doc <- simpleHttp url
+    -- Parse the document
+    -- reference: https://www.yesodweb.com/book/xml
+    let cursor = fromDocument $ parseLBS doc
+        hrefs = cursor $// element "a" >=> attributeIs "rel" "me" >=> attributeIs "href" targetUrl
+    return $ not $ null $ hrefs
+    
+relMeLink:: Text -> Text -> Text 
+relMeLink homeUrl text = "<a rel=\"me\" href=\""<>homeUrl<>"\">"<>text<>"</a>"
+
 data NameSetting=NameSetting{_name::Text}
+data AboutSetting=AboutSetting{_about::Maybe Text}
 --data AvatarSetting=AvatarSetting{_avatar::Maybe Text}
 --data NotificationSetting=NotificationSetting{_notificationEmailId::Maybe EmailId}
     --deriving Show
+data DefaultFormatSetting=DefaultFormatSetting{_defaultFormat::Format}
 data DefaultPreambleSetting=DefaultPreambleSetting{_defaultPreamble::Maybe Textarea}
 data DefaultCitationSetting=DefaultCitationSetting{_defaultCitation::Maybe Textarea}
 
@@ -19,6 +38,20 @@ nameSettingForm::User->Form NameSetting
 nameSettingForm user=renderBootstrap3 BootstrapBasicForm $ NameSetting
     <$> areq textField (bfs MsgName) (Just(userName user))
 
+aboutSettingForm::User->Form AboutSetting
+aboutSettingForm user=renderBootstrap3 BootstrapBasicForm $ AboutSetting
+    <$> aopt urlField aboutSetting (Just (Just (userAbout user)))
+    where 
+        aboutSetting = FieldSettings
+            { fsLabel = "About page"
+            , fsTooltip = Nothing
+            , fsId = Nothing
+            , fsName = Just "about"
+            , fsAttrs =
+                [ ("class", "form-control")
+                , ("placeholder", "Leave it blank if you want to use the default about page.")
+                ]
+            }
 {-avatarSettingForm::User->Form AvatarSetting
 avatarSettingForm user=renderBootstrap3 BootstrapBasicForm $ AvatarSetting
     <$> aopt urlField (bfs MsgAvatar) (Just(userAvatar user))-}
@@ -44,6 +77,12 @@ notificationSettingForm maybeEmailEntities maybeEmailId= renderBootstrap3 Bootst
 
         return (result, widget)
 -}
+defaultFormatSettingForm::User->Form DefaultFormatSetting
+defaultFormatSettingForm user=renderBootstrap3 BootstrapBasicForm $ DefaultFormatSetting
+    <$> areq (selectFieldList inputFormats) (bfs MsgDefaultFormat) (Just(userDefaultFormat user))
+    where
+        inputFormats = [("Markdown", Format "md"), ("LaTeX", Format "tex")]::[(Text, Format)]
+
 defaultPreambleSettingForm::User->Form DefaultPreambleSetting
 defaultPreambleSettingForm user=renderBootstrap3 BootstrapBasicForm $ DefaultPreambleSetting
     <$> aopt textareaField (bfs MsgDefaultPreamble) (Just(userDefaultPreamble user))
@@ -54,6 +93,7 @@ defaultCitationSettingForm user=renderBootstrap3 BootstrapBasicForm $ DefaultCit
 
 getSettingsR :: Handler Html
 getSettingsR = do 
+    urlRender<-getUrlRender
     (userId, user)<-requireAuthPair
     (emails, googles) <- runDB $ do
         --roleEntities<-selectList [RoleUserId==.userId,RoleType==.Administrator] []  
@@ -65,8 +105,10 @@ getSettingsR = do
         return $ (emails, googles)
 
     (nameWidget, nameEnctype) <- generateFormPost $ nameSettingForm user
+    (aboutWidget, aboutEnctype) <- generateFormPost $ aboutSettingForm user
     --(avatarWidget, avatarEnctype) <- generateFormPost $ avatarSettingForm user
     --(notificationWidget, notificationEnctype) <- generateFormPost $ notificationSettingForm emails (notificationEmailId . entityVal <$> mNotification)
+    (formatWidget, formatEnctype) <- generateFormPost $ defaultFormatSettingForm user
     (preambleWidget, preambleEnctype) <- generateFormPost $ defaultPreambleSettingForm user
     (citationWidget, citationEnctype) <- generateFormPost $ defaultCitationSettingForm user
     
@@ -74,24 +116,6 @@ getSettingsR = do
         --addStylesheetRemote "https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"     
         [whamlet|
             
-            <section .account-setting>
-                <h2>_{MsgAccount}
-                <div>
-                    <label>_{MsgNumber}
-                    #{toPathPiece userId}
-                    <!--<label>_{MsgUserNumber}
-                    <div>
-                        <p>
-                            <span>_{MsgNumber}#{toPathPiece userId}
-                        
-                        <a .btn .btn-default href=@{AccountR}>_{MsgEdit}-->
-                    <p>
-                <div>
-                    <label>_{MsgPassword}
-                    <div>
-                        <a .btn .btn-default href=@{AuthR forgotPasswordR}>_{MsgForgotPassword}
-                        <a .btn .btn-default href=@{AuthR setpassR}>_{MsgSetPassword}
-                    <p>
             <section .login-setting>
                 <h2>_{MsgLogin}
                 <div>
@@ -118,7 +142,7 @@ getSettingsR = do
                         $else
                             <ul>
                                 $forall Entity googleId google<-googles
-                                    <li>#{drop 11 (loginIdent google)}@Google
+                                    <li>Google ID. #{drop 11 (loginIdent google)}
                                         <ul .entry-menu.inline-menu>
                                             <li>
                                                 <a href=@{LoginSettingR googleId}>delete
@@ -157,11 +181,16 @@ getSettingsR = do
                         <div .avatar-right>
                             
                     <p>-->
+                
                 <div>
-                    <label>_{MsgAbout}
-                    <div>
-                        <a .btn .btn-default href=@{PageR userId "About"}>_{MsgView}
-                        <a .btn .btn-default href=@{EditPageR "About"}>_{MsgEdit}
+                    <form method=post enctype=#{aboutEnctype}>
+                        ^{aboutWidget}
+                        <p .note>You may either use the default about page on our platform or use your own about page somewhere else. In the latter case, please  provide the URL of your page in the blank and paste <code>#{relMeLink (urlRender $ UserHomeR userId) (userName user)}</code> in your page for ownership verification (You may replace <code>#{userName user}</code> with any text you like). 
+
+                        <button .btn .btn-default type=submit name=setting value=about>_{MsgVerifyAndSave}
+
+                        <a .btn .btn-default href=#{userAbout user}>_{MsgView}
+                        
                     <p>
             <!--<section .notification-setting>
                 <h2>_{MsgSubscription} 
@@ -178,17 +207,34 @@ getSettingsR = do
                     <p>-->
             <section .editor-setting>    
                 <h2>_{MsgEditor}
-                <div>
-                    
+                <div>                    
+                    <form .format-form method=post enctype=#{formatEnctype}>
+                        ^{formatWidget}
+                        <button .btn .btn-default type=submit name=setting value=format>_{MsgSave}
+                    <p>
+                <div>                    
                     <form method=post enctype=#{preambleEnctype}>
                         ^{preambleWidget}
                         <button .btn .btn-default type=submit name=setting value=preamble>_{MsgSave}
                     <p>
-                <div>
-                    
+                <div>                    
                     <form method=post enctype=#{citationEnctype}>
                         ^{citationWidget}
                         <button .btn .btn-default type=submit name=setting value=citation>_{MsgSave}
+                    <p>
+            <section .account-setting>
+                <h2>_{MsgAccount}
+                <div>
+                    <label>_{MsgID} 
+                    #{toPathPiece userId}
+                    <div>           
+                        <a .btn .btn-default href=@{AccountR}>_{MsgDelete}
+                    <p>
+                <div>
+                    <label>_{MsgPassword}
+                    <div>
+                        <a .btn .btn-default href=@{AuthR forgotPasswordR}>_{MsgForgotPassword}
+                        <a .btn .btn-default href=@{AuthR setpassR}>_{MsgSetPassword}
                     <p>
 
         |]
@@ -198,7 +244,7 @@ getSettingsR = do
                 border-top:1px solid #dce4ec;
             }
 
-            .name-form,.notification-form{
+            .name-form,.notification-form,.format-form{
                 max-width:15em;
             }
             .avatar-container{
@@ -225,6 +271,30 @@ postSettingsR = do
                 FormSuccess res -> do 
                     _<-runDB $ update userId [UserName =. _name res]
                     setMessageI $ MsgChangeSaved
+                    redirect $ SettingsR
+                _ -> notFound
+        Just "about"-> do
+            ((result,_), _) <- runFormPost $ aboutSettingForm user
+            case result of
+                FormSuccess res -> do 
+                    urlRender<-getUrlRender
+                    let defaultAboutPage = urlRender $ UserPageR userId "About"
+                    case _about res of 
+                        Just url | url /= defaultAboutPage ->do
+                            eResult <- liftIO $ try $ checkRelMeLink (unpack $ url) (urlRender $ UserHomeR userId) :: Handler (Either SomeException Bool)
+                            case eResult of
+                                Left _ -> setMessageI $ MsgVerificationNoResponse
+                                Right verified ->if verified
+                                    then do
+                                        _<-runDB $ update userId [UserAbout =. url]
+                                        setMessageI $ MsgChangeSaved
+                                        
+                                    else do
+                                        setMessageI $ MsgVerificationNoRelMeLink
+                                        
+                        _->do
+                            _<-runDB $ update userId [UserAbout =. defaultAboutPage]
+                            setMessageI $ MsgChangeSaved
                     redirect $ SettingsR
                 _ -> notFound
         {-Just "avatar"-> do
@@ -269,6 +339,14 @@ postSettingsR = do
                     redirect $ SettingsR
 
         -}
+        Just "format"-> do
+            ((result,_), _) <- runFormPost $ defaultFormatSettingForm user
+            case result of
+                FormSuccess res -> do 
+                    _<-runDB $ update userId [UserDefaultFormat =. _defaultFormat res]
+                    setMessageI $ MsgChangeSaved
+                    redirect $ SettingsR
+                _ -> notFound
         Just "preamble"-> do
             ((result,_), _) <- runFormPost $ defaultPreambleSettingForm user
             case result of

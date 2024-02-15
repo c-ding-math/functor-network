@@ -44,10 +44,10 @@ postEditEntrySubscriptionR subscriptionId = do
                 $forall error <- errors
                     <p>#{error}
                 |]
-            redirectUltDest Home0R
+            redirectUltDest HomeR
         _ -> do
             setMessageI MsgFormMissing
-            redirectUltDest Home0R
+            redirectUltDest HomeR
 
 
 unsubscribeForm :: Form (Maybe Text)

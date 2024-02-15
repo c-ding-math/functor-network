@@ -99,7 +99,7 @@ $newline never
       <div #privacy-dialog style="display:none;position: fixed;margin: 0 auto;left: 0;right: 0;bottom:0;background-color:white;box-shadow: 0 0 2px 2px #dce4ec;"> 
           <div .container style="display:flex;align-items:center;padding:1em;3em;">
             <p style="flex-grow:1;margin-right:0.5em;">This website uses essential cookies to ensure the basic functionalities and tracking cookies to understand how you interact with it. #
-              <a href=@{Page0R "Privacy Policy"}>Learn more
+              <a href=@{PageR "Privacy Policy"}>Learn more
             
             <button .btn.btn-primary.float-right onclick="consentGranted()">Got it!
 

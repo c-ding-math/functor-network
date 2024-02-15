@@ -27,7 +27,7 @@ $else
         <ul .users>
             $forall Entity uid u<-users
                 <li>
-                    <a href=@{HomeR uid}>#{userName u}
+                    <a href=@{UserHomeR uid}>#{userName u}
                         <span .note>registered on #{formatDateStr (userInserted u)}
         |]
         toWidget [lucius|

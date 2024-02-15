@@ -7,7 +7,7 @@
                 a blog platform for mathematicians
                 
             $maybe uid <- maybeUserId
-                <a href=@{HomeR uid} .btn.btn-info.btn-lg>
+                <a href=@{UserHomeR uid} .btn.btn-info.btn-lg>
                     My Homepage
             $nothing
                 <a href=@{AuthR LoginR} .btn.btn-info.btn-lg>
@@ -28,16 +28,16 @@
         <div .page-header>
             <h1>Features
             $maybe Entity _ features <- maybeFeatures
-                #{preEscapedToMarkup (entryOutputBody features)}
+                #{preEscapedToMarkup (entryBodyHtml features)}
             $nothing
                 <p>
-                    MsgComingsoon
+                    _{MsgComingSoon}
     <hr>
     <div .bs-docs-section>      
         <div .page-header>
             <h1>Screenshots
             $maybe Entity _ screenshots <- maybeScreenshots
-                #{preEscapedToMarkup (entryOutputBody screenshots)}
+                #{preEscapedToMarkup (entryBodyHtml screenshots)}
             $nothing
                 <p>
-                    MsgComingsoon
+                    _{MsgComingSoon}

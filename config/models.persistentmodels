@@ -4,6 +4,7 @@
 User json
     --ident Text 
     name Text
+    about Text --url
     password Text Maybe
     inserted UTCTime default=CURRENT_TIME
     --modified UTCTime -- change the ident
@@ -34,19 +35,17 @@ Login --via third parties
 
 Entry
     userId UserId
-    type EntryType
-    inputFormat Format 
-    inputTitle Text
-    inputBody Textarea 
-    inputPreamble Textarea Maybe
-    inputCitation Textarea Maybe
-    outputFormat Format
-    outputTitle Text
-    outputBody Text
     inserted UTCTime default=CURRENT_TIME
     updated UTCTime default=CURRENT_TIME
+    type EntryType
     status EntryStatus
-    locked Bool -- if locked, comments are not allowed
+    title Text
+    format Format
+    preamble Textarea Maybe
+    body Textarea Maybe
+    citation Textarea Maybe
+    titleHtml Text
+    bodyHtml Text
 
 EntryTree
     node EntryId

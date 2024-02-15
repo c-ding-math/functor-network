@@ -1,13 +1,13 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-module Handler.Pages0 where
+module Handler.Pages where
 
 import Import
-import Handler.Entries (entryListWidget)
+import Handler.UserEntries (entryListWidget)
 
-getPages0R :: Handler Html
-getPages0R = do
+getPagesR :: Handler Html
+getPagesR = do
     entryList<-runDB $ do     
         entries<- selectList [EntryType==.Page] [Desc EntryInserted]
         return $ entries
