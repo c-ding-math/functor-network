@@ -9,7 +9,7 @@ User json
     inserted UTCTime default=CURRENT_TIME
     --modified UTCTime -- change the ident
     --avatar Text Maybe -- url
-    defaultFormat Format default=Format "md"
+    defaultFormat Format 
     defaultPreamble Textarea Maybe
     defaultCitation Textarea Maybe   
     --UniqueUser ident

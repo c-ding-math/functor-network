@@ -14,7 +14,7 @@ Account: Account
 Unregister: Unregister
 UnregistrationWarning: If you are really sure that you want to unregister your account, please enter the precise confirmation text below.
 UserUnregistrationConfirmation: I understand that this action is irreversible and I will lose my posts, my comments, others' comments on my posts, and everything else associated with my account.
-UnregistrationSuccess: Your account has been unregistered. 
+UnregistrationSuccess: Your account has been unregistered. Wish you all the best.
 UnregistrationFailure: Account unregistration failed.
 PleaseConfirmUnregistration: Please enter the precise confirmation text to delete your account.
 ID: ID. 

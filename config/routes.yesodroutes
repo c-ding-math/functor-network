@@ -7,6 +7,8 @@
 /favicon.ico FaviconR GET
 /robots.txt RobotsR GET
 
+/maintenance MaintenanceR GET POST
+
 / HomeR GET POST
 /entries EntriesR GET
 /feedback FeedbackR GET POST
@@ -43,4 +45,4 @@
 !/#Text PageR GET
 !/user/#UserId/#Text UserPageR GET !user
 
-/maintenance MaintenanceR GET POST
+

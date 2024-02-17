@@ -10,10 +10,11 @@ import Import
 import Handler.UserEntry (formatDateStr)
 import Parse.Parser (scaleHeader)
 
+
 getEntriesR :: Handler Html
 getEntriesR = do
     entries<-runDB $ selectList [EntryType==.UserPost,EntryStatus==.Publish] [Desc EntryInserted]
-    let entryList = [x | x<-entries, not ("Fermat's lost proof" `isInfixOf` (entryTitle (entityVal x)))]
+    let entryList = [x | x<-entries, not ("lost proof" `isInfixOf` (entryBodyHtml (entityVal x)))]
     mAuthors<-runDB $ do
         mapM (\x-> get $ entryUserId $ entityVal x) entryList 
         

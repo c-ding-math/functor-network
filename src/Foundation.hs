@@ -198,7 +198,7 @@ instance Yesod App where
                             , menuItemAccessCallback = True
                             }
                         , FooterRight $ MenuItem
-                            { menuItemLabel = "Version 2023-10-17"
+                            { menuItemLabel = "Version 2024-02-07"
                             , menuItemRoute = PageR "Changelog"
                             , menuItemAccessCallback = True
                             }

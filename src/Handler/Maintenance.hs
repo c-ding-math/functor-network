@@ -28,9 +28,21 @@ postMaintenanceR :: Handler Html
 postMaintenanceR = do
     ((result, widget), enctype) <- runFormPost maintenanceForm
     case result of
-        FormSuccess maintenance -> do
-            runDB $ insert_ maintenance
-            setMessage "Maintenance scheduled"
+        FormSuccess formData -> do
+            runDB $ do 
+                mResult <- selectFirst [] [Desc MaintenanceFrom]
+                case mResult of
+                    Just (Entity theId _) -> if maintenanceDuration formData > 0
+                        then setMessage "Maintenance already scheduled"
+                        else do 
+                            delete theId
+                            setMessage "Maintenance over"
+                    _ -> if maintenanceDuration formData > 0
+                        then do
+                            insert_ formData
+                            setMessage "Maintenance scheduled"
+                        else setMessage "Please enter a positive duration."
+
             redirect MaintenanceR
         _ -> defaultLayout $ do
             setTitle "Please correct your entry form"
