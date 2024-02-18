@@ -7,13 +7,13 @@ import Text.Shakespeare.Text
 import Yesod.Form.Bootstrap3
 --import Handler.Parser(markItUpWidget)
 
-data Feedback = Feedback
+data FeedbackInput = FeedbackInput
     { subject :: Text
     , body :: Textarea
     }
 
-feedbackForm :: Maybe Feedback ->  Html -> MForm Handler (FormResult Feedback, Widget)
-feedbackForm feedback = renderBootstrap3 BootstrapBasicForm $ Feedback
+feedbackForm :: Maybe FeedbackInput ->  Form FeedbackInput
+feedbackForm feedback = renderBootstrap3 BootstrapBasicForm $ FeedbackInput
     <$> areq textField subjectSetting (subject <$> feedback)
     <*> areq textareaField editorSettings (body <$> feedback) where  
         subjectSetting = FieldSettings
@@ -32,8 +32,8 @@ feedbackForm feedback = renderBootstrap3 BootstrapBasicForm $ Feedback
 
 getFeedbackR :: Handler Html
 getFeedbackR = do
-    mFeedbackDescription<-runDB $ selectFirst [EntryInputTitle==."Feedback",EntryType==.Page0,EntryStatus==.Draft] [Desc EntryInserted]
-    (feedbackWidget, feedbackEnctype) <- generateFormPost $ feedbackForm $ Just $ Feedback "Feedback" $ Textarea ""
+    mFeedbackDescription<-runDB $ selectFirst [EntryTitle==."Feedback",EntryType==.Page,EntryStatus==.Draft] [Desc EntryInserted]
+    (feedbackWidget, feedbackEnctype) <- generateFormPost $ feedbackForm $ Just $ FeedbackInput "Feedback" $ Textarea ""
     defaultLayout $ do
         setTitleI MsgFeedback
         [whamlet|
@@ -41,7 +41,7 @@ getFeedbackR = do
   <h1>_{MsgFeedback}
   <div .entry-content>
     $maybe (Entity _ entry)<-mFeedbackDescription
-        <div .entry-content-wrapper>#{preEscapedToMarkup(entryOutputBody entry)}
+        <div .entry-content-wrapper>#{preEscapedToMarkup(entryBodyHtml entry)}
     $nothing
         _{MsgComingSoon}
 <section .new-comment>
@@ -66,6 +66,28 @@ postFeedbackR = do
 #{unTextarea(body feedback)}
 |]
             sendSystemEmail feedbackEmailAddress emailSubject emailText emailHtml
+            maybeUserId <- maybeAuthId
+            case maybeUserId of
+                Just userId -> do
+                    currentTime <- liftIO getCurrentTime
+                    runDB $ insert_ $ Entry
+                            { entryUserId=userId
+                            , entryType=Feedback
+                            , entryStatus=Draft
+                            , entryInserted=currentTime
+                            , entryUpdated=currentTime
+                            , entryTitle=subject feedback
+                            , entryPreamble=Nothing
+                            , entryFormat=Format "md"
+                            , entryBody=Just (body feedback)
+                            , entryCitation=Nothing
+                            , entryTitleHtml=subject feedback
+                            , entryBodyHtml=unTextarea (body feedback)
+                            }
+                    --insert_ $ EntryTree commentId entryId
+                    return ()
+                Nothing -> return ()
+            
             defaultLayout $ do
                 setTitleI MsgFeedback
                 [whamlet|

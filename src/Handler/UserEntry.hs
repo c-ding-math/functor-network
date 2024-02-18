@@ -1,7 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NoImplicitPrelude #-}
-module Handler.Entry where
+module Handler.UserEntry where
 
 import Import
 import Yesod.Form.Bootstrap3
@@ -9,24 +9,23 @@ import Handler.Parser(markItUpWidget)
 import Parse.Parser(scaleHeader)
 import Handler.EditComment(getChildIds)
 import Handler.NewEntrySubscription(subscribeToEntryWidget)
+import Data.Text(strip)
 
 
-getEntryR :: UserId ->  EntryId -> Handler Html
-getEntryR authorId entryId = do    
+getUserEntryR :: UserId ->  EntryId -> Handler Html
+getUserEntryR authorId entryId = do    
     maybeUserId<-maybeAuthId
     maybeUser<-maybeAuth
     (entry,mEntryAuthor,comments,mCommentAuthors,mCommentParentIds,mCommentParentAuthors)<-runDB $ do
         entry<-get404 entryId
-        if (entryUserId entry==Just authorId) && (entryStatus entry==Publish || isAdministrator maybeUserId entry) && (entryType entry==Standard)
+        
+        if (entryUserId entry==authorId) && (entryStatus entry==Publish || isAdministrator maybeUserId entry) && (entryType entry==UserPost)
           then do
-            mEntryAuthor<- case entryUserId entry of
-                Just userId -> selectFirst [UserId==.userId] []
-                Nothing -> return Nothing
+            mEntryAuthor<- selectFirst [UserId==.entryUserId entry] []
             commentIds<- getChildIds entryId
             comments<-selectList [EntryId <-. commentIds, EntryStatus==.Publish, EntryType==.Comment][Asc EntryInserted]     
-            mCommentAuthors<-mapM (\x-> case entryUserId $ entityVal x of
-                Just userId -> selectFirst [UserId==.userId] []
-                Nothing -> return Nothing ) comments
+            --commentHtmls<-mapM (\x->getBy404 $ UniqueEntryHtml $ entityKey x) comments
+            mCommentAuthors<-mapM (\x-> selectFirst [UserId==.entryUserId (entityVal x)] []) comments
             mCommentParentIds<-mapM (\comment -> do
                 mEntryTree<-selectFirst [EntryTreeNode==.entityKey comment] [] 
                 case mEntryTree of
@@ -40,9 +39,7 @@ getEntryR authorId entryId = do
                         mParentComment<-get parentId
                         case mParentComment of
                             Just parentComment -> do
-                                mCommentParentAuthor<- case entryUserId parentComment of
-                                    Just userId -> selectFirst [UserId==.userId] []
-                                    Nothing -> return Nothing
+                                mCommentParentAuthor<- selectFirst [UserId==.entryUserId parentComment] []
                                 return mCommentParentAuthor
                             Nothing -> return Nothing
                     Nothing -> return Nothing
@@ -53,26 +50,33 @@ getEntryR authorId entryId = do
     formatParam <- lookupGetParam "format"
     let format = case formatParam of
             Just "tex" -> Format "tex"
-            _ -> Format "md"
+            Just "md" -> Format "md"
+            _-> case maybeUser of
+                    Just (Entity _ user) -> userDefaultFormat user
+                    Nothing -> Format "md"
     (commentWidget, commentEnctype) <- case maybeUser of
         Nothing ->  generateFormPost $ newCommentForm Nothing
         Just (Entity _ user) -> generateFormPost $ newCommentForm $ Just $ CommentInput (userDefaultPreamble user) format (Textarea "") (userDefaultCitation user)
 
     defaultLayout $ do
-        setTitle $ toHtml $ entryInputTitle entry
+        setTitle $ toHtml $ entryTitle entry
 
         [whamlet|
 <article .entry :entryStatus entry == Draft:.draft #entry-#{toPathPiece entryId}>
-  <h1 .entry-title>#{preEscapedToMarkup(scaleHeader 1 (entryOutputTitle entry))}
+  <h1 .entry-title>#{preEscapedToMarkup(scaleHeader 1 (entryTitleHtml entry))}
   <div .entry-meta>
       <span .by>
           $maybe author<-mEntryAuthor      
-              <a href=@{PageR (entityKey author) "About"}>#{userName $ entityVal author}
+              <a href=#{userAbout (entityVal author)}>#{userName $ entityVal author}
           $nothing 
               _{MsgUnregisteredUser}
       <span .at>#{formatDateStr (entryInserted entry)}
   <div .entry-content>
-      <div .entry-content-wrapper>#{preEscapedToMarkup(entryOutputBody entry)}
+      <div .entry-content-wrapper>
+        $if strip (entryBodyHtml entry) /= "" 
+            #{preEscapedToMarkup(entryBodyHtml entry)}
+        $else
+            _{MsgComingSoon}
   <ul .entry-menu>
         <li .reply>
             <a href=#comment data-action=@{EditCommentR entryId}>comment
@@ -80,7 +84,7 @@ getEntryR authorId entryId = do
         <li> 
             ^{subscribeToEntryWidget entryId}
         $if isAdministrator maybeUserId entry
-            <li .edit><a href=@{EditEntryR entryId}>edit</a>
+            <li .edit><a href=@{EditUserEntryR entryId}>edit</a>
 
 <section #comments .comments  :entryStatus entry == Draft:.draft>    
     $if null comments
@@ -92,7 +96,7 @@ getEntryR authorId entryId = do
               <div .entry-meta>
                   <span .by>
                       $maybe author<-mCommentAuthor                           
-                          <a href=@{PageR (entityKey author) "About"}>#{userName $ entityVal author}
+                          <a href=#{userAbout (entityVal author)}>#{userName $ entityVal author}
                       $nothing 
                           _{MsgUnregisteredUser}
                   <span .at>#{formatDateStr (entryInserted comment)}
@@ -106,7 +110,7 @@ getEntryR authorId entryId = do
                                     _{MsgUnregisteredUser}
 
               <div .entry-content>
-                  <div .entry-content-wrapper>#{preEscapedToMarkup (entryOutputBody comment)}  
+                  <div .entry-content-wrapper>#{preEscapedToMarkup (entryBodyHtml comment)}  
               <ul .entry-menu>                
                   <li .reply>
                     <a href=#comment data-action=@{EditCommentR commentId}>reply
@@ -120,21 +124,14 @@ getEntryR authorId entryId = do
         $maybe _ <- maybeUser
             <h3 #comment>_{MsgNewComment}
             <form method=post enctype=#{commentEnctype} action=@{EditCommentR entryId}>
-                
-                <!--<select>
-                    $if format == Format "tex"
-                        <option value=1>Markdown
-                        <option value=2 selected>LaTeX
-                    $else
-                        <option value=1 selected>Markdown
-                        <option value=2>LaTeX -->
+
                 ^{commentWidget}
                 <div>
                     <button .btn.btn-primary type=submit>_{MsgComment}
         $nothing
             <h3 #comment>_{MsgNewComment}
             <p>
-                You must <a href=@{AuthR LoginR}>sign in</a> to post a comment
+                You must <a href=@{AuthR LoginR}>sign in</a> to post a comment.
                 
         |]
         markItUpWidget format (Format "html")
@@ -204,7 +201,7 @@ menuWidget=do
 data CommentInput=CommentInput
     {preamble::Maybe Textarea
     ,inputFormat::Format
-    ,content::Textarea
+    ,body::Textarea
     ,citation::Maybe Textarea
     }
 
@@ -212,7 +209,7 @@ newCommentForm :: Maybe CommentInput -> Form CommentInput
 newCommentForm mCommentData =  renderBootstrap3 BootstrapBasicForm $ CommentInput
     <$> aopt textareaField preambleSettings (preamble <$> mCommentData)
     <*> areq (selectFieldList inputFormats) "Comment" (inputFormat <$> mCommentData)
-    <*> areq textareaField editorSettings (content <$> mCommentData)
+    <*> areq textareaField editorSettings (body <$> mCommentData)
     <*> aopt textareaField citationSettings (citation <$> mCommentData)
     where   inputFormats = [("Markdown", Format "md"), ("LaTeX", Format "tex")]::[(Text, Format)] 
             editorSettings = FieldSettings

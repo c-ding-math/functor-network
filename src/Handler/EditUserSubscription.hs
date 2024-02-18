@@ -44,10 +44,10 @@ postEditUserSubscriptionR subscriptionId = do
                 $forall error <- errors
                     <p>#{error}
                 |]
-            redirectUltDest Home0R
+            redirectUltDest HomeR
         _ -> do
             setMessageI MsgFormMissing
-            redirectUltDest Home0R
+            redirectUltDest HomeR
 
 unsubscribeForm :: Form (Maybe Text)
 unsubscribeForm = renderBootstrap3 BootstrapBasicForm $ aopt hiddenField keySettings Nothing

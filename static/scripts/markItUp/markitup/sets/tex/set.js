@@ -28,7 +28,7 @@ editorSettings = {
 				closeBlockWith:function(markItUp){return '\n\\end{itemize}'+ markIt.latexBlock(markItUp).closeBlockWith;},
 				multiline:true,
 			},
-			{name:'Numeric list',key:'O', className:'numeric-list fas fa-list-ol',placeHolder:'List item', openWith:'  \\item ',
+			{name:'Numbered list',key:'O', className:'numeric-list fas fa-list-ol',placeHolder:'List item', openWith:'  \\item ',
 				openBlockWith:function(markItUp){return markIt.latexBlock(markItUp).openBlockWith + '\\begin{enumerate}\n';},
 				closeBlockWith:function(markItUp){return '\n\\end{enumerate}'+ markIt.latexBlock(markItUp).closeBlockWith;},
 				multiline:true,
@@ -106,11 +106,11 @@ markIt = {
 		return false;
 	},
 	latexSyntaxHelp: function(markItUp) {
-		window.open('https://www.functor.network/help/syntax?format=tex');
+		window.open('https://functor.network/help/syntax?format=tex');
 		return false;
 	},
 	latexEditorHelp: function(markItUp) {
-		window.open('https://www.functor.network/help/editor?format=tex');
+		window.open('https://functor.network/help/editor?format=tex');
 		return false;
 	},
 	latexBlock: function(markItUp) {
@@ -157,7 +157,7 @@ markIt = {
 		var prompt = $('<div/>', {
 			title:'Hyperlink',
 			html:
-				'<form><label>URL</label>(<a href="https://www.functor.network/files" target="_blank">copy a link from file library</a>)<input name="url"  type="text" value="https://example.com" autofocus onfocus="this.select();" class="form-control"/></form>',
+				'<form><label>URL</label>(<a href="https://functor.network/files" target="_blank">copy a link from file library</a>)<input name="url"  type="text" value="https://example.com" autofocus onfocus="this.select();" class="form-control"/></form>',
 		});
 		prompt.dialog({
 			modal: true,
@@ -187,7 +187,7 @@ markIt = {
 		var imagePrompt = $('<div/>', {
 				title:'Image',
 				html:
-				'<form><label>Image URL</label>(<a href="https://www.functor.network/files" target="_blank">copy a link from file library</a>)<input name="image-url"  type="text" value="https://example.com/image.jpg" autofocus onfocus="this.select();" class="form-control"/><label>Image width</label><input name="image-width" class="form-control" placeholder="e.g., 20px, 2em, or 60%"/><label>Image height</label><input name="image-height" class="form-control" placeholder="e.g., 20px, 2em, or 60%"/></form>',
+				'<form><label>Image URL</label>(<a href="https://functor.network/files" target="_blank">copy a link from file library</a>)<input name="image-url"  type="text" value="https://example.com/image.jpg" autofocus onfocus="this.select();" class="form-control"/><label>Image width</label><input name="image-width" class="form-control" placeholder="e.g., 20px, 2em, or 60%"/><label>Image height</label><input name="image-height" class="form-control" placeholder="e.g., 20px, 2em, or 60%"/></form>',
 			});
 		imagePrompt.dialog({
 			modal:true,

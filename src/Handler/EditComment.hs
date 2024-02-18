@@ -22,16 +22,16 @@ deleteEditCommentR commentId = runDB $ do
         _ -> permissionDeniedI MsgPermissionDenied
 
 data CommentInput=CommentInput
-    {preamble::Maybe Textarea
-    ,inputFormat::Format
-    ,content::Textarea
+    {inputFormat::Format
+    ,preamble::Maybe Textarea
+    ,body::Maybe Textarea
     ,citation::Maybe Textarea
     } 
 newCommentForm :: Maybe CommentInput -> Form CommentInput
 newCommentForm mCommentData =  renderBootstrap3 BootstrapBasicForm $ CommentInput
-    <$> aopt textareaField preambleSettings (preamble <$> mCommentData)
-    <*> areq (selectFieldList inputFormats) "Comment" (inputFormat <$> mCommentData)
-    <*> areq textareaField editorSettings (content <$> mCommentData)
+    <$> areq (selectFieldList inputFormats) "Comment" (inputFormat <$> mCommentData)
+    <*> aopt textareaField preambleSettings (preamble <$> mCommentData)
+    <*> aopt textareaField editorSettings (body <$> mCommentData)
     <*> aopt textareaField citationSettings (citation <$> mCommentData)
     where   inputFormats = [("Markdown", Format "md"), ("LaTeX", Format "tex")]::[(Text, Format)] 
             editorSettings = FieldSettings
@@ -65,10 +65,9 @@ postEditCommentR entryId = do
     (rootEntryId, rootEntryAuthorId, entry) <- runDB $ do
         rootEntryId <- getRootEntryId entryId
         entry <- get404 entryId
-        mRootEntryAuthorId <- entryUserId <$> get404 rootEntryId  
-        case mRootEntryAuthorId of
-            Just rootEntryAuthorId -> return (rootEntryId, rootEntryAuthorId, entry)
-            Nothing -> notFound        
+        rootEntryAuthorId <- entryUserId <$> get404 rootEntryId  
+   
+        return (rootEntryId, rootEntryAuthorId, entry)  
 
     urlRenderParams <- getUrlRenderParams
     
@@ -77,7 +76,7 @@ postEditCommentR entryId = do
         FormSuccess newCommentFormData -> do
             let editorData=EditorData{
                 editorPreamble=preamble newCommentFormData
-                ,editorContent=Just (content newCommentFormData)
+                ,editorContent=body newCommentFormData
                 ,editorCitation=citation newCommentFormData
             }
             currentTime <- liftIO getCurrentTime
@@ -87,20 +86,18 @@ postEditCommentR entryId = do
             userDir<-userTemporaryDirectory
             bodyHtml <- liftIO $ parse userDir parser editorData
             let commentData=Entry 
-                        {entryUserId=Just userId
+                        {entryUserId=userId
                         ,entryType=Comment
-                        ,entryInputFormat=inputFormat newCommentFormData
-                        ,entryOutputFormat=Format "html"
-                        ,entryInputTitle="Comment on "<> (entryInputTitle entry)
-                        ,entryOutputTitle="Comment on "<> (entryOutputTitle entry)
-                        ,entryInputPreamble=(preamble newCommentFormData)
-                        ,entryInputBody=(content newCommentFormData)
-                        ,entryOutputBody=bodyHtml
-                        ,entryInputCitation=(citation newCommentFormData)
+                        ,entryFormat=inputFormat newCommentFormData
+                        ,entryTitle="Comment on "<> (entryTitle entry)
+                        ,entryTitleHtml="Comment on "<> (entryTitleHtml entry)
+                        ,entryPreamble=(preamble newCommentFormData)
+                        ,entryBody=body newCommentFormData
+                        ,entryBodyHtml=bodyHtml
+                        ,entryCitation=citation newCommentFormData
                         ,entryInserted=currentTime
                         ,entryUpdated=currentTime
                         ,entryStatus=Publish
-                        ,entryLocked=False
                         }
                 
             commentId <- runDB $ do
@@ -115,12 +112,12 @@ postEditCommentR entryId = do
                 let unsubscribeUrl= urlRenderParams (EditEntrySubscriptionR subscriptionId) $ case entrySubscriptionKey subscription of
                         Just key -> [("key", key)] 
                         Nothing -> []
-                    entryUrl= urlRenderParams (EntryR rootEntryAuthorId rootEntryId) [] <> "#entry-" <> toPathPiece commentId
-                    subject= "New comment on \"" <> entryInputTitle rootEntry <> "\""
+                    entryUrl= urlRenderParams (UserEntryR rootEntryAuthorId rootEntryId) [] <> "#entry-" <> toPathPiece commentId
+                    subject= "New comment on \"" <> entryTitle rootEntry <> "\""
                     emailText= [stext|
 The following post you subscribed to received a new comment:
 
-#{entryInputTitle rootEntry}
+#{entryTitle rootEntry}
 
 You can view the commetn at #{entryUrl}.
 
@@ -130,7 +127,7 @@ To unsubscribe, please visit #{unsubscribeUrl}.
                     |]
                     emailHtml= [shamlet|
 <p>The following post you subscribed to received a new comment:
-<p>#{entryInputTitle rootEntry}
+<p>#{entryTitle rootEntry}
 <p><a href=#{entryUrl}>Go to view</a><span> | </span><a href=#{unsubscribeUrl}>Manage subscriptions</a>    
 <p>#{appName}
                     |]
@@ -138,14 +135,14 @@ To unsubscribe, please visit #{unsubscribeUrl}.
                         
 
             setMessage $ [hamlet|<a href=#entry-#{toPathPiece commentId}>Your comment</a> has been published. <a class='view alert-link' href=#entry-#{toPathPiece commentId}>View</a>|] urlRenderParams
-            redirect $ EntryR rootEntryAuthorId rootEntryId :#: ("entry-" <> toPathPiece commentId)
+            redirect $ UserEntryR rootEntryAuthorId rootEntryId :#: ("entry-" <> toPathPiece commentId)
 
         FormMissing -> do
             setMessageI MsgFormMissing
-            redirect $ EntryR rootEntryAuthorId rootEntryId
+            redirect $ UserEntryR rootEntryAuthorId rootEntryId
         FormFailure _ -> do
             setMessageI MsgSomethingWrong
-            redirect $ EntryR rootEntryAuthorId rootEntryId   
+            redirect $ UserEntryR rootEntryAuthorId rootEntryId
 
 deleteEntryRecursive :: EntryId -> ReaderT SqlBackend (HandlerFor App) ()
 deleteEntryRecursive entryId = do

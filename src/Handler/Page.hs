@@ -1,50 +1,24 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE NoImplicitPrelude #-}
 module Handler.Page where
 
 import Import
 
-getPageR :: UserId -> Text -> Handler Html
-getPageR userId _ = do
-    author<-runDB $ get404 userId
-    mCurrentUserId<-maybeAuthId
-    -- Currently, support about page only
-    mEntry<-runDB $ selectFirst [EntryInputTitle==."About",EntryType==.Page,EntryUserId==.Just userId,EntryStatus==.Publish] [Desc EntryInserted]
-
+getPageR :: Text -> Handler Html
+getPageR text = do
+    --appAdministratorId <- requireAppAdministratorId
+    mEntry<- runDB $ selectFirst [EntryTitle==.text,EntryType==.Page,EntryStatus==.Publish] [Desc EntryInserted]
     case mEntry of
-        Nothing->
-            defaultLayout $ do
-                setTitleI MsgAbout
-                [whamlet|
-<article .entry>
-    <h1>_{MsgAbout}
-    <div .entry-content>
-        <div .entry-content-wrapper>
-            <p>
-                <img src=@{StaticR $ StaticRoute ["icons","user-photo.png"] []} title="Avatar" class="float-right" style="height:6em;">
-            <h3 id="basic-information">Basic Information
-            <p><strong>Name</strong>: #{userName author}<br>
-                <strong>Homepage</strong>: 
-                    <a href=@{HomeR userId}>@{HomeR userId}
-    $if mCurrentUserId == Just userId
-        <ul .entry-menu>
-            <li>
-                <a href=@{EditPageR "About"}>_{MsgEdit}
-                |]
-                
-        Just (Entity _ entry) ->
-            defaultLayout $ do 
-                setTitleI MsgAbout
+        Nothing -> notFound
+        Just (Entity _ entry) -> defaultLayout $ do 
+                setTitle $ toHtml text
                 [whamlet|
 <article .entry :entryStatus entry == Draft:.draft>
-    <h1>_{MsgAbout}
+    <h1>#{text}
     <div .entry-content>
-        <div .entry-content-wrapper>#{preEscapedToMarkup (entryOutputBody entry)}
-    $if mCurrentUserId == Just userId
-        <ul .entry-menu>
-            <li>
-                <a href=@{EditPageR "About"}>_{MsgEdit}
+      <div .entry-content-wrapper>#{preEscapedToMarkup (entryBodyHtml entry)}
+    <!--  <ul .entry-menu>
+        <li>
+            <a href=@{EditPageR text}>_{MsgEdit}-->
                 |]
-
 

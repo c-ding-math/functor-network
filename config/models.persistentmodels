@@ -4,10 +4,12 @@
 User json
     --ident Text 
     name Text
+    about Text --url
     password Text Maybe
     inserted UTCTime default=CURRENT_TIME
     --modified UTCTime -- change the ident
     --avatar Text Maybe -- url
+    defaultFormat Format 
     defaultPreamble Textarea Maybe
     defaultCitation Textarea Maybe   
     --UniqueUser ident
@@ -32,20 +34,18 @@ Login --via third parties
     UniqueLogin plugin ident
 
 Entry
-    userId UserId Maybe
-    type EntryType
-    inputFormat Format 
-    inputTitle Text
-    inputBody Textarea 
-    inputPreamble Textarea Maybe
-    inputCitation Textarea Maybe
-    outputFormat Format
-    outputTitle Text
-    outputBody Text
+    userId UserId
     inserted UTCTime default=CURRENT_TIME
     updated UTCTime default=CURRENT_TIME
+    type EntryType
     status EntryStatus
-    locked Bool -- if locked, comments are not allowed
+    title Text
+    format Format
+    preamble Textarea Maybe
+    body Textarea Maybe
+    citation Textarea Maybe
+    titleHtml Text
+    bodyHtml Text
 
 EntryTree
     node EntryId
@@ -54,7 +54,7 @@ EntryTree
 File 
     filename String
     directory String
-    userId UserId Maybe
+    userId UserId
     inserted UTCTime
     description Text Maybe
     UniqueFile directory filename
@@ -75,4 +75,9 @@ EntrySubscription
     key Text Maybe
     verified Bool
     UniqueEntrySubscription email entryId
+    deriving Show
+
+Maintenance
+    from UTCTime
+    duration Int
     deriving Show

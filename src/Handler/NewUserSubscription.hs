@@ -93,10 +93,10 @@ Thank you!
 <p>#{appName}
                         |] 
                         sendSystemEmail address emailSubject emailText emailHtml
-            --redirect $ HomeR authorId
+            --redirect $ UserHomeR authorId
         FormFailure _ -> setMessageI MsgFormFailure
         _ -> setMessageI MsgFormMissing
-    redirect $ HomeR authorId
+    redirect $ UserHomeR authorId
 
 
 userSubscriptionForm ::Maybe Text -> Form Text 

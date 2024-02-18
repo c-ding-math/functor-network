@@ -24,7 +24,7 @@ getFilesR = do
     let fileLink::File->Text
         fileLink file=urlRender $ StaticR $ StaticRoute ["files","user",toPathPiece userId, pack (fileFilename file)] []
     ((_, uploadWidget), uploadEnctype) <- runFormPost uploadForm
-    files <- runDB $ selectList [FileUserId==.Just userId] [Desc FileInserted]
+    files <- runDB $ selectList [FileUserId==.userId] [Desc FileInserted]
     defaultLayout $ do
         --addStyleRemote "http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css"
         addWidget
@@ -140,7 +140,7 @@ postFilesR = do
                     setMessageI MsgFileTypeNotAllowed
                     redirect FilesR
                 else do
-                    eFile <- runDB $ insertBy (File {fileDirectory=userFileDirectory, fileFilename=unpack name, fileDescription= info, fileInserted= date, fileUserId=Just userId})
+                    eFile <- runDB $ insertBy (File {fileDirectory=userFileDirectory, fileFilename=unpack name, fileDescription= info, fileInserted= date, fileUserId=userId})
                     case eFile of 
                         Left _ -> setMessageI (MsgFileExists name)
                         Right _-> do
@@ -155,7 +155,7 @@ postFilesR = do
 deleteFileR :: FileId -> Handler ()
 deleteFileR fileId = do
     file <- runDB $ get404 fileId
-    userFileDirectory <- getUserStaticDir (fileUserId file)
+    userFileDirectory <- getUserStaticDir $ Just $ fileUserId file
     let filePath = userFileDirectory </> (unpack (fileFilename file))
     liftIO $ removeFile filePath
 

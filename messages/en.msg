@@ -11,8 +11,13 @@ FormMissing: Form data missing
 FormFailure: Form data invalid
 
 Account: Account
-UserNumber: User number
-Number: No. 
+Unregister: Unregister
+UnregistrationWarning: If you are really sure that you want to unregister your account, please enter the precise confirmation text below.
+UserUnregistrationConfirmation: I understand that this action is irreversible and I will lose my posts, my comments, others' comments on my posts, and everything else associated with my account.
+UnregistrationSuccess: Your account has been unregistered. Wish you all the best.
+UnregistrationFailure: Account unregistration failed.
+PleaseConfirmUnregistration: Please enter the precise confirmation text to delete your account.
+ID: ID. 
 Password: Password
 ForgotPassword: Forgot password
 SetPassword: Set a new password
@@ -33,15 +38,19 @@ Anonymous: Anonymous
 Name: Name
 Avatar: Avatar
 About: About
+VerifyAndSave: Verify & save
+VerificationNoRelMeLink: Verification failed. Please ensure that you have pasted the verification link into your about page.
+VerificationNoResponse: Verification failed. Please ensure that your about page is accessible.
 Subscription: Subscription
 Notification: Notification
 EmailNotification: Email notification
 NotifyMeViaEmail: Notify me via email when I receive a comment or reply.
-NewEmail: Add a new Email
+NewEmail: Add a new email
 Editor: Editor
-DefaultPreamble: Default LaTeX Preamble
+DefaultFormat: Default post format
+DefaultPreamble: Default LaTeX preamble
 Preamble: LaTeX Preamble
-DefaultCitation: Default Citation
+DefaultCitation: Default citation
 Citation: Citation
 Edit: Edit
 View: View
@@ -92,8 +101,6 @@ RecentEntries: Recent posts
 RecentComments: Recent comments
 RecentCommentsOn: Recent comments on
 NoPost: No post found.
-Tag: Keyword
-Tags: Keywords
 ViewAll: View all
 Home: Home
 

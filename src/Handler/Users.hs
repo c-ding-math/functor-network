@@ -12,7 +12,7 @@ getUsersR = do
     
     allUsers<- runDB $ selectList [] [Asc UserInserted]
     users <- runDB $ filterM (\(Entity uid _) -> do
-        entries <- selectList [EntryUserId==.Just uid] [Desc EntryInserted]
+        entries <- selectList [EntryUserId==.uid,EntryStatus==.Publish] [Desc EntryInserted]
         return $ not (null entries)) allUsers
     
     defaultLayout $ do
@@ -27,7 +27,7 @@ $else
         <ul .users>
             $forall Entity uid u<-users
                 <li>
-                    <a href=@{HomeR uid}>#{userName u}
+                    <a href=@{UserHomeR uid}>#{userName u}
                         <span .note>registered on #{formatDateStr (userInserted u)}
         |]
         toWidget [lucius|
