@@ -30,11 +30,18 @@ data EntryStatus =  Publish | Draft
     deriving (Show, Read, Eq)
 derivePersistField "EntryStatus"
 
+data NotificationType = Commented | Followed | Subscribed | SystemChanged
+    deriving (Show, Read, Eq, Generic)
+instance FromJSON NotificationType where
+instance ToJSON NotificationType where
+derivePersistField "NotificationType"
+
+
 data Format = Format Text
     deriving (Show, Read, Eq, Generic)
 instance FromJSON Format where
 instance ToJSON Format where
 derivePersistField "Format"
 
-share [mkPersist sqlSettings, mkMigrate "migrateAll"]
+share [mkPersist sqlSettings, mkDeleteCascade sqlSettings, mkMigrate "migrateAll"]
     $(persistFileWith lowerCaseSettings "config/models.persistentmodels")

@@ -8,7 +8,8 @@ import Yesod.Form.Bootstrap3
 import Handler.Parser(markItUpWidget)
 import Parse.Parser(scaleHeader)
 import Handler.EditComment(getChildIds)
-import Handler.NewEntrySubscription(subscribeToEntryWidget)
+--import Handler.NewEntrySubscription(subscribeToEntryWidget)
+import Handler.Following(followWidget)
 import Data.Text(strip)
 
 
@@ -70,7 +71,7 @@ getUserEntryR authorId entryId = do
               <a href=#{userAbout (entityVal author)}>#{userName $ entityVal author}
           $nothing 
               _{MsgUnregisteredUser}
-      <span .at>#{formatDateStr (entryInserted entry)}
+      <span .at>#{utcToString (entryInserted entry)}
   <div .entry-content>
       <div .entry-content-wrapper>
         $if strip (entryBodyHtml entry) /= "" 
@@ -80,9 +81,10 @@ getUserEntryR authorId entryId = do
   <ul .entry-menu>
         <li .reply>
             <a href=#comment data-action=@{EditCommentR entryId}>comment
-        <!--<li .print><a href=#>print</a>-->
-        <li> 
-            ^{subscribeToEntryWidget entryId}
+        <li>
+            ^{followWidget maybeUserId entryId}
+        <!--<li> 
+            ^{subscribeToEntryWidget entryId}-->
         $if isAdministrator maybeUserId entry
             <li .edit><a href=@{EditUserEntryR entryId}>edit</a>
 
@@ -99,7 +101,7 @@ getUserEntryR authorId entryId = do
                           <a href=#{userAbout (entityVal author)}>#{userName $ entityVal author}
                       $nothing 
                           _{MsgUnregisteredUser}
-                  <span .at>#{formatDateStr (entryInserted comment)}
+                  <span .at>#{utcToString (entryInserted comment)}
                   $maybe parentCommentId<-mCommentParentId
                     $if parentCommentId /= entryId
                         <span .to>
@@ -114,6 +116,8 @@ getUserEntryR authorId entryId = do
               <ul .entry-menu>                
                   <li .reply>
                     <a href=#comment data-action=@{EditCommentR commentId}>reply
+                  <li>
+                    ^{followWidget maybeUserId commentId}
                   <!--<li>
                     ^{subscribeToEntryWidget commentId}-->
                   $if isAdministrator maybeUserId entry || isAdministrator maybeUserId comment
@@ -131,7 +135,7 @@ getUserEntryR authorId entryId = do
         $nothing
             <h3 #comment>_{MsgNewComment}
             <p>
-                You must <a href=@{AuthR LoginR}>sign in</a> to post a comment.
+                You must <a href=@{AuthR LoginR}>login</a> to add a comment.
                 
         |]
         markItUpWidget format (Format "html")
@@ -197,6 +201,27 @@ menuWidget=do
             });
         });    
     |]
+    toWidget [julius|
+        $(document).ready(function(){
+
+            $("a.follow").click(function(e){
+                
+                e.preventDefault();
+                
+                link=$(this);
+                $.ajax({
+                    url: link.attr("href"),
+                    type: "POST",
+                    data: {},
+                    success: function(response){
+                        link.html(response);
+                    }
+                });
+                
+            });
+
+        });
+    |]
 
 data CommentInput=CommentInput
     {preamble::Maybe Textarea
@@ -236,6 +261,3 @@ newCommentForm mCommentData =  renderBootstrap3 BootstrapBasicForm $ CommentInpu
                 , fsName = Just "citation"
                 , fsAttrs =[("class", "hidden")]             
                 }
-
-formatDateStr :: UTCTime -> String
-formatDateStr t = formatTime defaultTimeLocale "%e %b %Y" t

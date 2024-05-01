@@ -167,6 +167,11 @@ instance Yesod App where
                             , menuItemAccessCallback = True
                             }
                         , NavbarRight $ MenuItem
+                            { menuItemLabel = "Notifications"
+                            , menuItemRoute = NotificationsR uid
+                            , menuItemAccessCallback = True
+                            }
+                        , NavbarRight $ MenuItem
                             { menuItemLabel = "Settings"
                             , menuItemRoute = SettingsR
                             , menuItemAccessCallback = True
@@ -198,7 +203,7 @@ instance Yesod App where
                             , menuItemAccessCallback = True
                             }
                         , FooterRight $ MenuItem
-                            { menuItemLabel = "Version 2024-02-07"
+                            { menuItemLabel = "Version 2024-04-30"
                             , menuItemRoute = PageR "Changelog"
                             , menuItemAccessCallback = True
                             }
@@ -226,7 +231,12 @@ instance Yesod App where
                             }
                         ]
                     False -> 
-                        [ FooterMiddle $ MenuItem
+                        [ NavbarLeft $ MenuItem
+                            { menuItemLabel = "Posts"
+                            , menuItemRoute = EntriesR
+                            , menuItemAccessCallback = True
+                            }
+                        ,NavbarLeft $ MenuItem
                             { menuItemLabel = "Members"
                             , menuItemRoute = UsersR
                             , menuItemAccessCallback = True
@@ -316,6 +326,8 @@ instance Yesod App where
     --isAuthorized (ParserR _ _) _ = isAuthenticated
     isAuthorized (EditCommentR _) _ = isAuthenticated
     isAuthorized NewUserEntryR _ = isAuthenticated
+    isAuthorized (FollowingR _ _) _ = isAuthenticated
+    isAuthorized (NotificationsR _) _ = isAuthenticated
 
     -- owner routes
     isAuthorized (EditUserEntryR entryId) _ = isAdmin entryId
@@ -486,6 +498,7 @@ instance YesodAuth App where
                                     ,userInserted=currentTime
                                     --,userModified=currentTime
                                     --,userAvatar=Nothing
+                                    ,userNotification=[Commented]
                                     ,userDefaultFormat=Format "md"
                                     ,userDefaultPreamble=Just (Textarea "\\usepackage{amsmath, amssymb, amsfonts}\n\\newcommand{\\NN}{\\mathbb{N}}")
                                     ,userDefaultCitation=Nothing
@@ -629,6 +642,7 @@ instance YesodAuthEmail App where
                                 ,userInserted=currentTime
                                 --,userModified=currentTime
                                 --,userAvatar=Nothing
+                                ,userNotification=[Commented]
                                 ,userDefaultFormat=Format "md"
                                 ,userDefaultPreamble=Just (Textarea "\\usepackage{amsmath, amssymb, amsfonts}\n\\newcommand{\\NN}{\\mathbb{N}}")
                                 ,userDefaultCitation=Nothing
@@ -813,7 +827,7 @@ instance YesodAuthEmail App where
                     ^{widget}
                     <div>
                         <button .btn.btn-primary type=submit>
-                            _{Msg.LoginViaEmail}
+                            _{MsgLoginViaEmail}
                         
                         <a .btn.btn-default href="@{toParent registerR}">
                             _{Msg.RegisterLong}

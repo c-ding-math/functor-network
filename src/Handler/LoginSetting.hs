@@ -26,7 +26,7 @@ postLoginSettingR loginId = do
     action<-lookupPostParam "action"
     case action of 
         Just "delete"->do 
-            runDB $ delete loginId 
+            runDB $ deleteCascade loginId 
             setMessageI MsgLoginDeleted
             redirect SettingsR
         _->redirect SettingsR
@@ -52,7 +52,7 @@ postEmailSettingR emailId = do
     action<-lookupPostParam "action"
     case action of 
         Just "delete"->do 
-            runDB $ delete emailId 
+            runDB $ deleteCascade emailId 
             setMessageI MsgEmailDeleted
             redirect SettingsR
         _->redirect SettingsR

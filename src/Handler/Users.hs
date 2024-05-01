@@ -28,7 +28,7 @@ $else
             $forall Entity uid u<-users
                 <li>
                     <a href=@{UserHomeR uid}>#{userName u}
-                        <span .note>registered on #{formatDateStr (userInserted u)}
+                        <span .note>registered on #{utcToString (userInserted u)}
         |]
         toWidget [lucius|
         .note{
@@ -49,6 +49,3 @@ $else
         }
             
         |]
-
-formatDateStr :: UTCTime -> String
-formatDateStr t = formatTime defaultTimeLocale "%e %b %Y" t

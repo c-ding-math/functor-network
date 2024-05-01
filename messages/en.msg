@@ -8,7 +8,7 @@ SiteRegistrationFailed: The site path has been registered by others. Please choo
 EnterPath: Enter your site path below. 
 PathRegex: A path must begin with a lowercase letter and consists of lowercase letters, hyphens and digits.
 FormMissing: Form data missing
-FormFailure: Form data invalid
+FormFailure: Invalid input
 
 Account: Account
 Unregister: Unregister
@@ -24,7 +24,7 @@ SetPassword: Set a new password
 EnterPasswordResetEmail: Enter your e-mail address below, and a password reset e-mail will be sent to you.
 Or: or
 Login: Login
-LoginViaEmail: Login via email
+LoginViaEmail: Sign in
 SignInWithGoogle: Sign in with Google
 NewGoogle: Connect to a new google account
 Email: Email
@@ -42,7 +42,6 @@ VerifyAndSave: Verify & save
 VerificationNoRelMeLink: Verification failed. Please ensure that you have pasted the verification link into your about page.
 VerificationNoResponse: Verification failed. Please ensure that your about page is accessible.
 Subscription: Subscription
-Notification: Notification
 EmailNotification: Email notification
 NotifyMeViaEmail: Notify me via email when I receive a comment or reply.
 NewEmail: Add a new email
@@ -115,6 +114,8 @@ Comments: Comments
 CommentPublished: Comment published
 CommentDeleted: Comment deleted
 Reply: Reply
+Follow: Follow
+Following: Following
 
 AboutPageReset: Your about page has been reset.
 PageDeleted: Page deleted
@@ -147,8 +148,19 @@ VerificationEmailSent email@Text: A verification email has been sent to #{email}
 Feedback: Feedback
 FeedbackSentDescription: Your feedback has been sent. Thank you!
 Send: Send
-SendAFeedback: Send a feedback
+SendFeedback: Send feedback
+
 
 Search: Search
 SearchReultsFor query@Text: Search results for "#{query}"
 PostsContaining query@Text: Posts containing "#{query}"
+
+Notification: Notification
+Notifications: Notifications
+NoNotification: No notification found.
+NotificationFilter: Notification filter
+Filter: Filter
+NotifyMeWhenCommented: Notify me when my post receives a comment or my comment receives a reply.
+NotifyMeWhenFollowed: Notify me when my post is followed.
+NotifyMeWhenSubscribed: Notify me when my blog is subscribed.
+NotifyMeWhenSystemChanged: Notify me when the paltform is updated.

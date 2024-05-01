@@ -110,7 +110,7 @@ postEditPageR title = do
             case entryAction of
                 Just "delete"->case mEntry of 
                     Just (Entity entryId _)->do
-                        runDB $ delete entryId
+                        runDB $ deleteCascade entryId
                         setMessage $ [hamlet|Your page, #{title}, has been deleted.|] urlRenderParams
                         redirect $ EditPageR title
                     Nothing->do

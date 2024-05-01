@@ -35,7 +35,7 @@ postMaintenanceR = do
                     Just (Entity theId _) -> if maintenanceDuration formData > 0
                         then setMessage "Maintenance already scheduled"
                         else do 
-                            delete theId
+                            deleteCascade theId
                             setMessage "Maintenance over"
                     _ -> if maintenanceDuration formData > 0
                         then do

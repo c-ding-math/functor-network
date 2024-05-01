@@ -9,6 +9,7 @@ User json
     inserted UTCTime default=CURRENT_TIME
     --modified UTCTime -- change the ident
     --avatar Text Maybe -- url
+    notification [NotificationType]
     defaultFormat Format 
     defaultPreamble Textarea Maybe
     defaultCitation Textarea Maybe   
@@ -81,3 +82,19 @@ Maintenance
     from UTCTime
     duration Int
     deriving Show
+
+Notification
+    type NotificationType
+    userId UserId Maybe -- the user who will receive the notification, if Nothing, it's a global notification
+    title Text
+    titleHtml Text
+    body Textarea Maybe
+    bodyHtml Text
+    inserted UTCTime
+    deriving Show
+
+Following
+    userId UserId
+    entryId EntryId
+    inserted UTCTime
+    UniqueFollowing userId entryId

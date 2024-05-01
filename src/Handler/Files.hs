@@ -55,7 +55,7 @@ getFilesR = do
                         <td>
                             <input type=text readonly value=#{fileLink file}>         
                         <td>
-                            #{formatDateStr $ fileInserted file}
+                            #{utcToString $ fileInserted file}
                         <td .actions>
                             <a href=# .copy-link data-toggle=tooltip data-placement="top" title="click to copy">_{MsgCopy}
                             <a href=#{fileLink file} .view>_{MsgView}
@@ -167,7 +167,7 @@ deleteFileR fileId = do
             setMessageI MsgSomethingWrong
             redirect FilesR
         _ -> do
-            runDB $ delete fileId
+            runDB $ deleteCascade fileId
             setMessageI MsgFileDeleted
             redirect FilesR
 
@@ -186,6 +186,3 @@ getUserStaticDir mUserId = do
 
 --openConnectionCount :: Int
 --openConnectionCount = 10
-
-formatDateStr :: UTCTime -> String
-formatDateStr t = formatTime defaultTimeLocale "%e %b %Y" t

@@ -16,7 +16,7 @@ module Handler.EditUserEntry (
 
 import Import
 import Yesod.Form.Bootstrap3
-import Handler.EditComment(deleteEntryRecursive)
+--import Handler.EditComment(deleteEntryRecursive)
 import Handler.Parser(parse,markItUpWidget,userTemporaryDirectory)
 import Parse.Parser(mdToHtml,mdToHtmlSimple,texToHtml,texToHtmlSimple,EditorData(..))
 import Text.Shakespeare.Text
@@ -195,6 +195,7 @@ postNewUserEntryR = do
                             , entryTitleHtml=titleHtml
                             , entryBodyHtml=bodyHtml
                             }
+                    _<-runDB $ insert $ Following userId entryId currentTime
                     subscribers <- runDB $ selectList [UserSubscriptionUserId ==. userId, UserSubscriptionVerified ==. True] []
                     forM_ subscribers $ \(Entity subscriptionId subscription) -> do
                         
@@ -238,6 +239,7 @@ To unsubscribe, please visit #{unsubscribeUrl}.
                         , entryTitleHtml=titleHtml
                         , entryBodyHtml=bodyHtml
                         }
+                    _<-runDB $ insert_ $ Following userId entryId currentTime
                     setMessage $ [hamlet|Your blog post, <a class=alert-link href=@{UserEntryR userId entryId}>#{inputTitle formData}</a>, has been saved. <a class='view alert-link' href=@{UserEntryR userId entryId}>View</a>|] urlRenderParams
                     redirect $ EditUserEntryR entryId
         FormMissing -> do
@@ -263,7 +265,7 @@ postEditUserEntryR  entryId = do
             entryAction <- lookupPostParam "action"  
             case entryAction of
                 Just "delete"->  do
-                    runDB $ deleteEntryRecursive entryId
+                    runDB $ deleteCascade entryId
                     setMessage $ [shamlet|Your blog post, #{inputTitle formData}, has been deleted.|] --getUrlRenderParams
                     redirect $ NewUserEntryR
                 Just "publish"-> do

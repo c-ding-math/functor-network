@@ -38,6 +38,8 @@
 
 /comment/#EntryId/edit EditCommentR POST DELETE !login 
 /user/#UserId/comments CommentsR GET !user
+/user/#UserId/following/#EntryId FollowingR POST
+/user/#UserId/notifications NotificationsR GET POST
 
 /edit/#Text EditPageR GET POST
 /page/#Text/edit EditUserPageR GET POST !user

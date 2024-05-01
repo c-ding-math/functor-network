@@ -33,7 +33,7 @@ postEditUserSubscriptionR subscriptionId = do
             subscription <- runDB $ get404 subscriptionId
             if userSubscriptionKey subscription == verificationKey && isJust (userSubscriptionKey subscription)
                 then do
-                    runDB $ delete subscriptionId
+                    runDB $ deleteCascade subscriptionId
                     setMessageI MsgSubscriptionDeleted
                     getSubscriptions $ userSubscriptionEmail subscription
                 else do

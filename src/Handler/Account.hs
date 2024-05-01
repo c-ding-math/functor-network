@@ -7,7 +7,7 @@ module Handler.Account where
 
 import Import
 import Yesod.Form.Bootstrap3
-import Handler.EditComment (deleteEntryRecursive)
+--import Handler.EditComment (deleteEntryRecursive)
 
 confirmationForm :: Form Text
 confirmationForm = renderBootstrap3 BootstrapBasicForm $ areq textField (bfs ("Confirmation"::Text)) Nothing
@@ -38,7 +38,8 @@ postAccountR = do
             msgRender <- getMessageRender
             if confirmation == msgRender MsgUserUnregistrationConfirmation
                 then do
-                    runDB $ deleteUserRecursive userId
+                    --runDB $ deleteUserRecursive userId
+                    runDB $ deleteCascade userId
                     setMessageI MsgUnregistrationSuccess
                     redirect FeedbackR
                     {-defaultLayout $ do
@@ -54,13 +55,14 @@ postAccountR = do
             setMessageI MsgUnregistrationFailure
             redirect $ AccountR
 
-deleteUserRecursive::UserId->ReaderT SqlBackend (HandlerFor App) ()
+{-deleteUserRecursive::UserId->ReaderT SqlBackend (HandlerFor App) ()
 deleteUserRecursive userId =do
-        entries <- selectList [EntryUserId ==. userId] []
-        forM_ entries $ \entry -> do
-            deleteEntryRecursive $ entityKey entry
-        deleteWhere [UserSubscriptionUserId ==. userId]
-        deleteWhere [FileUserId ==. userId]
-        deleteWhere [LoginUserId ==.Just userId]
-        deleteWhere [EmailUserId ==. Just userId]
-        delete userId
+    entries <- selectList [EntryUserId ==. userId] []
+    forM_ entries $ \entry -> do
+        deleteEntryRecursive $ entityKey entry
+    deleteWhere [UserSubscriptionUserId ==. userId]
+    deleteWhere [FileUserId ==. userId]
+    deleteWhere [LoginUserId ==.Just userId]
+    deleteWhere [EmailUserId ==. Just userId]
+    delete userId-}
+

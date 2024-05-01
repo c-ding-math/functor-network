@@ -88,7 +88,7 @@ postEditUserPageR title = do
                     case entryAction of
                         Just "delete"->case mEntry of 
                             Just (Entity entryId _)->do
-                                runDB $ delete entryId 
+                                runDB $ deleteCascade entryId 
                                 setMessageI MsgAboutPageReset
                                 redirect $ EditUserPageR title
                             Nothing->do

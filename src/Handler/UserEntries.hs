@@ -9,7 +9,6 @@ import Parse.Parser (scaleHeader)
 import Yesod.Form.Bootstrap3
 import Handler.NewUserSubscription (subscribeToUserWidget)
 import Data.Text (toLower)
-import Handler.UserEntry (formatDateStr)
 
 searchForm :: Form Text
 searchForm = renderBootstrap3 BootstrapBasicForm $ areq (searchField False) searchFieldSettings Nothing where
@@ -94,7 +93,7 @@ entryListWidget entryList = do
         <ul>
             $forall Entity entryId entry <- entryList 
                 
-                    <li :entryStatus entry == Draft:.draft data-date=#{formatDateStr (entryInserted entry)}>
+                    <li :entryStatus entry == Draft:.draft data-date=#{utcToString (entryInserted entry)}>
                         <a href=@{UserEntryR (entryUserId entry) entryId}>
                             <h3 .entry-title>#{preEscapedToMarkup (scaleHeader 3 (entryTitleHtml entry))}
                         

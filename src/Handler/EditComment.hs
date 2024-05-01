@@ -17,8 +17,8 @@ deleteEditCommentR commentId = runDB $ do
     mRootEntry <- get rootEntryId
 
     case (isAdministrator maybeUserId comment, mRootEntry) of
-        (_, Just entry) | isAdministrator maybeUserId entry -> deleteEntryRecursive commentId
-        (True, _) -> deleteEntryRecursive commentId
+        (_, Just entry) | isAdministrator maybeUserId entry -> deleteCascade commentId
+        (True, _) -> deleteCascade commentId
         _ -> permissionDeniedI MsgPermissionDenied
 
 data CommentInput=CommentInput
@@ -61,7 +61,7 @@ newCommentForm mCommentData =  renderBootstrap3 BootstrapBasicForm $ CommentInpu
 
 postEditCommentR :: EntryId -> Handler ()
 postEditCommentR entryId = do
-    userId <- requireAuthId
+    (userId, user) <- requireAuthPair
     (rootEntryId, rootEntryAuthorId, entry) <- runDB $ do
         rootEntryId <- getRootEntryId entryId
         entry <- get404 entryId
@@ -103,6 +103,16 @@ postEditCommentR entryId = do
             commentId <- runDB $ do
                 commentId<-insert commentData
                 insert_ $ EntryTree commentId entryId
+                insert_ $ Following userId commentId currentTime
+                insert_ $ Notification{
+                    notificationUserId=Just (entryUserId entry)
+                    ,notificationType=Commented
+                    ,notificationTitle="Comment by "<> (userName user)
+                    ,notificationTitleHtml="Comment by "<> (userName user)
+                    ,notificationBody=body newCommentFormData
+                    ,notificationBodyHtml=bodyHtml
+                    ,notificationInserted=currentTime
+                }
                 return commentId
 
             rootEntry <- runDB $ get404 rootEntryId
@@ -144,13 +154,14 @@ To unsubscribe, please visit #{unsubscribeUrl}.
             setMessageI MsgSomethingWrong
             redirect $ UserEntryR rootEntryAuthorId rootEntryId
 
-deleteEntryRecursive :: EntryId -> ReaderT SqlBackend (HandlerFor App) ()
+{-deleteEntryRecursive :: EntryId -> ReaderT SqlBackend (HandlerFor App) ()
 deleteEntryRecursive entryId = do
     children<-getChildIds entryId 
     deleteWhere [EntrySubscriptionEntryId <-. children++[entryId]]
+    deleteWhere [FollowEntryId <-. children++[entryId]]
     deleteWhere [EntryTreeNode <-. children++[entryId]]
     deleteWhere [EntryId <-. children++[entryId]]
-    return ()
+    return ()-}
     
 getChildIds :: EntryId -> ReaderT SqlBackend (HandlerFor App) [EntryId]
 getChildIds entryId = do
