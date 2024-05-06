@@ -102,7 +102,7 @@ editorSettings = {
         {name:'Preview', className:"preview", dropMenu:[
 			{name:"Update preview", key:'0', call:'preview'},
 			//{name:"Shrink", key:"", replaceWith:function(markItUp){markIt.editorShrink(markItUp);return false;},className:"normal-size hidden"},
-			{name:"Side by side", key:'M', className:'toggle', call:'preview',replaceWith:function(markItUp){markIt.editorToggle(markItUp);return false;}},
+			{name:"Zen mode", key:'M', className:'toggle', call:'preview',replaceWith:function(markItUp){markIt.editorToggle(markItUp);return false;}},
 		]},
       
     ]
@@ -111,9 +111,9 @@ markIt = {
 	editorToggle: function(markItUp) {
 		$(".markItUpContainer").toggleClass("full-screen");
 		if($(".markItUpContainer").hasClass("full-screen")) {
-			$(".markItUpContainer .toggle a").text("Normal size");
+			$(".markItUpContainer .toggle a").text("Normal mode");
 		} else {
-			$(".markItUpContainer .toggle a").text("Side by side");
+			$(".markItUpContainer .toggle a").text("Zen mode");
 		}
 		return false;
 	},

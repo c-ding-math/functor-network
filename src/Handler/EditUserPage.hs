@@ -6,7 +6,7 @@
 module Handler.EditUserPage where
 
 import Import
-import Yesod.Form.Bootstrap3
+--import Yesod.Form.Bootstrap3
 import Handler.Parser(parse,markItUpWidget,userTemporaryDirectory)
 import Handler.EditUserEntry(EntryInput(..),entryInputForm,entry2Html)
 --import Parse.Parser (mdToHtml,texToHtml,EditorData(..))
@@ -16,7 +16,7 @@ import Text.Shakespeare.Text
 
 getEditUserPageR :: Text -> Handler Html
 getEditUserPageR title = do
-    (userId, user)<- requireAuthPair
+    (userId, user) <- requireAuthPair
     case title of  
         "About" -> do
             mEntry<-runDB $ selectFirst [EntryType==.UserPage, EntryUserId==.userId] [Desc EntryInserted]

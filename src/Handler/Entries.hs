@@ -14,7 +14,7 @@ import Parse.Parser (scaleHeader)
 getEntriesR :: Handler Html
 getEntriesR = do
     entries<-runDB $ selectList [EntryType==.UserPost,EntryStatus==.Publish] [Desc EntryInserted]
-    let entryList = [x | x<-entries, not ("lost proof" `isInfixOf` (entryBodyHtml (entityVal x)))]
+    let entryList = [x | x<-entries, not ("lost proof" `isInfixOf` (entryBodyHtml (entityVal x))), not ("filter-information" `isInfixOf` ((entryBodyHtml (entityVal x))<>(entryTitleHtml (entityVal x))))]
     mAuthors<-runDB $ do
         mapM (\x-> get $ entryUserId $ entityVal x) entryList 
         

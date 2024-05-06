@@ -25,11 +25,13 @@ checkRelMeLink url targetUrl = do
 relMeLink:: Text -> Text -> Text 
 relMeLink homeUrl text = "<a rel=\"me\" href=\""<>homeUrl<>"\">"<>text<>"</a>"
 
+
 data NameSetting=NameSetting{_name::Text}
 data AboutSetting=AboutSetting{_about::Maybe Text}
 --data AvatarSetting=AvatarSetting{_avatar::Maybe Text}
 --data NotificationSetting=NotificationSetting{_notificationEmailId::Maybe EmailId}
     --deriving Show
+data EmailSetting=EmailSetting{_email::Maybe Text}
 data DefaultFormatSetting=DefaultFormatSetting{_defaultFormat::Format}
 data DefaultPreambleSetting=DefaultPreambleSetting{_defaultPreamble::Maybe Textarea}
 data DefaultCitationSetting=DefaultCitationSetting{_defaultCitation::Maybe Textarea}
@@ -77,6 +79,12 @@ notificationSettingForm maybeEmailEntities maybeEmailId= renderBootstrap3 Bootst
 
         return (result, widget)
 -}
+emailSettingForm::User->[Text]->Form EmailSetting
+emailSettingForm user emails=renderBootstrap3 BootstrapBasicForm $ EmailSetting
+    <$> aopt (selectFieldList options) (bfs MsgEmail) (Just(userEmail user))
+    where
+        options = [(email,email)|email<-emails]::[(Text, Text)]
+
 defaultFormatSettingForm::User->Form DefaultFormatSetting
 defaultFormatSettingForm user=renderBootstrap3 BootstrapBasicForm $ DefaultFormatSetting
     <$> areq (selectFieldList inputFormats) (bfs MsgDefaultFormat) (Just(userDefaultFormat user))
@@ -109,6 +117,7 @@ getSettingsR = do
     --(avatarWidget, avatarEnctype) <- generateFormPost $ avatarSettingForm user
     --(notificationWidget, notificationEnctype) <- generateFormPost $ notificationSettingForm emails (notificationEmailId . entityVal <$> mNotification)
     (formatWidget, formatEnctype) <- generateFormPost $ defaultFormatSettingForm user
+    (emailWidget, emailEnctype) <- generateFormPost $ emailSettingForm user (emailAddress . entityVal <$> emails)
     (preambleWidget, preambleEnctype) <- generateFormPost $ defaultPreambleSettingForm user
     (citationWidget, citationEnctype) <- generateFormPost $ defaultCitationSettingForm user
     
@@ -192,19 +201,14 @@ getSettingsR = do
                         <a .btn .btn-default href=#{userAbout user}>_{MsgView}
                         
                     <p>
-            <!--<section .notification-setting>
-                <h2>_{MsgSubscription} 
+            <section .email-setting>
+                <h2>_{MsgNotification} 
                 <div>
-                    <p>_{MsgNotifyMeViaEmail}
-                    $if null emails
-                        <label>_{MsgEmailNotification}
-                        <div>
-                            <a .btn .btn-default href=@{AuthR registerR}>_{MsgNewEmail}
-                    $else
-                        <form .notification-form method=post enctype=#{notificationEnctype}>
-                            ^{notificationWidget}                            
-                            <button .btn .btn-default type=submit name=setting value=notification>_{MsgSave}
-                    <p>-->
+                    <form .email-form method=post enctype=#{emailEnctype}>
+                        ^{emailWidget}        
+                        <p .note>_{MsgNotifyMeViaEmail "noreply@functor.network"}                    
+                        <button .btn .btn-default type=submit name=setting value=email>_{MsgSave}
+                    <p>
             <section .editor-setting>    
                 <h2>_{MsgEditor}
                 <div>                    
@@ -244,7 +248,7 @@ getSettingsR = do
                 border-top:1px solid #dce4ec;
             }
 
-            .name-form,.notification-form,.format-form{
+            .name-form,.email-form select,.format-form{
                 max-width:15em;
             }
             .avatar-container{
@@ -344,6 +348,15 @@ postSettingsR = do
             case result of
                 FormSuccess res -> do 
                     _<-runDB $ update userId [UserDefaultFormat =. _defaultFormat res]
+                    setMessageI $ MsgChangeSaved
+                    redirect $ SettingsR
+                _ -> notFound
+        Just "email"-> do
+            emails <- runDB $ selectList [EmailUserId==.Just userId, EmailVerified==.True] [Desc EmailInserted]
+            ((result,_), _) <- runFormPost $ emailSettingForm user (emailAddress . entityVal <$> emails)
+            case result of
+                FormSuccess res -> do 
+                    _<-runDB $ update userId [UserEmail =. _email res]
                     setMessageI $ MsgChangeSaved
                     redirect $ SettingsR
                 _ -> notFound

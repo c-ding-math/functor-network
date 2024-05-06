@@ -65,7 +65,8 @@ postFeedbackR = do
                 emailHtml = [shamlet|
 #{unTextarea(body feedback)}
 |]
-            sendSystemEmail feedbackEmailAddress emailSubject emailText emailHtml
+
+            sendAppEmail feedbackEmailAddress $ AppEmail emailSubject emailText emailHtml
             maybeUserId <- maybeAuthId
             case maybeUserId of
                 Just userId -> do

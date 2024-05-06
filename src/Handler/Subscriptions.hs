@@ -7,6 +7,7 @@ module Handler.Subscriptions where
 
 import Import
 import Yesod.Form.Bootstrap3 (BootstrapFormLayout (..), renderBootstrap3)
+import Handler.EditComment(commentLink)
 
 getSubscriptionsR :: EmailId -> Handler Html
 getSubscriptionsR emailId = do
@@ -45,6 +46,16 @@ getSubscriptions address = do
             return $ Entity entryId entry
             ) entrySubscriptionEntities
         return (userSubscriptionEntities,userEntities,entrySubscriptionEntities,entryEntities)
+    let postList = [ x | x <- entryList, entryType (entityVal x) == UserPost]
+    let commentList = [ x | x <- entryList, entryType (entityVal x) == Comment]
+    entryLinkList <- runDB $ do
+        mapM (\(Entity entryId entry) -> do
+            case entryType entry of
+                Comment -> do
+                    theLink <- commentLink entryId
+                    return theLink
+                _ -> return ("","")
+            ) entryList
     (unsubscribeFormWidget, unsubscribeFormEnctype) <- generateFormPost unsubscribeForm
     defaultLayout $ do
         setTitleI MsgEmailSubscriptions
@@ -73,11 +84,12 @@ getSubscriptions address = do
                         ^{unsubscribeFormWidget}-->
             <h3>_{MsgPosts}
             <p>_{MsgPostSubscriptionsDescription}
-            $if null entrySubscriptionList
+            $if null postList
                 <p>_{MsgNoSubscription}
             $else
                 <ul>
                     $forall (Entity subscriptionId subscription, Entity entryId entry)<- zip entrySubscriptionList entryList
+                      $if entryType entry == UserPost
                         <li>
                           
                             <a href=@{UserEntryR (entryUserId entry) entryId}>#{preEscapedToMarkup $ entryTitleHtml entry}
@@ -92,6 +104,27 @@ getSubscriptions address = do
             <form .hidden #unsubscribe-form action="" method=post enctype=#{unsubscribeFormEnctype}>
                 ^{unsubscribeFormWidget}
 
+            <h3>_{MsgComments}
+            <p>_{MsgCommentSubscriptionsDescription}
+            $if null commentList
+                <p>_{MsgNoSubscription}
+            $else
+                <ul>
+                    $forall (Entity subscriptionId subscription, Entity _ entry, (url, text))<- zip3 entrySubscriptionList entryList entryLinkList 
+                      $if entryType entry == Comment
+                        <li>
+                          
+                            <a href=#{url}>#{text}
+                            $maybe key <- entrySubscriptionKey subscription
+                                <ul .entry-menu.inline-menu>
+                                    <li>
+                                        <a .unsubscribe href=@{EditEntrySubscriptionR subscriptionId} data-key=#{key}>_{MsgUnsubscribe}
+                            $nothing
+                                <ul .entry-menu.inline-menu>
+                                    <li>
+                                        <a .unsubscribe href=@{EditEntrySubscriptionR subscriptionId} data-key="">_{MsgUnsubscribe}
+            <form .hidden #unsubscribe-form action="" method=post enctype=#{unsubscribeFormEnctype}>
+                ^{unsubscribeFormWidget}
                                     
         |]
         toWidget [julius|

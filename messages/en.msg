@@ -41,10 +41,11 @@ About: About
 VerifyAndSave: Verify & save
 VerificationNoRelMeLink: Verification failed. Please ensure that you have pasted the verification link into your about page.
 VerificationNoResponse: Verification failed. Please ensure that your about page is accessible.
+Follow: Follow
 Subscription: Subscription
 Notification: Notification
 EmailNotification: Email notification
-NotifyMeViaEmail: Notify me via email when I receive a comment or reply.
+NotifyMeViaEmail email@Text: Follow your new post and comment via the above email by default. To ensure that the notification can reach you, please add #{email} to the whitelist with your email provider.
 NewEmail: Add a new email
 Editor: Editor
 DefaultFormat: Default post format
@@ -134,9 +135,11 @@ EntrySubscriptionConfirmation email@Text: Your subscription via email #{email} h
 Unsubscribe: Unsubscribe
 UnsubscribeAll: Unsubscribe all
 SubscribeToUser: Please enter your email address below. You will receive an email notification when the author publishes a new post.
-SubscribeToEntry: Please enter your email address below. You will receive an email notification when the post receives a new comment.
+SubscribeToPost: Please enter your email address below. You will receive an email notification when the post receives a new comment.
+SubscribeToComment: Please enter your email address below. You will receive an email notification when your comment receives a reply.
 UserSubscriptionsDescription: You are subscribed to the following members. You will receive an email notification when they publish a new post.
 PostSubscriptionsDescription: You are subscribed to the following posts. You will receive an email notification when they receive a new comment.
+CommentSubscriptionsDescription: You are subscribed to the following comments. You will receive an email notification when they receive a reply.
 NoSubscription: No subscription found.
 EmailSubscriptions: Email subscriptions
 EmailAddress: Email address

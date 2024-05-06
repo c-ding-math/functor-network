@@ -6,8 +6,9 @@ module Handler.EditComment where
 import Import
 import Yesod.Form.Bootstrap3
 import Handler.Parser(parse,userTemporaryDirectory)
+import Handler.NewEntrySubscription(entrySubscriptionNotification,insertDefaultEntrySubscription)
 import Parse.Parser(mdToHtml,texToHtml,EditorData(..))
-import Text.Shakespeare.Text
+--import Text.Shakespeare.Text
 
 deleteEditCommentR :: EntryId -> Handler ()
 deleteEditCommentR commentId = runDB $ do
@@ -61,13 +62,14 @@ newCommentForm mCommentData =  renderBootstrap3 BootstrapBasicForm $ CommentInpu
 
 postEditCommentR :: EntryId -> Handler ()
 postEditCommentR entryId = do
-    userId <- requireAuthId
-    (rootEntryId, rootEntryAuthorId, entry) <- runDB $ do
+    Entity userId _ <- requireAuth
+    (rootEntryId, rootEntryAuthorId, entry, entryAuthorName) <- runDB $ do
         rootEntryId <- getRootEntryId entryId
         entry <- get404 entryId
+        entryAuthor <- get404 $ entryUserId entry
         rootEntryAuthorId <- entryUserId <$> get404 rootEntryId  
    
-        return (rootEntryId, rootEntryAuthorId, entry)  
+        return (rootEntryId, rootEntryAuthorId, entry, userName entryAuthor)  
 
     urlRenderParams <- getUrlRenderParams
     
@@ -84,13 +86,15 @@ postEditCommentR entryId = do
                         Format "tex" -> texToHtml
                         _ -> mdToHtml
             userDir<-userTemporaryDirectory
+            let title = "Comment"
+                
             bodyHtml <- liftIO $ parse userDir parser editorData
             let commentData=Entry 
                         {entryUserId=userId
                         ,entryType=Comment
                         ,entryFormat=inputFormat newCommentFormData
-                        ,entryTitle="Comment on "<> (entryTitle entry)
-                        ,entryTitleHtml="Comment on "<> (entryTitleHtml entry)
+                        ,entryTitle=title
+                        ,entryTitleHtml=title
                         ,entryPreamble=(preamble newCommentFormData)
                         ,entryBody=body newCommentFormData
                         ,entryBodyHtml=bodyHtml
@@ -103,35 +107,18 @@ postEditCommentR entryId = do
             commentId <- runDB $ do
                 commentId<-insert commentData
                 insert_ $ EntryTree commentId entryId
+                insertDefaultEntrySubscription commentId
                 return commentId
 
-            rootEntry <- runDB $ get404 rootEntryId
-            subscribers <- runDB $ selectList [EntrySubscriptionEntryId ==. rootEntryId, EntrySubscriptionVerified ==. True] []
+            --rootEntry <- runDB $ get404 rootEntryId
+            subscribers <- runDB $ selectList [EntrySubscriptionEntryId ==. entryId, EntrySubscriptionVerified ==. True] []
             forM_ subscribers $ \(Entity subscriptionId subscription) -> do
                 
                 let unsubscribeUrl= urlRenderParams (EditEntrySubscriptionR subscriptionId) $ case entrySubscriptionKey subscription of
                         Just key -> [("key", key)] 
                         Nothing -> []
                     entryUrl= urlRenderParams (UserEntryR rootEntryAuthorId rootEntryId) [] <> "#entry-" <> toPathPiece commentId
-                    subject= "New comment on \"" <> entryTitle rootEntry <> "\""
-                    emailText= [stext|
-The following post you subscribed to received a new comment:
-
-#{entryTitle rootEntry}
-
-You can view the commetn at #{entryUrl}.
-
-To unsubscribe, please visit #{unsubscribeUrl}.
-
-#{appName}
-                    |]
-                    emailHtml= [shamlet|
-<p>The following post you subscribed to received a new comment:
-<p>#{entryTitle rootEntry}
-<p><a href=#{entryUrl}>Go to view</a><span> | </span><a href=#{unsubscribeUrl}>Manage subscriptions</a>    
-<p>#{appName}
-                    |]
-                sendSystemEmail (entrySubscriptionEmail subscription) subject emailText emailHtml
+                sendAppEmail (entrySubscriptionEmail subscription) $ entrySubscriptionNotification unsubscribeUrl entryUrl commentData
                         
 
             setMessage $ [hamlet|<a href=#entry-#{toPathPiece commentId}>Your comment</a> has been published. <a class='view alert-link' href=#entry-#{toPathPiece commentId}>View</a>|] urlRenderParams
@@ -168,3 +155,22 @@ getRootEntryId entryId = do
     case mEntryTree of
         Nothing -> return entryId
         Just tree -> getRootEntryId $ entryTreeParent $ entityVal tree
+
+commentLink :: EntryId -> ReaderT SqlBackend (HandlerFor App) (Text, Text) -- (url,text)
+commentLink commentId = do
+    urlRender <- getUrlRender
+    rootEntryId <- getRootEntryId commentId
+    rootEntry <- get404 rootEntryId
+    let rootEntryAuthorId = entryUserId rootEntry
+
+    mTree <- selectFirst [EntryTreeNode==.commentId] []
+    let parentId = case mTree of
+            Nothing -> commentId
+            Just tree -> entryTreeParent $ entityVal tree
+    parent <- get404 parentId
+    parentAuthor <- get404 $ entryUserId parent
+    let url = urlRender (UserEntryR rootEntryAuthorId rootEntryId) <> "#entry-" <> toPathPiece commentId
+    let text = case entryType parent of
+            Comment -> "Reply to " <> userName parentAuthor <> "'s comment"
+            _ -> "Comment on " <> userName parentAuthor <> "'s post"
+    return (url, text)

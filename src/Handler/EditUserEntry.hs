@@ -18,8 +18,10 @@ import Import
 import Yesod.Form.Bootstrap3
 import Handler.EditComment(deleteEntryRecursive)
 import Handler.Parser(parse,markItUpWidget,userTemporaryDirectory)
+import Handler.NewEntrySubscription(insertDefaultEntrySubscription)
+import Handler.NewUserSubscription(userSubscriptionNotification)
 import Parse.Parser(mdToHtml,mdToHtmlSimple,texToHtml,texToHtmlSimple,EditorData(..))
-import Text.Shakespeare.Text
+--import Text.Shakespeare.Text
 
 data EntryInput=EntryInput
     { inputTitle::Text
@@ -181,7 +183,8 @@ postNewUserEntryR = do
             urlRenderParams <- getUrlRenderParams
             case entryAction of
                 Just "publish"-> do
-                    entryId<-runDB $ insert $ Entry
+                    entryId<-runDB $ do
+                        entryId<-insert $ Entry
                             { entryUserId=userId
                             , entryType=UserPost
                             , entryStatus=Publish
@@ -195,6 +198,8 @@ postNewUserEntryR = do
                             , entryTitleHtml=titleHtml
                             , entryBodyHtml=bodyHtml
                             }
+                        insertDefaultEntrySubscription entryId
+                        return entryId
                     subscribers <- runDB $ selectList [UserSubscriptionUserId ==. userId, UserSubscriptionVerified ==. True] []
                     forM_ subscribers $ \(Entity subscriptionId subscription) -> do
                         
@@ -202,42 +207,27 @@ postNewUserEntryR = do
                                 Just key -> [("key", key)] 
                                 Nothing -> []
                             entryUrl= urlRenderParams (UserEntryR userId entryId) []
-                            subject= "New post by " ++ (userName user) ++ ": " ++ (inputTitle formData) 
-                            emailText= [stext|
-The author #{userName user} you subscribed to has published a new post: 
-
-#{inputTitle formData}.
-
-You can view the post at #{entryUrl}.
-
-To unsubscribe, please visit #{unsubscribeUrl}.
-
-#{appName}
-                            |]
-                            emailHtml= [shamlet|
-<p>The author #{userName user} you subscribed to has published a new post:
-<p>#{inputTitle formData}
-<p><a href=#{entryUrl}>Go to view</a><span> | </span><a href=#{unsubscribeUrl}>Manage subscriptions</a>    
-<p>#{appName}
-                            |]
-                        sendSystemEmail (userSubscriptionEmail subscription) subject emailText emailHtml
+                        sendAppEmail (userSubscriptionEmail subscription) $ userSubscriptionNotification unsubscribeUrl entryUrl (inputTitle formData) user
                     setMessage $ [hamlet|Your blog post, <a class=alert-link href=@{UserEntryR userId entryId}>#{inputTitle formData}</a>, has been published. <a class='view alert-link' href=@{UserEntryR userId entryId}>View</a>|] urlRenderParams
                     redirect $ EditUserEntryR entryId
                 _-> do 
-                    entryId<-runDB $ insert $ Entry
-                        { entryUserId=userId
-                        , entryType=UserPost
-                        , entryStatus=Draft
-                        , entryInserted=currentTime
-                        , entryUpdated=currentTime
-                        , entryTitle=inputTitle formData
-                        , entryPreamble=inputPreamble formData
-                        , entryFormat=inputFormat formData
-                        , entryBody=inputBody formData
-                        , entryCitation=inputCitation formData
-                        , entryTitleHtml=titleHtml
-                        , entryBodyHtml=bodyHtml
-                        }
+                    entryId<-runDB $ do
+                        entryId<-insert $ Entry
+                            { entryUserId=userId
+                            , entryType=UserPost
+                            , entryStatus=Draft
+                            , entryInserted=currentTime
+                            , entryUpdated=currentTime
+                            , entryTitle=inputTitle formData
+                            , entryPreamble=inputPreamble formData
+                            , entryFormat=inputFormat formData
+                            , entryBody=inputBody formData
+                            , entryCitation=inputCitation formData
+                            , entryTitleHtml=titleHtml
+                            , entryBodyHtml=bodyHtml
+                            }
+                        insertDefaultEntrySubscription entryId
+                        return entryId
                     setMessage $ [hamlet|Your blog post, <a class=alert-link href=@{UserEntryR userId entryId}>#{inputTitle formData}</a>, has been saved. <a class='view alert-link' href=@{UserEntryR userId entryId}>View</a>|] urlRenderParams
                     redirect $ EditUserEntryR entryId
         FormMissing -> do
@@ -275,24 +265,7 @@ postEditUserEntryR  entryId = do
                                     Just key -> [("key", key)] 
                                     Nothing -> []
                                 entryUrl= urlRenderParams (UserEntryR userId entryId) []
-                                subject= "New post by " ++ (userName user) ++ ": " ++ (inputTitle formData) 
-                                emailText= [stext|
-The author #{userName user} you subscribed to has published a new post:
-
-#{inputTitle formData}.
-
-You can view the post at #{entryUrl}.
-To unsubscribe, please visit #{unsubscribeUrl}.
-#{appName}
-                                |]
-                                emailHtml= [shamlet|
-<p>The author #{userName user} you subscribed to has published a new post:
-<p>#{inputTitle formData}
-<p><a href=#{entryUrl}>Go to view</a><span> | </span><a href=#{unsubscribeUrl}>Manage subscriptions</a>
-<p>#{appName}
-                                |]
-                            sendSystemEmail (userSubscriptionEmail subscription) subject emailText emailHtml
-
+                            sendAppEmail (userSubscriptionEmail subscription) $ userSubscriptionNotification unsubscribeUrl entryUrl (inputTitle formData) user
                     runDB $ update entryId                    
                         [EntryStatus=.Publish
                         ,EntryUpdated=.currentTime
@@ -321,6 +294,8 @@ To unsubscribe, please visit #{unsubscribeUrl}.
                             ,EntryFormat=.inputFormat formData
                             ,EntryBody=.inputBody formData
                             ,EntryCitation=.inputCitation formData
+                            ,EntryTitleHtml=.titleHtml
+                            ,EntryBodyHtml=.bodyHtml
                             ] 
                         
                     setMessage $ [hamlet|Your blog post, <a class=alert-link href=@{UserEntryR userId entryId}>#{inputTitle formData}</a>, has been saved. <a class='view alert-link' href=@{UserEntryR userId entryId}>View</a>|] urlRenderParams
