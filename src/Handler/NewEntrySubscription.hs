@@ -46,26 +46,19 @@ postNewEntrySubscriptionR entryId= do
                         let url = case entrySubscriptionKey subscription of
                                 Just key -> urlRenderParams (EditEntrySubscriptionR subscriptionId) [("key", key)]
                                 Nothing -> urlRenderParams (EditEntrySubscriptionR subscriptionId) []
-                            
-                            emailSubject = "Subscription confirmation"
-                            emailText = [stext|
-Please confirm your subscription to the post "#{entryTitle entry}" with the link below.
-
-#{url}
-
-Thank you!
-
-#{appName}
-                            
-                        |]
-                            emailHtml = [shamlet|
-<p>Please confirm your subscription to the post "#{entryTitle entry}" by clicking the link below.
-<p>
-    <a href=#{url}>Confirm subscription
-<p>Thank you!
-<p>#{appName}
-                        |] 
-                        sendSystemEmail address emailSubject emailText emailHtml
+                        title <- runDB $ do
+                                    mTree <- selectFirst [EntryTreeNode ==. entryId] []
+                                    case mTree of
+                                        Just (Entity _ tree) -> do
+                                            parent <- get404 $ entryTreeParent tree
+                                            case entryType parent of
+                                                Comment -> do
+                                                    parentAuthor <- get404 $ entryUserId parent
+                                                    return $ "Reply to " <> userName parentAuthor
+                                                _ -> return $ "Comment on " <> entryTitle parent
+                                        Nothing -> return $ entryTitle entry
+                                    
+                        sendAppEmail address $ entrySubscriptionConfirmation url title
                 Right subscriptionId -> if verified
                     then do  
                         setMessageI $ MsgEntrySubscriptionConfirmation address
@@ -75,58 +68,91 @@ Thank you!
                         setMessageI $ MsgSubscriptionConfirmationSent address 
                         
                         let url = urlRenderParams (EditEntrySubscriptionR subscriptionId) [("key", verificationKey)]
-                            emailSubject = "Subscription confirmation"
-                            emailText = [stext|
-Please confirm your subscription to the post "#{entryTitle entry}" with the link below.
-
-#{url}
-
-Thank you!
-
-#{appName}
-                            
-                        |]
-                            emailHtml = [shamlet|
-<p>Please confirm your subscription to the post "#{entryTitle entry}" by clicking the link below.
-<p>
-    <a href=#{url}>Confirm subscription
-<p>Thank you!
-<p>#{appName}
-                        |] 
-                        sendSystemEmail address emailSubject emailText emailHtml
+                        title <- runDB $ do
+                                    mTree <- selectFirst [EntryTreeNode ==. entryId] []
+                                    case mTree of
+                                        Just (Entity _ tree) -> do
+                                            parent <- get404 $ entryTreeParent tree
+                                            case entryType parent of
+                                                Comment -> do
+                                                    parentAuthor <- get404 $ entryUserId parent
+                                                    return $ "Reply to " <> userName parentAuthor
+                                                _ -> return $ "Comment on " <> entryTitle parent
+                                        Nothing -> return $ entryTitle entry
+                        sendAppEmail address  $ entrySubscriptionConfirmation url title
             --redirect $ HomeR authorId
         FormFailure _ -> setMessageI MsgFormFailure
         _ -> setMessageI MsgFormMissing
+    (rootEntryUserId, rootEntryId) <- runDB $ do 
+        rootEntryId <- getRootEntryId entryId
+        rootEntry <- get404 rootEntryId
+        return (entryUserId rootEntry, rootEntryId)
+    redirect $ UserEntryR rootEntryUserId rootEntryId
 
-    redirect $ UserEntryR (entryUserId entry) entryId
+getRootEntryId :: EntryId -> ReaderT SqlBackend (HandlerFor App) EntryId
+getRootEntryId entryId = do
+    mEntryTree<-selectFirst [EntryTreeNode==.entryId] []
+    case mEntryTree of
+        Nothing -> return entryId
+        Just tree -> getRootEntryId $ entryTreeParent $ entityVal tree
+
+insertDefaultEntrySubscription :: EntryId -> ReaderT SqlBackend (HandlerFor App) ()
+insertDefaultEntrySubscription entryId = do
+    Entity _ user <- requireAuth
+
+    case userEmail user of
+        Just email -> do
+            --urlRenderParams <- getUrlRenderParams
+            currentTime <- liftIO getCurrentTime
+            verificationKey <- liftIO $ Nonce.nonce128urlT $ unsafePerformIO (Nonce.new)
+    
+            insert_ $ EntrySubscription{
+                entrySubscriptionEmail = email,
+                entrySubscriptionEntryId = entryId,
+                entrySubscriptionKey = Just verificationKey,
+                entrySubscriptionInserted = currentTime,
+                entrySubscriptionVerified = True
+            }
+            
+        Nothing -> return ()
+
 
 subscribeEntryForm ::Maybe Text -> Form Text 
 subscribeEntryForm mEmail = renderBootstrap3 BootstrapBasicForm $ areq emailField (bfs MsgEmail) mEmail
 
 subscribeToEntryWidget :: EntryId -> Widget
 subscribeToEntryWidget entryId = do
+    messageRender <- getMessageRender
     (subscribeWidget, subscribeEnctype) <- handlerToWidget $ do
-        mCurrentUserId<-maybeAuthId
-        mCurrentUserEmail <- runDB $ selectFirst [EmailUserId ==. mCurrentUserId, EmailVerified ==. True] [Desc EmailInserted]
-
-        generateFormPost $ subscribeEntryForm $ (emailAddress . entityVal) <$> mCurrentUserEmail
+        mCurrentUser <- maybeAuth
+        --mCurrentUserEmail <- runDB $ selectFirst [EmailUserId ==. mCurrentUserId, EmailVerified ==. True] [Desc EmailInserted]
+        let mCurrentUserEmail = case mCurrentUser of
+                Just (Entity _ user) -> userEmail user
+                _ -> Nothing
+        generateFormPost $ subscribeEntryForm $ mCurrentUserEmail
+    entry <- handlerToWidget $ runDB $ get404 entryId
     [whamlet|
-        <a .subscribe href=#>_{MsgSubscribe}
-        <form style="display:none;" #subscribe-form method=post action=@{NewEntrySubscriptionR entryId} enctype=#{subscribeEnctype}>
-            <p>_{MsgSubscribeToEntry}
+        <form style="display:none;" #subscribe-form method=post enctype=#{subscribeEnctype} action=@{NewEntrySubscriptionR entryId}>
+            <p>
+                $if entryType entry == Post
+                    _{MsgSubscribeToPost}
+                $else
+                    _{MsgSubscribeToComment}
             ^{subscribeWidget}
     |]
     toWidget [julius|
 $(document).ready(function(){
-    $(".subscribe").click(function(e){
+    $(".subscribe a").click(function(e){
         e.preventDefault();
 		var prompt = $("#subscribe-form");
+        prompt.attr("action", $(this).attr("href"));
+
 		prompt.dialog({
 			modal: true,
-            title: "Subscribe",
+            title: #{messageRender MsgFollow},
 			buttons: [
 				{
-					html: "Subscribe",
+					html: #{messageRender MsgFollow},
 					class: "btn btn-primary",
 					click: function () {
                         $(this).dialog("close");
@@ -134,7 +160,7 @@ $(document).ready(function(){
                     },
 				},
 				{
-					html: "Cancel",
+					html: #{messageRender MsgCancel},
 					class:"btn btn-default",
 					click: function () {
 						$(this).dialog( "close" );
@@ -147,3 +173,55 @@ $(document).ready(function(){
 });
     |]
     jqueryUiWidget
+
+entrySubscriptionConfirmation :: Text -> Text -> AppEmail
+entrySubscriptionConfirmation url title = AppEmail emailSubject emailText emailHtml
+    where
+        emailSubject = "Subscription confirmation"
+        emailText = [stext|
+Please confirm your subscription to "#{title}" with the link below.
+
+#{url}
+
+Thank you!
+
+#{appName}
+                            
+        |]
+        emailHtml = [shamlet|
+<p>Please confirm your subscription to "#{title}" by clicking the link below.
+<p>
+    <a href=#{url}>Confirm subscription
+<p>Thank you!
+<p>#{appName}
+        |]
+
+entrySubscriptionNotification :: Text -> Text -> Entry -> AppEmail 
+entrySubscriptionNotification unsubscribeUrl entryUrl entry = AppEmail emailSubject emailText emailHtml
+    where
+        entryBodyText = case entryBody entry of 
+            Just (Textarea body) -> body
+            _ -> "Coming soon..."
+
+        emailSubject= entryTitle entry
+        emailText = [stext|
+New comment:
+
+#{entryBodyText}
+
+View it at #{entryUrl}.
+
+Manage your subscriptions at #{unsubscribeUrl}.
+
+#{appName}
+            |]
+
+        emailHtml = [shamlet|
+<p>New comment:
+<p>#{entryBodyText}
+<p><a href=#{entryUrl}>View</a><span> | </span><a href=#{unsubscribeUrl}>Manage subscriptions</a>
+<p>#{appName}
+            |]
+
+
+

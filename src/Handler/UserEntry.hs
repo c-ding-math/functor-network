@@ -81,8 +81,8 @@ getUserEntryR authorId entryId = do
         <li .reply>
             <a href=#comment data-action=@{EditCommentR entryId}>comment
         <!--<li .print><a href=#>print</a>-->
-        <li> 
-            ^{subscribeToEntryWidget entryId}
+        <li .subscribe>
+            <a href=@{NewEntrySubscriptionR entryId}>_{MsgFollow}     
         $if isAdministrator maybeUserId entry
             <li .edit><a href=@{EditUserEntryR entryId}>edit</a>
 
@@ -114,8 +114,8 @@ getUserEntryR authorId entryId = do
               <ul .entry-menu>                
                   <li .reply>
                     <a href=#comment data-action=@{EditCommentR commentId}>reply
-                  <!--<li>
-                    ^{subscribeToEntryWidget commentId}-->
+                  <li .subscribe>
+                    <a href=@{NewEntrySubscriptionR commentId}>_{MsgFollow}
                   $if isAdministrator maybeUserId entry || isAdministrator maybeUserId comment
                       <li .delete>
                         <a href=@{EditCommentR commentId}>_{MsgDelete}
@@ -131,10 +131,11 @@ getUserEntryR authorId entryId = do
         $nothing
             <h3 #comment>_{MsgNewComment}
             <p>
-                You must <a href=@{AuthR LoginR}>sign in</a> to post a comment.
+                You must <a href=@{AuthR LoginR}>login</a> to add a comment.
                 
         |]
         markItUpWidget format (Format "html")
+        subscribeToEntryWidget entryId
         menuWidget
 
         

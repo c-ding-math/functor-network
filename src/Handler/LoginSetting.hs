@@ -49,13 +49,26 @@ getEmailSettingR _ = do
     
 postEmailSettingR :: EmailId -> Handler Html
 postEmailSettingR emailId = do
-    action<-lookupPostParam "action"
-    case action of 
-        Just "delete"->do 
-            runDB $ delete emailId 
-            setMessageI MsgEmailDeleted
+    theLast<-theLastLogin
+    if theLast
+        then do 
+            setMessageI MsgTheLastLoginMethod
             redirect SettingsR
-        _->redirect SettingsR
+        else do
+            Entity userId user<-requireAuth
+            action<-lookupPostParam "action"
+            case action of 
+                Just "delete"->do 
+                    runDB $ do 
+                        email<-get404 emailId
+                        if userEmail user == (Just (emailAddress email))
+                            then do 
+                                update userId [UserEmail=.Nothing]
+                                delete emailId 
+                            else delete emailId
+                    setMessageI MsgEmailDeleted
+                    redirect SettingsR
+                _->redirect SettingsR
 
 theLastLogin::Handler Bool
 theLastLogin=runDB $ do

@@ -45,25 +45,7 @@ postNewUserSubscriptionR authorId = do
                                 Just key -> urlRenderParams (EditUserSubscriptionR subscriptionId) [("key", key)]
                                 Nothing -> urlRenderParams (EditUserSubscriptionR subscriptionId) []
                             
-                            emailSubject = "Subscription confirmation"
-                            emailText = [stext|
-Please confirm your subscription to the author #{userName author} with the link below.
-
-#{url}
-
-Thank you!
-
-#{appName}
-                            
-                        |]
-                            emailHtml = [shamlet|
-<p>Please confirm your subscription to the author #{userName author} by clicking the link below.
-<p>
-    <a href=#{url}>Confirm subscription
-<p>Thank you!
-<p>#{appName}
-                        |] 
-                        sendSystemEmail address emailSubject emailText emailHtml
+                        sendAppEmail address $ userSubscriptionConfirmation url author
                 Right subscriptionId -> if verified
                     then do  
                         setMessageI $ MsgUserSubscriptionConfirmation address
@@ -74,26 +56,7 @@ Thank you!
                         urlRenderParams <- getUrlRenderParams
                         
                         let url = urlRenderParams (EditUserSubscriptionR subscriptionId) [("key", verificationKey)]
-                            emailSubject = "Subscription confirmation"
-                            emailText = [stext|
-Please confirm your subscription to the author #{userName author} with the link below.
-
-#{url}
-
-Thank you!
-
-#{appName}
-                            
-                        |]
-                            emailHtml = [shamlet|
-<p>Please confirm your subscription to the author #{userName author} by clicking the link below.
-<p>
-    <a href=#{url}>Confirm subscription
-<p>Thank you!
-<p>#{appName}
-                        |] 
-                        sendSystemEmail address emailSubject emailText emailHtml
-            --redirect $ UserHomeR authorId
+                        sendAppEmail address $ userSubscriptionConfirmation url author
         FormFailure _ -> setMessageI MsgFormFailure
         _ -> setMessageI MsgFormMissing
     redirect $ UserHomeR authorId
@@ -154,3 +117,43 @@ $(document).ready(function(){
         }
     |]
     
+userSubscriptionConfirmation :: Text -> User -> AppEmail
+userSubscriptionConfirmation url author = AppEmail emailSubject emailText emailHtml
+    where
+        emailSubject = "Subscription confirmation"
+        emailText = [stext|
+Please confirm your subscription to the author #{userName author} with the link below.
+
+#{url}
+
+Thank you!
+
+#{appName}                   
+        |]
+        emailHtml= [shamlet|
+<p>Please confirm your subscription to the author #{userName author} by clicking the link below.
+<p>
+    <a href=#{url}>Confirm subscription
+<p>Thank you!
+<p>#{appName}
+        |]
+
+userSubscriptionNotification :: Text -> Text -> Text -> User -> AppEmail
+userSubscriptionNotification unsubscribeUrl entryUrl title user = AppEmail emailSubject emailText emailHtml
+    where
+        emailSubject = "New post by " ++ (userName user)
+        emailText= [stext|
+The author #{userName user} you subscribed to has published a new post:
+
+#{title}.
+
+You can view the post at #{entryUrl}.
+To unsubscribe, please visit #{unsubscribeUrl}.
+#{appName}
+                    |]
+        emailHtml= [shamlet|
+<p>The author #{userName user} you subscribed to has published a new post:
+<p>#{title}
+<p><a href=#{entryUrl}>Go to view</a><span> | </span><a href=#{unsubscribeUrl}>Manage subscriptions</a>
+<p>#{appName}
+                    |]

@@ -33,6 +33,15 @@
                 <p>
                     _{MsgComingSoon}
     <hr>
+    <div .bs-docs-section>
+        <div .page-header>
+            <h1>Comparison with Other Platforms
+            $maybe Entity _ comparison <- maybeComparison
+                #{preEscapedToMarkup (entryBodyHtml comparison)}
+            $nothing
+                <p>
+                    _{MsgComingSoon}
+    <hr>
     <div .bs-docs-section>      
         <div .page-header>
             <h1>Screenshots

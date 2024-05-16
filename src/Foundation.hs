@@ -29,7 +29,7 @@ import qualified Network.Mail.SMTP
 import           Text.Shakespeare.Text         (stext)
 import qualified Data.Text                     as TS
 import qualified Data.Text.Lazy 
-import qualified Data.Text.Lazy.Encoding
+--import qualified Data.Text.Lazy.Encoding
 import           Text.Blaze.Html.Renderer.Utf8 (renderHtml)
 import qualified Yesod.Auth.Message as Msg
 import qualified Yesod.Auth.Extra  
@@ -132,7 +132,7 @@ instance Yesod App where
     defaultLayout :: Widget -> Handler Html
     defaultLayout widget = do
         mMaintenance<-runDB $ selectFirst [] [Desc MaintenanceFrom]
-        master <- getYesod
+        --master <- getYesod
         mmsg <- getMessage
 
         muser <- maybeAuthPair
@@ -198,7 +198,7 @@ instance Yesod App where
                             , menuItemAccessCallback = True
                             }
                         , FooterRight $ MenuItem
-                            { menuItemLabel = "Version 2024-02-07"
+                            { menuItemLabel = "Version 2024-05-01"
                             , menuItemRoute = PageR "Changelog"
                             , menuItemAccessCallback = True
                             }
@@ -226,7 +226,12 @@ instance Yesod App where
                             }
                         ]
                     False -> 
-                        [ FooterMiddle $ MenuItem
+                        [ NavbarLeft $ MenuItem
+                            { menuItemLabel = "Posts"
+                            , menuItemRoute = EntriesR
+                            , menuItemAccessCallback = True
+                            }
+                        , NavbarLeft $ MenuItem
                             { menuItemLabel = "Members"
                             , menuItemRoute = UsersR
                             , menuItemAccessCallback = True
@@ -295,7 +300,6 @@ instance Yesod App where
     isAuthorized UsersR _ = return Authorized
     isAuthorized (UserHomeR _) _ = return Authorized
     isAuthorized (UserPageR _ _) _ = return Authorized
-    --isAuthorized (EntriesR _) _ = return Authorized
     isAuthorized (UserEntryR _ _) _ = return Authorized
     isAuthorized (CommentsR _) _ = return Authorized
     isAuthorized (PageR _) _ = return Authorized
@@ -486,6 +490,7 @@ instance YesodAuth App where
                                     ,userInserted=currentTime
                                     --,userModified=currentTime
                                     --,userAvatar=Nothing
+                                    ,userEmail=Nothing
                                     ,userDefaultFormat=Format "md"
                                     ,userDefaultPreamble=Just (Textarea "\\usepackage{amsmath, amssymb, amsfonts}\n\\newcommand{\\NN}{\\mathbb{N}}")
                                     ,userDefaultCitation=Nothing
@@ -567,7 +572,7 @@ instance YesodAuthEmail App where
                 True -> verurl<>"/has-set-pass"
                 _->verurl
 
-        liftHandler $ sendSystemEmail email subject (text url) (html url)
+        liftHandler $ sendAppEmail email $ AppEmail subject (text url) (html url)
 
       where
         subject="Verify your email address"
@@ -590,7 +595,7 @@ instance YesodAuthEmail App where
         --appName="Functor Network"::Text
 
     sendForgotPasswordEmail email _ verurl =  do
-        liftHandler $ sendSystemEmail email subject text html
+        liftHandler $ sendAppEmail email $ AppEmail subject text html
       where
         subject="Verify your email address"
         text =  [stext|
@@ -629,6 +634,7 @@ instance YesodAuthEmail App where
                                 ,userInserted=currentTime
                                 --,userModified=currentTime
                                 --,userAvatar=Nothing
+                                ,userEmail=Just $ emailAddress email
                                 ,userDefaultFormat=Format "md"
                                 ,userDefaultPreamble=Just (Textarea "\\usepackage{amsmath, amssymb, amsfonts}\n\\newcommand{\\NN}{\\mathbb{N}}")
                                 ,userDefaultCitation=Nothing
@@ -813,7 +819,7 @@ instance YesodAuthEmail App where
                     ^{widget}
                     <div>
                         <button .btn.btn-primary type=submit>
-                            _{Msg.LoginViaEmail}
+                            _{MsgLogin}
                         
                         <a .btn.btn-default href="@{toParent registerR}">
                             _{Msg.RegisterLong}
@@ -1034,8 +1040,47 @@ instance YesodAuthEmail App where
         | otherwise = return $ Left "Password must be at least 8 characters"
 
 -- | send email 
+data AppEmail = AppEmail
+    { appEmailSubject :: Text
+    , appEmailText :: Data.Text.Lazy.Text
+    , appEmailHtml :: Html
+    }
+sendAppEmail ::  Text -> AppEmail -> Handler ()
+sendAppEmail email appEmail= do
+        master<-getYesod
+        let systemEmailPassword=appEmailPassword $ appSettings master
+            systemEmailHost=appEmailHost $ appSettings master
+            systemEmailUser=appEmailUser $ appSettings master
+            textMailPart = Part
+                { partType = "text/plain; charset=utf-8"
+                , partEncoding = None
+                , partDisposition = DefaultDisposition
+                , partContent = PartContent $ encodeUtf8 $ appEmailText appEmail
+                , partHeaders = []
+                }
+            htmlMailPart = Part
+                { partType = "text/html; charset=utf-8"
+                , partEncoding = None
+                , partDisposition = DefaultDisposition
+                , partContent = PartContent $ renderHtml $ appEmailHtml appEmail
+                , partHeaders = []
+                }
+
+        liftIO $ do
+            _ <- forkIO $ do
+                
+                Network.Mail.SMTP.sendMailWithLoginTLS (unpack systemEmailHost) (unpack systemEmailUser) (unpack systemEmailPassword) (emptyMail $ Address Nothing systemEmailUser)
+                    { mailTo = [Address Nothing email]
+                    , mailHeaders =
+                        [ ("Subject", appEmailSubject appEmail)
+                        ]
+                    , mailParts = [[textMailPart, htmlMailPart]]
+                    }
+                        
+            return ()
+{-
 sendSystemEmail ::  Yesod.Auth.Email.Email ->Text->Data.Text.Lazy.Text->Html-> Handler ()
-sendSystemEmail email subject text html= do
+sendSystemEmail email $ AppEmail subject text html= do
         master<-getYesod
         let systemEmailPassword=appEmailPassword $ appSettings master
             systemEmailHost=appEmailHost $ appSettings master
@@ -1067,7 +1112,7 @@ sendSystemEmail email subject text html= do
                     }
                         
             return ()
- 
+-} 
 -- | Access function to determine if a user is logged in.
 isAuthenticated :: Handler AuthResult
 isAuthenticated = do
