@@ -933,7 +933,7 @@ instance YesodAuthEmail App where
                 <ul>
                     <li> Wait a minute.
                     <li> Make sure you typed your email address correctly.
-                    <li> With your email provider, add our domain <code>functor.network</code> to your whitelist and try again.
+                    <li> Add our notification email <code>noreply@functor.network</code> to your whitelist with your provider and try again.
                     <li> Send an email to <a href="mailto:feedback@functor.network">feedback@functor.network</a> and we will help you out.
               |]
       where

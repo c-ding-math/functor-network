@@ -50,11 +50,17 @@ entry2Html formData=do
 entryInputForm:: Maybe EntryInput -> Html -> MForm Handler (FormResult EntryInput, Widget)
 entryInputForm mEntryInput=renderBootstrap3 BootstrapBasicForm $ EntryInput
     <$> areq textField titleSetting (inputTitle <$> mEntryInput)
-    <*> areq (selectFieldList inputFormats) "Content" (inputFormat <$> mEntryInput)
+    <*> areq (selectFieldList inputFormats) formatSettings (inputFormat <$> mEntryInput)
     <*> aopt textareaField preambleSettings (inputPreamble <$> mEntryInput)
     <*> aopt textareaField editorSettings (inputBody <$> mEntryInput)
     <*> aopt textareaField citationSettings (inputCitation <$> mEntryInput) where  
-        inputFormats = [("Markdown", Format "md"), ("LaTeX", Format "tex")]::[(Text, Format)] 
+        inputFormats = [(MsgMarkdown, Format "md"), (MsgLaTeX, Format "tex")]
+        formatSettings =  FieldSettings
+            { fsLabel = SomeMessage MsgBody
+            , fsTooltip = Nothing
+            , fsId = Nothing
+            , fsName = Just "format"
+            , fsAttrs =[("class", "input-sm form-control format-selector")]}
         editorSettings = FieldSettings
             { fsLabel = ""
             , fsTooltip = Nothing
@@ -74,7 +80,7 @@ entryInputForm mEntryInput=renderBootstrap3 BootstrapBasicForm $ EntryInput
             , fsName = Just "citation"
             , fsAttrs =[("class", "hidden")]}
         titleSetting=FieldSettings 
-            { fsLabel = "Title"
+            { fsLabel = SomeMessage MsgTitle
             , fsTooltip = Nothing
             , fsId = Nothing
             , fsName = Just "title"
@@ -119,9 +125,21 @@ getNewUserEntryR =  do
         [whamlet|
 <form  method=post enctype=#{inputEnctype}>
     ^{inputWidget}
-    <button .btn .btn-primary type=submit name=action value=publish>_{MsgPublishPost}
-    <button .btn .btn-default type=submit name=action value=draft>_{MsgSaveDraft}
+    <button .btn .btn-primary .publish type=submit name=action value=publish>_{MsgPublishPost}
+    <button .btn .btn-default .draft type=submit name=action value=draft>_{MsgSaveDraft}
         |]
+        toWidget        
+            [julius|
+                $(document).ready(function(){
+                    $('.btn.publish, .btn.draft').click(function(){
+                        var title= $("input[name='title']").val();
+                        if(title.length>256){
+                            alert("Title is too long. Please make it shorter.");
+                            return false;
+                        }
+                    });
+                });
+            |]
         markItUpWidget format (Format "html")
 
 
@@ -152,8 +170,8 @@ getEditUserEntryR entryId = do
         [whamlet|
 <form  method=post enctype=#{inputEnctype}>
     ^{inputWidget}
-    <button .btn .btn-primary type=submit name=action value=publish>_{MsgPublishPost}
-    <button .btn .btn-default type=submit name=action value=draft>_{MsgSaveDraft}
+    <button .btn .btn-primary .publish type=submit name=action value=publish>_{MsgPublishPost}
+    <button .btn .btn-default .draft type=submit name=action value=draft>_{MsgSaveDraft}
     <button .btn .btn-default .delete type=submit name=action value=delete>_{MsgDelete}
         |]
             
@@ -164,6 +182,13 @@ getEditUserEntryR entryId = do
                         if(!confirm("You are about to delete your entry! Are you really sure?")){
                             return false;
                         };
+                    });
+                    $('.btn.publish, .btn.draft').click(function(){
+                        var title= $("input[name='title']").val();
+                        if(title.length>256){
+                            alert("Title is too long. Please make it shorter.");
+                            return false;
+                        }
                     });
                 });
             |]
@@ -208,7 +233,7 @@ postNewUserEntryR = do
                                 Nothing -> []
                             entryUrl= urlRenderParams (UserEntryR userId entryId) []
                         sendAppEmail (userSubscriptionEmail subscription) $ userSubscriptionNotification unsubscribeUrl entryUrl (inputTitle formData) user
-                    setMessage $ [hamlet|Your blog post, <a class=alert-link href=@{UserEntryR userId entryId}>#{inputTitle formData}</a>, has been published. <a class='view alert-link' href=@{UserEntryR userId entryId}>View</a>|] urlRenderParams
+                    setMessage $ [hamlet|Your post, <a class=alert-link href=@{UserEntryR userId entryId}>#{inputTitle formData}</a>, has been published. <a class='view alert-link' href=@{UserEntryR userId entryId}>View</a>|] urlRenderParams
                     redirect $ EditUserEntryR entryId
                 _-> do 
                     entryId<-runDB $ do
@@ -228,7 +253,7 @@ postNewUserEntryR = do
                             }
                         insertDefaultEntrySubscription entryId
                         return entryId
-                    setMessage $ [hamlet|Your blog post, <a class=alert-link href=@{UserEntryR userId entryId}>#{inputTitle formData}</a>, has been saved. <a class='view alert-link' href=@{UserEntryR userId entryId}>View</a>|] urlRenderParams
+                    setMessage $ [hamlet|Your post, <a class=alert-link href=@{UserEntryR userId entryId}>#{inputTitle formData}</a>, has been saved. <a class='view alert-link' href=@{UserEntryR userId entryId}>View</a>|] urlRenderParams
                     redirect $ EditUserEntryR entryId
         FormMissing -> do
             setMessageI MsgFormMissing
@@ -254,7 +279,7 @@ postEditUserEntryR  entryId = do
             case entryAction of
                 Just "delete"->  do
                     runDB $ deleteEntryRecursive entryId
-                    setMessage $ [shamlet|Your blog post, #{inputTitle formData}, has been deleted.|] --getUrlRenderParams
+                    setMessage $ [shamlet|Your post, #{inputTitle formData}, has been deleted.|] --getUrlRenderParams
                     redirect $ NewUserEntryR
                 Just "publish"-> do
                     entry<-runDB $ get404 entryId
@@ -277,7 +302,7 @@ postEditUserEntryR  entryId = do
                         ,EntryTitleHtml=.titleHtml
                         ,EntryBodyHtml=.bodyHtml
                         ] 
-                    setMessage $ [hamlet|Your blog post, <a class=alert-link href=@{UserEntryR userId entryId}>#{inputTitle formData}</a>, has been published. <a class='view alert-link' href=@{UserEntryR userId entryId}>View</a>|] urlRenderParams --Message can't be too long, use title text instead of titleHtml
+                    setMessage $ [hamlet|Your post, <a class=alert-link href=@{UserEntryR userId entryId}>#{inputTitle formData}</a>, has been published. <a class='view alert-link' href=@{UserEntryR userId entryId}>View</a>|] urlRenderParams --Message can't be too long, use title text instead of titleHtml
                     redirect $ EditUserEntryR entryId
                 _-> do 
                     
@@ -298,7 +323,7 @@ postEditUserEntryR  entryId = do
                             ,EntryBodyHtml=.bodyHtml
                             ] 
                         
-                    setMessage $ [hamlet|Your blog post, <a class=alert-link href=@{UserEntryR userId entryId}>#{inputTitle formData}</a>, has been saved. <a class='view alert-link' href=@{UserEntryR userId entryId}>View</a>|] urlRenderParams
+                    setMessage $ [hamlet|Your post, <a class=alert-link href=@{UserEntryR userId entryId}>#{inputTitle formData}</a>, has been saved. <a class='view alert-link' href=@{UserEntryR userId entryId}>View</a>|] urlRenderParams
                     redirect $ EditUserEntryR entryId
         FormMissing -> do          
             setMessageI MsgFormMissing
