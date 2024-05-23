@@ -18,7 +18,7 @@ searchForm = renderBootstrap3 BootstrapBasicForm $ areq (searchField False) sear
         fsTooltip = Nothing,
         fsId = Nothing,
         fsName = Just "keyword",
-        fsAttrs = [("class","form-control"),("placeholder","Search")]
+        fsAttrs = [("class","form-control"),("placeholder","Search...")]
     }
 
 getUserEntriesR :: UserId -> Handler Html

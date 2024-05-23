@@ -86,7 +86,7 @@
     margin:auto;
 }
 .entry-content .entry-content-wrapper, .markItUpFooter .entry-content-wrapper{
-    width:14.2cm;
+    width:13.8cm;
     margin:auto;
     color:black;
 }
@@ -113,9 +113,7 @@ div.mark{
     float: left;
 }
 .proof-like>*:last-child::after{ 
-    content: "";
-    border: 1px solid black;
-    padding: 0.3em;
+    content: "\25FB";
     float: right;
 }
 blockquote{

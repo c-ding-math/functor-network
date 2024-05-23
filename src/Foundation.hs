@@ -198,7 +198,7 @@ instance Yesod App where
                             , menuItemAccessCallback = True
                             }
                         , FooterRight $ MenuItem
-                            { menuItemLabel = "Version 2024-05-01"
+                            { menuItemLabel = "Version 2024-05-25"
                             , menuItemRoute = PageR "Changelog"
                             , menuItemAccessCallback = True
                             }
@@ -275,7 +275,10 @@ instance Yesod App where
         -- you to use normal widget features in default-layout.
 
         pc <- widgetToPageContent $ do
+            --addStylesheetRemote "https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css"
+            --addStylesheetRemote "https://fonts.googleapis.com/css?family=Lato:400,700,400italic"
             addStylesheet $ StaticR css_bootstrap_min_css
+            addStylesheet $ StaticR css_theme_css
             addStylesheet $ StaticR css_entry_css
                                     -- ^ generated from @Settings/StaticFiles.hs@
             $(widgetFile "default-layout")

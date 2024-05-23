@@ -30,7 +30,7 @@ postParserR inputFormat outputFormat = do
     subdirectoriesNumber<-liftIO $ countActiveSubdirectories $ takeDirectory userDir
     if subdirectoriesNumber > 0 then do
         let busyMessage::Text
-            busyMessage= "busy..."
+            busyMessage= "<span class='loading'>Busy</span>"
         return $ RepPlain $ toContent $ busyMessage
     else do  
         let parser = case (inputFormat,outputFormat) of
