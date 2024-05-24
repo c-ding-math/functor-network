@@ -174,13 +174,6 @@ td {
     padding: 0.125em 0.5em 0.25em 0.5em;
 }
 
-/* alert */
-.alert a{
-    color:white;
-}
-.alert a.view{
-    float:right;text-decoration: underline;
-}
 /* dialog */
 .ui-dialog{
     min-width:10cm;
