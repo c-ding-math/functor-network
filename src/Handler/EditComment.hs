@@ -23,18 +23,26 @@ deleteEditCommentR commentId = runDB $ do
         _ -> permissionDeniedI MsgPermissionDenied
 
 data CommentInput=CommentInput
-    {inputFormat::Format
-    ,preamble::Maybe Textarea
-    ,body::Maybe Textarea
+    {preamble::Maybe Textarea
+    ,inputFormat::Format
+    ,body::Textarea
     ,citation::Maybe Textarea
-    } 
+    }
+
 newCommentForm :: Maybe CommentInput -> Form CommentInput
 newCommentForm mCommentData =  renderBootstrap3 BootstrapBasicForm $ CommentInput
-    <$> areq (selectFieldList inputFormats) "Comment" (inputFormat <$> mCommentData)
-    <*> aopt textareaField preambleSettings (preamble <$> mCommentData)
-    <*> aopt textareaField editorSettings (body <$> mCommentData)
+    <$> aopt textareaField preambleSettings (preamble <$> mCommentData)
+    <*> areq (selectFieldList inputFormats) formatSettings (inputFormat <$> mCommentData)
+    <*> areq textareaField editorSettings (body <$> mCommentData)
     <*> aopt textareaField citationSettings (citation <$> mCommentData)
-    where   inputFormats = [("Markdown", Format "md"), ("LaTeX", Format "tex")]::[(Text, Format)] 
+    where   
+            inputFormats = [(MsgMarkdown, Format "md"), (MsgLaTeX, Format "tex")]
+            formatSettings =  FieldSettings
+                { fsLabel = SomeMessage MsgComment
+                , fsTooltip = Nothing
+                , fsId = Nothing
+                , fsName = Just "format"
+                , fsAttrs =[("class", "input-sm form-control format-selector")]}
             editorSettings = FieldSettings
                 { fsLabel = ""
                 , fsTooltip = Nothing
@@ -58,7 +66,7 @@ newCommentForm mCommentData =  renderBootstrap3 BootstrapBasicForm $ CommentInpu
                 , fsId = Nothing
                 , fsName = Just "citation"
                 , fsAttrs =[("class", "hidden")]             
-                }       
+                }
 
 postEditCommentR :: EntryId -> Handler ()
 postEditCommentR entryId = do
@@ -77,10 +85,10 @@ postEditCommentR entryId = do
     case res of
         FormSuccess newCommentFormData -> do
             let editorData=EditorData{
-                editorPreamble=preamble newCommentFormData
-                ,editorContent=body newCommentFormData
-                ,editorCitation=citation newCommentFormData
-            }
+                    editorPreamble=preamble newCommentFormData
+                    ,editorContent=Just $ body newCommentFormData
+                    ,editorCitation=citation newCommentFormData
+                }
             currentTime <- liftIO getCurrentTime
             let parser=  case inputFormat newCommentFormData of
                         Format "tex" -> texToHtml
@@ -96,7 +104,7 @@ postEditCommentR entryId = do
                         ,entryTitle=title
                         ,entryTitleHtml=title
                         ,entryPreamble=(preamble newCommentFormData)
-                        ,entryBody=body newCommentFormData
+                        ,entryBody=Just $ body newCommentFormData
                         ,entryBodyHtml=bodyHtml
                         ,entryCitation=citation newCommentFormData
                         ,entryInserted=currentTime
@@ -121,7 +129,10 @@ postEditCommentR entryId = do
                 sendAppEmail (entrySubscriptionEmail subscription) $ entrySubscriptionNotification unsubscribeUrl entryUrl commentData
                         
 
-            setMessage $ [hamlet|<a href=#entry-#{toPathPiece commentId}>Your comment</a> has been published. <a class='view alert-link' href=#entry-#{toPathPiece commentId}>View</a>|] urlRenderParams
+            setMessage $ [hamlet|
+                            Your comment has been published. #
+                            <a .alert-link.pull-right href=#entry-#{toPathPiece commentId}>View
+                         |] urlRenderParams
             redirect $ UserEntryR rootEntryAuthorId rootEntryId :#: ("entry-" <> toPathPiece commentId)
 
         FormMissing -> do

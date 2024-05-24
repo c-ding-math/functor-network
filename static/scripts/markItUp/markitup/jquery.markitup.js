@@ -560,6 +560,10 @@
 						data: parsedData,
 						contentType:"application/json; charset=utf-8",
 						//data: options.previewParserVar+'='+encodeURIComponent(parsedData),
+						beforeSend: function() {
+							$(options.previewInElement).remove('.markItUpPreviewLoading');
+							$(options.previewInElement).append('<span class="markItUpPreviewLoading loading"></span>');
+						},
 						success: function(data) {
 							writeInPreview( localize(data, 1) ); 
 						}

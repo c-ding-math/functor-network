@@ -58,10 +58,11 @@ View: View
 Save: Save
 Update: Update
 Reset: Reset
+Title: Title
+Body: Body
 PublishPost: Publish post
 SaveDraft: Save draft
 ChangeSaved: Changes Saved
-UpdateSite: Update site
 
 File: File
 FileTooLarge maxSize@Int: The file is too large. The maximum file size is #{show maxSize} MB.
@@ -92,6 +93,8 @@ EmailDeleted: Email deleted
 InputFormat: Which format do you want to write you post in?
 OutputFormat: Which format do you want to publish your post in?
 Format: format
+LaTeX: LaTeX
+Markdown: Markdown
 Post: Post
 Posts: Posts
 LatestPosts: Latest posts
@@ -150,7 +153,7 @@ VerificationEmailSent email@Text: A verification email has been sent to #{email}
 Feedback: Feedback
 FeedbackSentDescription: Your feedback has been sent. Thank you!
 Send: Send
-SendAFeedback: Send a feedback
+SendFeedback: Send feedback
 
 Search: Search
 SearchReultsFor query@Text: Search results for "#{query}"

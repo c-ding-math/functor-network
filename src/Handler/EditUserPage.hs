@@ -111,7 +111,12 @@ postEditUserPageR title = do
                                         , entryBodyHtml=bodyHtml
                                         }
 
-                                setMessage $ [hamlet|<a .alert-link href=@{UserPageR userId title}>Your profile page</a> has been updated. <a class='view alert-link' href=@{UserPageR userId title}>View</a>|] urlRenderParams
+                                setMessage $ [hamlet|
+                                                Your page, #
+                                                <a .alert-link href=@{UserPageR userId title}>#{title}
+                                                , has been updated. #
+                                                <a .alert-link.pull-right href=@{UserPageR userId title}>View
+                                             |] urlRenderParams
                                    
                                 redirect $ EditUserPageR title
                             Just (Entity entryId _) -> do
@@ -127,7 +132,12 @@ postEditUserPageR title = do
                                     ,EntryBodyHtml=.bodyHtml
                                     ] 
 
-                                setMessage $ [hamlet|<a .alert-link href=@{UserPageR userId title}>Your profile page</a> has been updated. <a class='view alert-link' href=@{UserPageR userId title}>View</a>|] urlRenderParams
+                                setMessage $ [hamlet|
+                                                Your page, #
+                                                <a .alert-link href=@{UserPageR userId title}>#{title}
+                                                , has been updated. #
+                                                <a .alert-link.pull-right href=@{UserPageR userId title}>View
+                                             |] urlRenderParams
                                 
                                 redirect $ EditUserPageR title
 
@@ -148,7 +158,12 @@ postEditUserPageR title = do
                                             , entryBodyHtml=bodyHtml
                                             }
 
-                                    setMessage $ [hamlet|Your page, <a .alert-link href=@{UserPageR userId title}>#{title}</a>, has been saved. <a class='view alert-link' href=@{UserPageR userId title}>View</a>|] urlRenderParams
+                                    setMessage $ [hamlet|
+                                                    Your page, #
+                                                    <a .alert-link href=@{UserPageR userId title}>#{title}
+                                                    , has been saved. #
+                                                    <a .alert-link.pull-right href=@{UserPageR userId title}>View
+                                                 |] urlRenderParams
                                     
                                     redirect $ EditUserPageR title
 
@@ -165,7 +180,12 @@ postEditUserPageR title = do
                                         ,EntryBodyHtml=.bodyHtml
                                         ] 
 
-                                    setMessage $ [hamlet|Your page, <a .alert-link href=@{UserPageR userId title}>#{title}</a>, has been saved. <a class='view alert-link' href=@{UserPageR userId title}>View</a>|] urlRenderParams
+                                    setMessage $ [hamlet|
+                                                    Your page, #
+                                                    <a .alert-link href=@{UserPageR userId title}>#{title}
+                                                    , has been saved. #
+                                                    <a .alert-link.pull-right href=@{UserPageR userId title}>View
+                                                 |] urlRenderParams
                                     
                                     redirect $ EditUserPageR title
 

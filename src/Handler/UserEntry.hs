@@ -4,10 +4,10 @@
 module Handler.UserEntry where
 
 import Import
-import Yesod.Form.Bootstrap3
+--import Yesod.Form.Bootstrap3
 import Handler.Parser(markItUpWidget)
 import Parse.Parser(scaleHeader)
-import Handler.EditComment(getChildIds)
+import Handler.EditComment(getChildIds,newCommentForm,CommentInput(..))
 import Handler.NewEntrySubscription(subscribeToEntryWidget)
 import Data.Text(strip)
 
@@ -82,7 +82,7 @@ getUserEntryR authorId entryId = do
             <a href=#comment data-action=@{EditCommentR entryId}>comment
         <!--<li .print><a href=#>print</a>-->
         <li .subscribe>
-            <a href=@{NewEntrySubscriptionR entryId}>_{MsgFollow}     
+            <a href=# data-action=@{NewEntrySubscriptionR entryId}>_{MsgFollow}     
         $if isAdministrator maybeUserId entry
             <li .edit><a href=@{EditUserEntryR entryId}>edit</a>
 
@@ -115,7 +115,7 @@ getUserEntryR authorId entryId = do
                   <li .reply>
                     <a href=#comment data-action=@{EditCommentR commentId}>reply
                   <li .subscribe>
-                    <a href=@{NewEntrySubscriptionR commentId}>_{MsgFollow}
+                    <a href=# data-action=@{NewEntrySubscriptionR commentId}>_{MsgFollow}
                   $if isAdministrator maybeUserId entry || isAdministrator maybeUserId comment
                       <li .delete>
                         <a href=@{EditCommentR commentId}>_{MsgDelete}
@@ -131,7 +131,7 @@ getUserEntryR authorId entryId = do
         $nothing
             <h3 #comment>_{MsgNewComment}
             <p>
-                You must <a href=@{AuthR LoginR}>login</a> to add a comment.
+                You must <a href=@{AuthR LoginR}>log in</a> to post a comment.
                 
         |]
         markItUpWidget format (Format "html")
@@ -199,44 +199,6 @@ menuWidget=do
         });    
     |]
 
-data CommentInput=CommentInput
-    {preamble::Maybe Textarea
-    ,inputFormat::Format
-    ,body::Textarea
-    ,citation::Maybe Textarea
-    }
-
-newCommentForm :: Maybe CommentInput -> Form CommentInput
-newCommentForm mCommentData =  renderBootstrap3 BootstrapBasicForm $ CommentInput
-    <$> aopt textareaField preambleSettings (preamble <$> mCommentData)
-    <*> areq (selectFieldList inputFormats) "Comment" (inputFormat <$> mCommentData)
-    <*> areq textareaField editorSettings (body <$> mCommentData)
-    <*> aopt textareaField citationSettings (citation <$> mCommentData)
-    where   inputFormats = [("Markdown", Format "md"), ("LaTeX", Format "tex")]::[(Text, Format)] 
-            editorSettings = FieldSettings
-                { fsLabel = ""
-                , fsTooltip = Nothing
-                , fsId = Nothing
-                , fsName = Just "content"
-                , fsAttrs =
-                    [ ("class", "editor form-control")
-                    , ("placeholder", "")
-                    ]
-                }
-            preambleSettings = FieldSettings
-                { fsLabel = ""
-                , fsTooltip = Nothing
-                , fsId = Nothing
-                , fsName = Just "preamble"
-                , fsAttrs =[("class", "hidden")]
-                }
-            citationSettings = FieldSettings
-                { fsLabel = ""
-                , fsTooltip = Nothing
-                , fsId = Nothing
-                , fsName = Just "citation"
-                , fsAttrs =[("class", "hidden")]             
-                }
 
 formatDateStr :: UTCTime -> String
 formatDateStr t = formatTime defaultTimeLocale "%e %b %Y" t

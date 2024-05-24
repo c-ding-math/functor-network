@@ -64,7 +64,7 @@ getFilesR = do
         <div>
             <form method=post enctype=#{uploadEnctype}>
                 ^{uploadWidget}
-                <input .btn type=submit value=Upload>                    
+                <input .btn.btn-default type=submit value=Upload>                    
 |]
   where  
     addWidget :: Widget

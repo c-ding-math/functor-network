@@ -145,7 +145,7 @@ $(document).ready(function(){
     $(".subscribe a").click(function(e){
         e.preventDefault();
 		var prompt = $("#subscribe-form");
-        prompt.attr("action", $(this).attr("href"));
+        prompt.attr("action", $(this).data("action"));
 
 		prompt.dialog({
 			modal: true,

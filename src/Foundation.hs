@@ -198,7 +198,7 @@ instance Yesod App where
                             , menuItemAccessCallback = True
                             }
                         , FooterRight $ MenuItem
-                            { menuItemLabel = "Version 2024-05-01"
+                            { menuItemLabel = "Version 2024-05-25"
                             , menuItemRoute = PageR "Changelog"
                             , menuItemAccessCallback = True
                             }
@@ -275,7 +275,10 @@ instance Yesod App where
         -- you to use normal widget features in default-layout.
 
         pc <- widgetToPageContent $ do
+            --addStylesheetRemote "https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css"
+            --addStylesheetRemote "https://fonts.googleapis.com/css?family=Lato:400,700,400italic"
             addStylesheet $ StaticR css_bootstrap_min_css
+            addStylesheet $ StaticR css_theme_css
             addStylesheet $ StaticR css_entry_css
                                     -- ^ generated from @Settings/StaticFiles.hs@
             $(widgetFile "default-layout")
@@ -441,8 +444,8 @@ instance YesodAuth App where
             Just uid -> do
                 urlRenderParam <- getUrlRenderParams
                 addMessage "success" $ [hamlet|
-                    You are now logged in.
-                    <a .view.alert-link href=@{UserHomeR uid}>Home
+                    You are now logged in. #
+                    <a .alert-link.pull-right href=@{UserHomeR uid}>Home
                 |] urlRenderParam 
             _ -> addMessage "success" "You are now logged in."
 
@@ -933,7 +936,7 @@ instance YesodAuthEmail App where
                 <ul>
                     <li> Wait a minute.
                     <li> Make sure you typed your email address correctly.
-                    <li> With your email provider, add our domain <code>functor.network</code> to your whitelist and try again.
+                    <li> Add our notification email <code>noreply@functor.network</code> to your whitelist with your provider and try again.
                     <li> Send an email to <a href="mailto:feedback@functor.network">feedback@functor.network</a> and we will help you out.
               |]
       where
