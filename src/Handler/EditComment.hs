@@ -129,7 +129,10 @@ postEditCommentR entryId = do
                 sendAppEmail (entrySubscriptionEmail subscription) $ entrySubscriptionNotification unsubscribeUrl entryUrl commentData
                         
 
-            setMessage $ [hamlet|<a href=#entry-#{toPathPiece commentId}>Your comment</a> has been published. <a class='view alert-link' href=#entry-#{toPathPiece commentId}>View</a>|] urlRenderParams
+            setMessage $ [hamlet|
+                            Your comment has been published. #
+                            <a .alert-link.pull-right href=#entry-#{toPathPiece commentId}>View
+                         |] urlRenderParams
             redirect $ UserEntryR rootEntryAuthorId rootEntryId :#: ("entry-" <> toPathPiece commentId)
 
         FormMissing -> do

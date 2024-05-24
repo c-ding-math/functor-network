@@ -233,7 +233,12 @@ postNewUserEntryR = do
                                 Nothing -> []
                             entryUrl= urlRenderParams (UserEntryR userId entryId) []
                         sendAppEmail (userSubscriptionEmail subscription) $ userSubscriptionNotification unsubscribeUrl entryUrl (inputTitle formData) user
-                    setMessage $ [hamlet|Your post, <a class=alert-link href=@{UserEntryR userId entryId}>#{inputTitle formData}</a>, has been published. <a class='view alert-link' href=@{UserEntryR userId entryId}>View</a>|] urlRenderParams
+                    setMessage $ [hamlet|
+                                    Your post, #
+                                    <a .alert-link href=@{UserEntryR userId entryId}>#{inputTitle formData}
+                                    , has been published. #
+                                    <a .alert-link.pull-right href=@{UserEntryR userId entryId}>View
+                                 |] urlRenderParams
                     redirect $ EditUserEntryR entryId
                 _-> do 
                     entryId<-runDB $ do
@@ -253,7 +258,12 @@ postNewUserEntryR = do
                             }
                         insertDefaultEntrySubscription entryId
                         return entryId
-                    setMessage $ [hamlet|Your post, <a class=alert-link href=@{UserEntryR userId entryId}>#{inputTitle formData}</a>, has been saved. <a class='view alert-link' href=@{UserEntryR userId entryId}>View</a>|] urlRenderParams
+                    setMessage $ [hamlet|
+                                    Your post, #
+                                    <a .alert-link href=@{UserEntryR userId entryId}>#{inputTitle formData}
+                                    , has been saved. #
+                                    <a .alert-link.pull-right href=@{UserEntryR userId entryId}>View
+                                 |] urlRenderParams
                     redirect $ EditUserEntryR entryId
         FormMissing -> do
             setMessageI MsgFormMissing
@@ -302,7 +312,12 @@ postEditUserEntryR  entryId = do
                         ,EntryTitleHtml=.titleHtml
                         ,EntryBodyHtml=.bodyHtml
                         ] 
-                    setMessage $ [hamlet|Your post, <a class=alert-link href=@{UserEntryR userId entryId}>#{inputTitle formData}</a>, has been published. <a class='view alert-link' href=@{UserEntryR userId entryId}>View</a>|] urlRenderParams --Message can't be too long, use title text instead of titleHtml
+                    setMessage $ [hamlet|
+                                    Your post, #
+                                    <a .alert-link href=@{UserEntryR userId entryId}>#{inputTitle formData}
+                                    , has been published. #
+                                    <a .alert-link.pull-right href=@{UserEntryR userId entryId}>View
+                                 |] urlRenderParams --Message can't be too long, use title text instead of titleHtml
                     redirect $ EditUserEntryR entryId
                 _-> do 
                     
@@ -323,7 +338,12 @@ postEditUserEntryR  entryId = do
                             ,EntryBodyHtml=.bodyHtml
                             ] 
                         
-                    setMessage $ [hamlet|Your post, <a class=alert-link href=@{UserEntryR userId entryId}>#{inputTitle formData}</a>, has been saved. <a class='view alert-link' href=@{UserEntryR userId entryId}>View</a>|] urlRenderParams
+                    setMessage $ [hamlet|
+                                    Your post, #
+                                    <a .alert-link href=@{UserEntryR userId entryId}>#{inputTitle formData}
+                                    , has been saved. #
+                                    <a .alert-link.pull-right href=@{UserEntryR userId entryId}>View
+                                 |] urlRenderParams
                     redirect $ EditUserEntryR entryId
         FormMissing -> do          
             setMessageI MsgFormMissing

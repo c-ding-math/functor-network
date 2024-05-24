@@ -133,7 +133,12 @@ postEditPageR title = do
                             ,entryBodyHtml=bodyHtml
                             }
 
-                        setMessage $ [hamlet|Your page, <a .alert-link href=@{PageR title}>#{title}</a>, has been updated. <a .alert-link class=view href=@{PageR title}>View</a>|] urlRenderParams
+                        setMessage $ [hamlet|
+                                        Your page, #
+                                        <a .alert-link href=@{PageR title}>#{title}
+                                        , has been updated. #
+                                        <a .alert-link.pull-right href=@{PageR title}>View
+                                     |] urlRenderParams
                            
                         redirect $ EditPageR title
                     Just (Entity entryId _) -> do
@@ -147,7 +152,12 @@ postEditPageR title = do
                             ,EntryUpdated=.currentTime
                             ,EntryBodyHtml=.bodyHtml
                             ]
-                        setMessage $ [hamlet|Your page, <a .alert-link href=@{PageR title}>#{title}</a>, has been updated. <a .alert-link class=view href=@{PageR title}>View</a>|] urlRenderParams
+                        setMessage $ [hamlet|
+                                        Your page, #
+                                        <a .alert-link href=@{PageR title}>#{title}
+                                        , has been updated. #
+                                        <a .alert-link.pull-right href=@{PageR title}>View
+                                     |] urlRenderParams
                         
                         redirect $ EditPageR title
 
@@ -168,7 +178,12 @@ postEditPageR title = do
                                 ,entryBodyHtml=bodyHtml
                                 }
 
-                            setMessage $ [hamlet|Your page, <a .alert-link href=@{PageR title}>#{title}</a>, has been saved. <a .alert-link class=view href=@{PageR title}>View</a>|] urlRenderParams
+                            setMessage $ [hamlet|
+                                            Your page, #
+                                            <a .alert-link href=@{PageR title}>#{title}
+                                            , has been saved. #
+                                            <a .alert-link.pull-right href=@{PageR title}>View
+                                         |] urlRenderParams
                             
                             redirect $ EditPageR title
 
@@ -184,7 +199,12 @@ postEditPageR title = do
                                 ,EntryBodyHtml=.bodyHtml
                                 ]
 
-                            setMessage $ [hamlet|Your page, <a .alert-link href=@{PageR title}>#{title}</a>, has been saved. <a .alert-link class=view href=@{PageR title}>View</a>|] urlRenderParams
+                            setMessage $ [hamlet|
+                                            Your page, #
+                                            <a .alert-link href=@{PageR title}>#{title}
+                                            , has been saved. #
+                                            <a .alert-link.pull-right href=@{PageR title}>View
+                                         |] urlRenderParams
                             
                             redirect $ EditPageR title
 
