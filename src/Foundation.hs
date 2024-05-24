@@ -444,8 +444,8 @@ instance YesodAuth App where
             Just uid -> do
                 urlRenderParam <- getUrlRenderParams
                 addMessage "success" $ [hamlet|
-                    You are now logged in.
-                    <a .view.alert-link href=@{UserHomeR uid}>Home
+                    You are now logged in. #
+                    <a .alert-link.pull-right href=@{UserHomeR uid}>Home
                 |] urlRenderParam 
             _ -> addMessage "success" "You are now logged in."
 
