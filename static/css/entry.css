@@ -81,7 +81,7 @@
 }
 .wrap {
     width: 100%;
-    min-width: 14.3cm;
+    min-width: 13.9cm;
     max-width:22cm;
     margin:auto;
 }
@@ -125,6 +125,7 @@ div.csl-bib-body {
     margin-bottom: 10.5px;
 }
 div.csl-entry {
+    margin-bottom: 0.5em;
     clear: both;
 }
 .hanging-indent div.csl-entry {

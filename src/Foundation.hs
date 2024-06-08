@@ -220,7 +220,7 @@ instance Yesod App where
                             , menuItemAccessCallback = True
                             }
                         , FooterRight $ MenuItem
-                            { menuItemLabel = "Functor Network"
+                            { menuItemLabel = "Network"
                             , menuItemRoute = HomeR
                             , menuItemAccessCallback = True
                             }

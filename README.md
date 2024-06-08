@@ -6,26 +6,27 @@ This is the source code for the [Functor Network](https://functor.network) - a b
 
 In one word, all features are meticulously crafted for mathematicians.
 
-- **Effortless Typesetting**: Save valuable time and energy by leaving the laborious task of typesetting math content to us. Focus solely on your content creation while we handle the formatting seamlessly.
+- **Effortless Typesetting:** Typesetting math on the web can be exhausting and time-consuming. However, on our platform, you can focus on your content creation and leave the typesetting to us.
 
-- **Dual LaTeX and Markdown Support**: Latex is great for math content, while markdown is great for web content. Our platform offers dual support for both, granting you the flexibility to choose the format that suits your workflow best.
+- **Actual TeX Engine:** We use a real TeX engine to render your math content. This means that you are able to include LaTeX packages, use math environments, or even copy and paste your existing LaTeX document into our platform.
 
-- **Automated Numbering and Referencing**: Dive into mathematical discourse without the hassle of manual numbering and referencing. Our platform automates this process, streamlining your equations and theorems.
+- **Markdown Support:** In addition to LaTeX, our platform also supports Markdown, which is a convenient format for web content. Moreover, features like cross-referencing, bibliography and theorem environments have been implemented.
 
-- **Streamlined Bibliography**: Citing relevant works in your document is made effortless with our built-in bibliography support. Elevate the credibility of your content with proper references.
+- **Minimalist spirit:** Only necessary functions and features are included in our platform. This allows you to express yourself as freely as possible.
 
-- **Latex Package Support**: Unlock a world of possibilities with our extensive LaTeX package support. Enhance your documents with a diverse range of LaTeX packages.
 
-- **Custom LaTeX Commands**: Our platform allows you to implement your own custom LaTeX commands, simplifying your writing process.
+## Comparison
 
-- **Clean and Focused Design**: Our platform boasts a clean and focused design, enabling you to concentrate wholly on your content without distractions.
-
-- **Essential Functionality Only**: We have designed our platform to include only the most necessary features, allowing you to you express yourself as freely as possible.
-
-At Functor Network, we've curated a suite of features designed to elevate your mathematical expression. Join us in a seamless journey of content creation and exploration.
-
-## Contribution and acknowledgment
-
-You are welcome to join us in making the project better. Feedback and suggestions are highly appreciated. You can contact us via email [feedback@functor.network](mailto:feedback@functor.network).
-
-Our platform is built using [Haskell](https://www.haskell.org), [Yesod](https://www.yesodweb.com/), [Pandoc](https://pandoc.org), and [TeX Live](https://tug.org/texlive/). We would like to express our gratitude to the developers of these projects for their outstanding work.
+|           | Our platform  | Other platform |
+|-----------|---------------|----------------|
+| writing post directly in latex | supports | doesn't support |
+| math-featured markdown | supports | maybe supports, but has limited features on math |
+| math formula rendering | has built-in support | doesn't support or needs add-ons to support |
+| keep latex code unchanged | yes | may eat backslashes, encode `<`, `&` and other math symbols |
+| latex packages | supports. You can use different latex packages for each post separately | doesn't support |
+| automated numbering and referencing | supports. You can use `\label{}` and `\ref{}` for this. | doesn't support or partially supports |
+| custom latex commands | supports. You can define your own latex command for each post. | maybe supports |
+| theorem-like environments | supports | doesn't support |
+| bibliography | supports | maybe supports |
+| clean and neat | Yes. Our platform is designed with minimalism in mind. It even looks a bit abstract. | may have many unnecessary functions |
+| editor | provides a plain text editor with a preview window. You can focus more on the content itself rather than its appearance. | provides a WYSIWYG editor. This kind of editor may be annoying when handling math content. |
