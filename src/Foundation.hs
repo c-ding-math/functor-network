@@ -198,7 +198,7 @@ instance Yesod App where
                             , menuItemAccessCallback = True
                             }
                         , FooterRight $ MenuItem
-                            { menuItemLabel = "Version 2024-05-25"
+                            { menuItemLabel = "Version 2024-06-29"
                             , menuItemRoute = PageR "Changelog"
                             , menuItemAccessCallback = True
                             }
@@ -278,8 +278,10 @@ instance Yesod App where
             --addStylesheetRemote "https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css"
             --addStylesheetRemote "https://fonts.googleapis.com/css?family=Lato:400,700,400italic"
             addStylesheet $ StaticR css_bootstrap_min_css
-            addStylesheet $ StaticR css_theme_css
-            addStylesheet $ StaticR css_entry_css
+            addStylesheet $ StaticR css_bootstrap_theme_css
+            addScript $ StaticR js_bootstrap_min_js
+            
+            --addStylesheet $ StaticR css_entry_css
                                     -- ^ generated from @Settings/StaticFiles.hs@
             $(widgetFile "default-layout")
         withUrlRenderer $(hamletFile "templates/default-layout-wrapper.hamlet")
@@ -332,6 +334,7 @@ instance Yesod App where
     isAuthorized (SubscriptionsR x) _ = isAdmin x
 
     -- app administrator routes
+    isAuthorized (EditEntryR _ ) _ = isAppAdministrator
     isAuthorized (EditPageR _ ) _ = isAppAdministrator
     isAuthorized PagesR _ = isAppAdministrator
     isAuthorized MaintenanceR _ = isAppAdministrator
@@ -467,7 +470,9 @@ instance YesodAuth App where
                     Just (Entity _ email) | emailVerified email -> do
                         let muid=emailUserId email
                         case muid of 
-                            Just uid->return $ Authenticated uid
+                            Just uid->do
+                                update uid [UserLogged=.currentTime]
+                                return $ Authenticated uid
                             _ -> return $ UserError Msg.InvalidEmailAddress 
                     _ -> return $ UserError Msg.InvalidEmailAddress
                      
@@ -476,7 +481,9 @@ instance YesodAuth App where
                 case x of 
                     Just (Entity _ login) -> do
                         case loginUserId login of 
-                            Just uid->return $ Authenticated uid
+                            Just uid-> do
+                                update uid [UserLogged=.currentTime]
+                                return $ Authenticated uid
                             _ -> return $ UserError Msg.InvalidLogin
                     Nothing -> do
                         case mCurrentUserId of
@@ -491,7 +498,7 @@ instance YesodAuth App where
                                     ,userPassword=Nothing
                                     --,userIdent=uIdent
                                     ,userInserted=currentTime
-                                    --,userModified=currentTime
+                                    ,userLogged=currentTime
                                     --,userAvatar=Nothing
                                     ,userEmail=Nothing
                                     ,userDefaultFormat=Format "md"
@@ -535,7 +542,14 @@ instance YesodAuth App where
         where 
             googleButtonWidget = [whamlet|
                 <span .btn .btn-default .google-button>
-                    <img src=@{StaticR icons_google_logo_png}>
+                    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" xmlns:xlink="http://www.w3.org/1999/xlink">
+                        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z">
+                        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z">
+                        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z">
+                        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z">
+                        <path fill="none" d="M0 0h48v48H0z"></path>
+                    
+                    <!--<img src=@{StaticR icons_google_logo_png}>-->
                     <span>_{MsgSignInWithGoogle}
             |]
             extraAuthPlugins = [authDummy | appAuthDummyLogin $ appSettings app]
@@ -635,7 +649,7 @@ instance YesodAuthEmail App where
                                 ,userPassword=Nothing
                                 --,userIdent=emailAddress email
                                 ,userInserted=currentTime
-                                --,userModified=currentTime
+                                ,userLogged=currentTime
                                 --,userAvatar=Nothing
                                 ,userEmail=Just $ emailAddress email
                                 ,userDefaultFormat=Format "md"
@@ -822,10 +836,9 @@ instance YesodAuthEmail App where
                     ^{widget}
                     <div>
                         <button .btn.btn-primary type=submit>
-                            _{MsgLogin}
-                        
+                            _{MsgLogIn}  
                         <a .btn.btn-default href="@{toParent registerR}">
-                            _{Msg.RegisterLong}
+                            _{MsgRegisterLong}
                         <a .btn.btn-default href="@{toParent forgotPasswordR}">
                             _{MsgForgotPassword}
                         <div .or>
@@ -890,7 +903,6 @@ instance YesodAuthEmail App where
                 }
                 .login-form-container .or span{
                     padding:0 1em; 
-                    background-color: #f8f9f8;
                 }
                 .login-form-container + a{
                     display:block;
@@ -898,28 +910,20 @@ instance YesodAuthEmail App where
                     margin:0.5em auto;
                     width:20em;
                 }
-                .login-form-container + a:hover{
-                    text-decoration:none;
-                }
                 .google-button{
                     display:flex;
                     align-items: center;
-                    background-color: #fff;
-                    color: #333;            
-                    /*font-family: 'Roboto', sans-serif;*/
-                    border: 1px solid #dce4ec;    
                 }
-                .google-button:hover{
-                    background-color: #fff;
-                }
-                .google-button img{
+                .google-button svg{
                     height: 1.5em;
                 }
                 .google-button span{
                     flex-grow:1;
                     text-align:center;
                 }
-
+                .login-form-container + a:hover{
+                    text-decoration:none;
+                }
                 |]
 
     -- | Response after sending a confirmation email.
@@ -969,26 +973,21 @@ instance YesodAuthEmail App where
             let widget = do
                     [whamlet|
                         #{extra}
-                        <table>
+                        <div>
                             $if needOld
-                                <tr>
-                                    <th>
-                                        ^{fvLabel currentPasswordView}
-                                    <td>
-                                        ^{fvInput currentPasswordView}
-                            <tr>
-                                <th>
-                                    ^{fvLabel newPasswordView}
-                                <td>
-                                    ^{fvInput newPasswordView}
-                            <tr>
-                                <th>
+                                <div .form-group.required>
+                                    <label>
+                                        ^{fvLabel currentPasswordView}      
+                                    ^{fvInput currentPasswordView}
+                            <div .form-group.required>
+                                <label>
+                                    ^{fvLabel newPasswordView}                             
+                                ^{fvInput newPasswordView}
+                            <div .form-group.required>
+                                <label>
                                     ^{fvLabel confirmPasswordView}
-                                <td>
-                                    ^{fvInput confirmPasswordView}
-                            <tr>
-                                <td colspan="2">
-                                    <input .btn .btn-default type=submit value=_{Msg.SetPassTitle}>
+                                ^{fvInput confirmPasswordView}
+                            <input .btn .btn-primary type=submit value=_{Msg.SetPassTitle}>
                     |]
 
             return (passwordFormRes, widget)
@@ -998,7 +997,7 @@ instance YesodAuthEmail App where
                 fsTooltip = Nothing,
                 fsId = Just "currentPassword",
                 fsName = Just "current",
-                fsAttrs = [("autofocus", "")]
+                fsAttrs = [("autofocus", ""),("class","form-control")]
             }
         newPasswordSettings =
             FieldSettings {
@@ -1006,7 +1005,7 @@ instance YesodAuthEmail App where
                 fsTooltip = Nothing,
                 fsId = Just "newPassword",
                 fsName = Just "new",
-                fsAttrs = [("autofocus", ""), (":not", ""), ("needOld:autofocus", "")]
+                fsAttrs = [("autofocus", ""), (":not", ""), ("needOld:autofocus", ""), ("class","form-control")]
             }
         confirmPasswordSettings =
             FieldSettings {
@@ -1014,7 +1013,7 @@ instance YesodAuthEmail App where
                 fsTooltip = Nothing,
                 fsId = Just "confirmPassword",
                 fsName = Just "confirm",
-                fsAttrs = [("autofocus", "")]
+                fsAttrs = [("autofocus", ""), ("class","form-control")]
             }
         loginStyle=toWidget [lucius|
             .login-form-container{
@@ -1029,12 +1028,6 @@ instance YesodAuthEmail App where
             .login-form-container h3{
                 text-align:center;
             }
-            .login-form-container table{
-                width:100%;
-            }    
-            .login-form-container table tbody{
-                border:none;
-            } 
         |]
     
     checkPasswordSecurity :: AuthId site -> Text -> AuthHandler site (Either Text ())
@@ -1081,41 +1074,7 @@ sendAppEmail email appEmail= do
                     }
                         
             return ()
-{-
-sendSystemEmail ::  Yesod.Auth.Email.Email ->Text->Data.Text.Lazy.Text->Html-> Handler ()
-sendSystemEmail email $ AppEmail subject text html= do
-        master<-getYesod
-        let systemEmailPassword=appEmailPassword $ appSettings master
-            systemEmailHost=appEmailHost $ appSettings master
-            systemEmailUser=appEmailUser $ appSettings master
-            textMailPart = Part
-                { partType = "text/plain; charset=utf-8"
-                , partEncoding = None
-                , partDisposition = DefaultDisposition
-                , partContent = PartContent $ Data.Text.Lazy.Encoding.encodeUtf8 text
-                , partHeaders = []
-                }
-            htmlMailPart = Part
-                { partType = "text/html; charset=utf-8"
-                , partEncoding = None
-                , partDisposition = DefaultDisposition
-                , partContent = PartContent $ renderHtml html
-                , partHeaders = []
-                }
-        --liftIO $ putStrLn $ systemEmailHost ++ systemEmailPassword ++ systemEmailUser
-        liftIO $ do
-            _ <- forkIO $ do
-                
-                Network.Mail.SMTP.sendMailWithLoginTLS (unpack systemEmailHost) (unpack systemEmailUser) (unpack systemEmailPassword) (emptyMail $ Address Nothing systemEmailUser)
-                    { mailTo = [Address Nothing email]
-                    , mailHeaders =
-                        [ ("Subject", subject)
-                        ]
-                    , mailParts = [[textMailPart, htmlMailPart]]
-                    }
-                        
-            return ()
--} 
+
 -- | Access function to determine if a user is logged in.
 isAuthenticated :: Handler AuthResult
 isAuthenticated = do

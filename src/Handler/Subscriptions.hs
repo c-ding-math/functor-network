@@ -73,11 +73,13 @@ getSubscriptions address = do
                         <li>
                             <a href=@{UserHomeR userId}>#{userName user}
                             $maybe key <- userSubscriptionKey subscription
-                                <ul .entry-menu.inline-menu>
+                              <span .menu>  
+                                <ul>
                                     <li>
                                         <a .unsubscribe href=@{EditUserSubscriptionR subscriptionId} data-key=#{key}>_{MsgUnsubscribe}
                             $nothing
-                                <ul .entry-menu.inline-menu>
+                              <span .menu>
+                                <ul>
                                     <li>
                                         <a .unsubscribe href=@{EditUserSubscriptionR subscriptionId} data-key="">_{MsgUnsubscribe}
                     <!--<form .hidden #unsubscribe-form action="" method=post enctype=#{unsubscribeFormEnctype}>
@@ -94,11 +96,13 @@ getSubscriptions address = do
                           
                             <a href=@{UserEntryR (entryUserId entry) entryId}>#{preEscapedToMarkup $ entryTitleHtml entry}
                             $maybe key <- entrySubscriptionKey subscription
-                                <ul .entry-menu.inline-menu>
+                              <span .menu>  
+                                <ul>
                                     <li>
                                         <a .unsubscribe href=@{EditEntrySubscriptionR subscriptionId} data-key=#{key}>_{MsgUnsubscribe}
                             $nothing
-                                <ul .entry-menu.inline-menu>
+                              <span .menu>
+                                <ul>
                                     <li>
                                         <a .unsubscribe href=@{EditEntrySubscriptionR subscriptionId} data-key="">_{MsgUnsubscribe}
             <form .hidden #unsubscribe-form action="" method=post enctype=#{unsubscribeFormEnctype}>
@@ -116,11 +120,13 @@ getSubscriptions address = do
                           
                             <a href=#{url}>#{text}
                             $maybe key <- entrySubscriptionKey subscription
-                                <ul .entry-menu.inline-menu>
+                              <span .menu>
+                                <ul>
                                     <li>
                                         <a .unsubscribe href=@{EditEntrySubscriptionR subscriptionId} data-key=#{key}>_{MsgUnsubscribe}
                             $nothing
-                                <ul .entry-menu.inline-menu>
+                              <span .menu>
+                                <ul>
                                     <li>
                                         <a .unsubscribe href=@{EditEntrySubscriptionR subscriptionId} data-key="">_{MsgUnsubscribe}
             <form .hidden #unsubscribe-form action="" method=post enctype=#{unsubscribeFormEnctype}>

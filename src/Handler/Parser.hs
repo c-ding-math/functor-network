@@ -85,6 +85,7 @@ $(document).ready(function(){
 
     //wrap textarea and preview area in a div
     var parent = textarea.closest('.markItUpContainer');
+    parent.find('.markItUpHeader').addClass('menu');
     var childrenToWrap = parent.children().not(':first-child');
     var wrapperDiv = $('<div>').attr('class', 'markItUpWrapper');
     childrenToWrap.wrapAll(wrapperDiv);  

@@ -9,7 +9,8 @@ import Yesod.Form.Bootstrap3
 
 maintenanceForm :: Form Maintenance
 maintenanceForm = renderBootstrap3 BootstrapBasicForm $ Maintenance
-    <$> lift (liftIO getCurrentTime)
+    <$> lift requireAuthId
+    <*> lift (liftIO getCurrentTime)
     <*> areq intField "Duration (hours)" (Just 12)
 
 getMaintenanceR :: Handler Html

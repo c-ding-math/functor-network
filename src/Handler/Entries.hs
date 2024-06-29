@@ -14,7 +14,8 @@ import Parse.Parser (scaleHeader)
 getEntriesR :: Handler Html
 getEntriesR = do
     entries<-runDB $ selectList [EntryType==.UserPost,EntryStatus==.Publish] [Desc EntryInserted]
-    let entryList = [x | x<-entries, not ("lost proof" `isInfixOf` (entryBodyHtml (entityVal x))), not ("parser-message" `isInfixOf` ((entryBodyHtml (entityVal x))<>(entryTitleHtml (entityVal x))))]
+    let entryList = [x | x<-entries, not (any (`isInfixOf` (entryBodyHtml (entityVal x))) ["lost proof","parser-message","filter-information"])]
+    --let entryList = [x | x<-entries, not ("lost proof" `isInfixOf` (entryBodyHtml (entityVal x))), not ("parser-message" `isInfixOf` ((entryBodyHtml (entityVal x))<>(entryTitleHtml (entityVal x))))]
     mAuthors<-runDB $ do
         mapM (\x-> get $ entryUserId $ entityVal x) entryList 
         

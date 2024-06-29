@@ -136,7 +136,8 @@ getSettingsR = do
                             <ul>
                                 $forall Entity emailId email<-emails
                                     <li>#{emailAddress email}
-                                        <ul .entry-menu.inline-menu>
+                                      <span .menu> 
+                                        <ul>
                                             <li>
                                                 <a href=@{EmailSettingR emailId}>delete
                                             <li>    
@@ -152,7 +153,8 @@ getSettingsR = do
                             <ul>
                                 $forall Entity googleId google<-googles
                                     <li>Google ID. #{drop 11 (loginIdent google)}
-                                        <ul .entry-menu.inline-menu>
+                                      <span .menu>  
+                                        <ul>
                                             <li>
                                                 <a href=@{LoginSettingR googleId}>delete
                                         
@@ -194,7 +196,7 @@ getSettingsR = do
                 <div>
                     <form method=post enctype=#{aboutEnctype}>
                         ^{aboutWidget}
-                        <p .note>You may either use the default about page on our platform or use your own about page somewhere else. In the latter case, please  provide the URL of your page in the blank and paste <code>#{relMeLink (urlRender $ UserHomeR userId) (userName user)}</code> in your page for ownership verification (You may replace <code>#{userName user}</code> with any text you like). 
+                        <p .text-muted>You may either use the default about page on our platform or use your own about page somewhere else. In the latter case, please  provide the URL of your page in the blank and paste <code>#{relMeLink (urlRender $ UserHomeR userId) (userName user)}</code> in your page for ownership verification (You may replace <code>#{userName user}</code> with any text you like). 
 
                         <button .btn .btn-default type=submit name=setting value=about>_{MsgVerifyAndSave}
 
@@ -206,7 +208,8 @@ getSettingsR = do
                 <div>
                     <form .email-form method=post enctype=#{emailEnctype}>
                         ^{emailWidget}        
-                        <p .note>_{MsgNotifyMeViaEmail "noreply@functor.network"}                    
+                        $#<p .text-muted>_{MsgNotifyMeViaEmail "noreply@functor.network"}
+                        <p .text-muted>Follow your new post and comment via the above email by default. To ensure that the notification can reach you, please add <code>noreply@functor.network</code> to the whitelist with your email provider.                  
                         <button .btn .btn-default type=submit name=setting value=email>_{MsgSave}
                     <p>
             <section .editor-setting>    
@@ -245,7 +248,10 @@ getSettingsR = do
         toWidget [lucius|
             section+section{
                 margin-top:2em;
-                border-top:1px solid #dce4ec;
+                border-top:1px solid #ccc;
+            }
+            .menu {
+                margin-left:1.5em;
             }
 
             .name-form,.email-form select,.format-form{

@@ -39,7 +39,8 @@
 /comment/#EntryId/edit EditCommentR POST DELETE !login 
 /user/#UserId/comments CommentsR GET !user
 
-/edit/#Text EditPageR GET POST
+/edit/entry/#EntryId EditEntryR GET POST
+/edit/page/#Text EditPageR GET POST
 /page/#Text/edit EditUserPageR GET POST !user
 /pages PagesR GET
 !/#Text PageR GET

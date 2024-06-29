@@ -43,7 +43,7 @@ getFilesR = do
                     <th>
                         _{MsgUploaded}
                     <th>
-                        _{MsgAction}
+                        _{MsgActions}
                 $forall Entity fileId file <- files
                     <tr>
                         <td>

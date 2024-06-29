@@ -1,16 +1,13 @@
 .ui-dialog{
-    background-color:white;
-    border-radius: 0 0 0 0;
+    background-color:#f5f5f5;
     border:solid 1px #ccc;
     border-radius: 6px;
-    padding:1em;
     z-index: 10001!important;
+    min-width:378px;
 }
 .ui-dialog-titlebar{
     border-bottom: 1px solid #ccc;
-    border-radius: 4px;
-    background-color: #333;
-    color: #fff;
+    margin-bottom: 1em;
 }
 .ui-dialog-title{
     font-weight:bold;

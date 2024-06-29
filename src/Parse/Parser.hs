@@ -80,7 +80,7 @@ texToHtmlSimple title=do
 -- should be replaced. This is a temporary solution
 scaleHeader::Int->Text->Text
 scaleHeader n title|n<=6= do
-    let headerScale=[2.4,2.00,1.6,1.3,1.0,0.7]
+    let headerScale=[2.6,2.15,1.7,1.25,1.0,0.85]
     let temporaryReplacement="IDontBelieveThisStringWillEverOccurInUserInput"
 
     let widthMatches=case scrapeStringLike (unpack title) (attrs "width" $ "svg") of
