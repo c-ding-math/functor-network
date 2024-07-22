@@ -18,7 +18,8 @@ getUsersR = do
     defaultLayout $ do
         setTitleI MsgUsers
         [whamlet|
-<h1>_{MsgActiveUsers}
+<div .page-header>
+    <h1>_{MsgActiveUsers}
 $if null users
     <div>_{MsgNothingFound}
 $else 

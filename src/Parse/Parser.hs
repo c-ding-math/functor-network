@@ -14,12 +14,13 @@ module Parse.Parser (
 
 --import Import
 --import qualified Prelude 
-import Parse.Svg
+--import Parse.Svg
 import System.Process
 import System.Exit
 --import System.Directory
 --import Text.HTML.TagSoup 
 import Text.HTML.Scalpel (scrapeStringLike, attrs, innerHTML)
+import Text.Regex.Posix
 import Text.Regex (mkRegexWithOpts, subRegex)
 import Yesod.Form.Fields 
 import Data.Text
@@ -80,7 +81,8 @@ texToHtmlSimple title=do
 -- should be replaced. This is a temporary solution
 scaleHeader::Int->Text->Text
 scaleHeader n title|n<=6= do
-    let headerScale=[2.6,2.15,1.7,1.25,1.0,0.85]
+    
+    let headerScale= [2.6,2.15,1.7,1.25,1.0,0.85] 
     let temporaryReplacement="IDontBelieveThisStringWillEverOccurInUserInput"
 
     let widthMatches=case scrapeStringLike (unpack title) (attrs "width" $ "svg") of
@@ -93,10 +95,10 @@ scaleHeader n title|n<=6= do
         heights=(Prelude.map stringToDouble heightMatches)
     let modify:: [Double]->[Double]->String->String
         modify (w:ws) (h:hs) str= do
-            let str1=subRegex (mkRegexWithOpts ("(width=\')"++ show w ++"(pt\')") False True) str ("\\1" ++ temporaryReplacement ++ (show (headerScale!!(n-1) * w)) ++ "\\2")
-                str1'=subRegex (mkRegexWithOpts ("(width=\")"++ show w ++"(pt\")") False True) str1 ("\\1" ++ temporaryReplacement ++ (show (headerScale!!(n-1) * w)) ++ "\\2")
-                str2=subRegex (mkRegexWithOpts ("(height=\')"++ show h ++"(pt\')") False True) str1' ("\\1" ++ temporaryReplacement ++ (show (headerScale!!(n-1) * h)) ++ "\\2")
-                str2'=subRegex (mkRegexWithOpts ("(height=\")"++ show h ++"(pt\")") False True) str2 ("\\1" ++ temporaryReplacement ++ (show (headerScale!!(n-1) * h)) ++ "\\2")
+            let str1=subRegex (mkRegexWithOpts ("(width=\')"++ show w ++"(px\')") False True) str ("\\1" ++ temporaryReplacement ++ (show (headerScale!!(n-1) * w)) ++ "\\2")
+                str1'=subRegex (mkRegexWithOpts ("(width=\")"++ show w ++"(px\")") False True) str1 ("\\1" ++ temporaryReplacement ++ (show (headerScale!!(n-1) * w)) ++ "\\2")
+                str2=subRegex (mkRegexWithOpts ("(height=\')"++ show h ++"(px\')") False True) str1' ("\\1" ++ temporaryReplacement ++ (show (headerScale!!(n-1) * h)) ++ "\\2")
+                str2'=subRegex (mkRegexWithOpts ("(height=\")"++ show h ++"(px\")") False True) str2 ("\\1" ++ temporaryReplacement ++ (show (headerScale!!(n-1) * h)) ++ "\\2")
             modify ws hs str2'
         modify _ _ str=str
     pack $ subRegex (mkRegexWithOpts (temporaryReplacement) False True) (modify widths heights $ unpack title) ("")
@@ -125,3 +127,9 @@ removePTag::String->String
 removePTag html = case scrapeStringLike html (innerHTML $ "p") of
     Just x -> x
     Nothing -> html
+
+stringToDouble:: String -> Double
+stringToDouble s = do
+    let doubleString = (s=~("[0-9]*\\.[0-9]*"::String) :: String)
+        doubleString' =  if doubleString!!0 == '.' then "0" ++ doubleString else doubleString
+    read doubleString' :: Double

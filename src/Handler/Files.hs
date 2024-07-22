@@ -33,7 +33,8 @@ getFilesR = do
             File Library
         $if not $ Import.null files
             <table .table>
-                <tr>
+              <thead>
+                <tr .header>
                     <th>
                         _{MsgFile}
                     <!--<th>
@@ -44,6 +45,7 @@ getFilesR = do
                         _{MsgUploaded}
                     <th>
                         _{MsgActions}
+              <tbody>
                 $forall Entity fileId file <- files
                     <tr>
                         <td>
