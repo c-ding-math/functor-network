@@ -93,15 +93,21 @@ scaleHeader n title|n<=6= do
             Just x -> x
             Nothing -> []
         heights=(Prelude.map stringToDouble heightMatches)
-    let modify:: [Double]->[Double]->String->String
-        modify (w:ws) (h:hs) str= do
+        depthMatches=case scrapeStringLike (unpack title) (attrs "style" $ "svg") of
+            Just x -> x
+            Nothing -> []
+        depths=(Prelude.map stringToDouble depthMatches)
+    let modify:: [Double]->[Double]->[Double]->String->String
+        modify (w:ws) (h:hs) (d:ds) str= do
             let str1=subRegex (mkRegexWithOpts ("(width=\')"++ show w ++"(px\')") False True) str ("\\1" ++ temporaryReplacement ++ (show (headerScale!!(n-1) * w)) ++ "\\2")
                 str1'=subRegex (mkRegexWithOpts ("(width=\")"++ show w ++"(px\")") False True) str1 ("\\1" ++ temporaryReplacement ++ (show (headerScale!!(n-1) * w)) ++ "\\2")
                 str2=subRegex (mkRegexWithOpts ("(height=\')"++ show h ++"(px\')") False True) str1' ("\\1" ++ temporaryReplacement ++ (show (headerScale!!(n-1) * h)) ++ "\\2")
                 str2'=subRegex (mkRegexWithOpts ("(height=\")"++ show h ++"(px\")") False True) str2 ("\\1" ++ temporaryReplacement ++ (show (headerScale!!(n-1) * h)) ++ "\\2")
-            modify ws hs str2'
-        modify _ _ str=str
-    pack $ subRegex (mkRegexWithOpts (temporaryReplacement) False True) (modify widths heights $ unpack title) ("")
+                str3=subRegex (mkRegexWithOpts ("(vertical-align:-)"++ show d ++"(px;)") False True) str2' ("\\1" ++ temporaryReplacement ++ (show (headerScale!!(n-1) * d)) ++ "\\2")
+                str3'=subRegex (mkRegexWithOpts ("(vertical-align:-)"++ show d ++"(px;)") False True) str3 ("\\1" ++ temporaryReplacement ++ (show (headerScale!!(n-1) * d)) ++ "\\2")
+            modify ws hs ds str3'
+        modify _ _ _ str=str
+    pack $ subRegex (mkRegexWithOpts (temporaryReplacement) False True) (modify widths heights depths $ unpack title) ("")
         
 scaleHeader _ title = title
 
