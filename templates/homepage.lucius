@@ -1,41 +1,21 @@
-.masthead h1.header p {
-    font-size: 0.5em;
+
+.alert-info {
+    position: relative;
+    z-index: 1;
 }
-p, li {
+.jumbotron {
+    margin-top: -111px;
+    padding-top: 111px;
+}
+.jumbotron h2 {
+    margin-top: 0;
+    margin-bottom: 32px;
+}
+.bs-docs-section{
+    padding-top: 2em;
+    padding-bottom: 2em;
+}
+body {
     line-height: 2em;
-    font-size: 16px
-}
-
-.navbar, .footer{
-    min-width:initial;
-}
-
-.footer-right{
-    display: none;
-}
-
-.image-overlay {
-    z-index:2001;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.5);
-}
-
-.image-overlay img {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    max-width: 80%;
-    max-height: 80%;
-}
-
-@media (max-width: 768px) {
-    .image-overlay img {
-        max-width: 100%;
-        max-height: 100%;
-    }
+    background-color:white;
 }

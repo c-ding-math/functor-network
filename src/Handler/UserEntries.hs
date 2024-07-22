@@ -77,6 +77,19 @@ getUserEntriesR authorId = do
             <div style="display:none;"><a href=@{CommentsR authorId}>Comments</a></div>
         |]
         toWidget [lucius| 
+            .page-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .page-header-menu {
+                display: flex;
+                justify-content: space-between;
+            }
+            .page-header-menu > * {
+                margin: 0.25em;
+            }
+
             .search-form{
                 flex-grow:1;
                 margin:0 1em;

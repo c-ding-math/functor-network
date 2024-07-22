@@ -18,7 +18,8 @@ getUsersR = do
     defaultLayout $ do
         setTitleI MsgUsers
         [whamlet|
-<h1>_{MsgActiveUsers}
+<div .page-header>
+    <h1>_{MsgActiveUsers}
 $if null users
     <div>_{MsgNothingFound}
 $else 
@@ -28,7 +29,7 @@ $else
             $forall Entity uid u<-users
                 <li>
                     <a href=@{UserHomeR uid}>#{userName u}
-                        <span .note>registered on #{formatDateStr (userInserted u)}
+                        <span .note.text-muted>registered on #{formatDateStr (userInserted u)}
         |]
         toWidget [lucius|
         .note{

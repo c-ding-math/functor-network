@@ -1,4 +1,4 @@
-<div .masthead>
+<div .jumbotron .text-center>
     <div .container>
         <div .row>
             <h1 .header>
@@ -7,17 +7,17 @@
                 a blog platform for mathematicians
                 
             $maybe uid <- maybeUserId
-                <a href=@{UserHomeR uid} .btn.btn-info.btn-lg>
+                <a href=@{UserHomeR uid} .btn.btn-primary.btn-lg>
                     My Homepage
             $nothing
-                <a href=@{AuthR LoginR} .btn.btn-info.btn-lg>
+                <a href=@{AuthR LoginR} .btn.btn-primary.btn-lg>
                     Sign up / Sign in
 
 <div .container>
     <!-- Starting
         ================================================== -->
     <div .bs-docs-section>
-        <div .page-header>
+        
             <h1>What is #{appName}
 
             <p>
@@ -25,7 +25,7 @@
         
     <hr>
     <div .bs-docs-section>
-        <div .page-header>
+        
             <h1>Features
             $maybe Entity _ features <- maybeFeatures
                 #{preEscapedToMarkup (entryBodyHtml features)}
@@ -34,8 +34,8 @@
                     _{MsgComingSoon}
     <hr>
     <div .bs-docs-section>
-        <div .page-header>
-            <h1>Comparison with Other Platforms
+        
+            <h1>Comparison
             $maybe Entity _ comparison <- maybeComparison
                 #{preEscapedToMarkup (entryBodyHtml comparison)}
             $nothing
@@ -43,7 +43,7 @@
                     _{MsgComingSoon}
     <hr>
     <div .bs-docs-section>      
-        <div .page-header>
+        
             <h1>Screenshots
             $maybe Entity _ screenshots <- maybeScreenshots
                 #{preEscapedToMarkup (entryBodyHtml screenshots)}

@@ -15,11 +15,17 @@ data EntryInput=EntryInput
 
 entryForm::Maybe EntryInput -> Html -> MForm Handler (FormResult EntryInput, Widget)
 entryForm inputs=renderBootstrap3 BootstrapBasicForm $ EntryInput
-    <$> areq (selectFieldList inputFormats) "Format" (inputFormat <$> inputs)
+    <$> areq (selectFieldList inputFormats) formatSettings (inputFormat <$> inputs)
     <*> aopt textareaField preambleSettings (preamble <$> inputs)
     <*> aopt textareaField editorSettings  (body  <$> inputs)
     <*> aopt textareaField citationSettings (citation  <$> inputs) where  
         inputFormats = [("Markdown", Format "md"), ("LaTeX", Format "tex")]::[(Text, Format)] 
+        formatSettings =  FieldSettings
+            { fsLabel = SomeMessage MsgFormat
+            , fsTooltip = Nothing
+            , fsId = Nothing
+            , fsName = Just "format"
+            , fsAttrs =[("class", "input-sm form-control format-selector")]}
         editorSettings = FieldSettings
             { fsLabel = ""
             , fsTooltip = Nothing

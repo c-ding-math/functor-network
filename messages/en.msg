@@ -23,8 +23,10 @@ ForgotPassword: Forgot password
 SetPassword: Set a new password
 EnterPasswordResetEmail: Enter your e-mail address below, and a password reset e-mail will be sent to you.
 Or: or
+LogIn: Log in
 Login: Login
 LoginViaEmail: Login via email
+RegisterLong: Register a new account
 SignInWithGoogle: Sign in with Google
 NewGoogle: Connect to a new google account
 Email: Email
@@ -74,7 +76,7 @@ Uploaded: Uploaded
 FileExists name@Text: The file named #{name} already exites!
 FileSaved: File saved
 SomethingWrong: Something went wrong
-Action: Action
+Actions: Actions
 Copy: Copy
 ClickToCopy: Click to copy
 FileDeletionConfirmation: Are you sure that you want to delete the file?
@@ -90,9 +92,7 @@ EmailDeletionConfirmation: Are you sure to delete the email? Then you can't logi
 LoginDeleted: Login method deleted
 EmailDeleted: Email deleted
 
-InputFormat: Which format do you want to write you post in?
-OutputFormat: Which format do you want to publish your post in?
-Format: format
+Format: Format
 LaTeX: LaTeX
 Markdown: Markdown
 Post: Post

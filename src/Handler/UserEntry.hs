@@ -77,7 +77,8 @@ getUserEntryR authorId entryId = do
             #{preEscapedToMarkup(entryBodyHtml entry)}
         $else
             _{MsgComingSoon}
-  <ul .entry-menu>
+  <div .menu>
+    <ul>
         <li .reply>
             <a href=#comment data-action=@{EditCommentR entryId}>comment
         <!--<li .print><a href=#>print</a>-->
@@ -111,7 +112,8 @@ getUserEntryR authorId entryId = do
 
               <div .entry-content>
                   <div .entry-content-wrapper>#{preEscapedToMarkup (entryBodyHtml comment)}  
-              <ul .entry-menu>                
+              <div .menu>
+                <ul>                
                   <li .reply>
                     <a href=#comment data-action=@{EditCommentR commentId}>reply
                   <li .subscribe>
@@ -143,11 +145,11 @@ menuWidget::Widget
 menuWidget=do
     toWidget [julius|
         $(document).ready(function()	{
-            /*$(".entry-menu .print a").click(function(){
+            /*$(".menu .print a").click(function(){
                 window.print();
                 return false;
             }); 
-            $(".entry-menu .favorite a,.comment .vote a").click(function(){
+            $(".menu .favorite a,.comment .vote a").click(function(){
                 var that =$(this);
                 var url=$(this).attr("href");
                 $.ajax({
@@ -162,19 +164,19 @@ menuWidget=do
                 return false;
             }); */
 
-            $(".entry .entry-menu .reply a").click(function(){
+            $(".entry .menu .reply a").click(function(){
                 $("#comment").html("Add a comment");
                 var handlerUrl=$(this).attr("data-action");
                 $(".new-comment form").attr("action", handlerUrl);
             });
-            $(".comment .entry-menu .reply a").click(function(){
+            $(".comment .menu .reply a").click(function(){
                 var handlerUrl=$(this).attr("data-action");
                 $(".new-comment form").attr("action", handlerUrl);
                 var parentId=$(this).closest(".comment").attr("id").replace("entry-","");
                 var parentCommentAuthor=$(this).closest(".comment").find(".entry-meta .by a").html();
                 $("#comment").html("Reply to <a href=#entry-"+parentId+">"+parentCommentAuthor+"</a>");
             });
-            $(".entry-menu .delete a").click(function(event){  
+            $(".menu .delete a").click(function(event){  
                 if (confirm("Are you sure that you want to delete the comment?")) {
             
                     var that =$(this);

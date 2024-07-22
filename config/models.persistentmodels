@@ -7,6 +7,7 @@ User json
     about Text --url
     password Text Maybe
     inserted UTCTime default=CURRENT_TIME
+    logged UTCTime default=CURRENT_TIME
     --modified UTCTime -- change the ident
     --avatar Text Maybe -- url
     email Text Maybe -- the email to receive notifications
@@ -79,6 +80,7 @@ EntrySubscription
     deriving Show
 
 Maintenance
+    userId UserId
     from UTCTime
     duration Int
     deriving Show

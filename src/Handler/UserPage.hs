@@ -31,10 +31,11 @@ getUserPageR userId _ = do
                 <li><strong>Homepage</strong>: 
                     <a href=@{UserHomeR userId}>@{UserHomeR userId}
     $if mCurrentUserId == Just userId
-        <ul .entry-menu>
-            <li>
-                <a href=@{EditUserPageR "About"}>_{MsgEdit}
-                |]
+        <div .menu>
+            <ul .entry-menu.list-inline>
+                <li>
+                    <a href=@{EditUserPageR "About"}>_{MsgEdit}
+                    |]
                 
         Just (Entity _ entry) ->
             defaultLayout $ do 
@@ -51,7 +52,8 @@ getUserPageR userId _ = do
             _{MsgComingSoon}
 
   $if mCurrentUserId == Just userId
-        <ul .entry-menu>
+    <div .menu>
+        <ul .entry-menu.list-inline>
             <li>
                 <a href=@{EditUserPageR "About"}>_{MsgEdit}
                 |]
