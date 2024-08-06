@@ -7,7 +7,7 @@ module Handler.EditEntry where
 
 import Import
 import Handler.EditComment(deleteEntryRecursive)
-import Handler.Parser(markItUpWidget)
+import Handler.Parser(editorWidget)
 import Handler.EditUserEntry(EntryInput(..),entryInputForm,entry2Html)
 
 getEditEntryR :: EntryId -> Handler Html
@@ -33,8 +33,9 @@ getEditEntryR entryId = do
         [whamlet|
 <form  method=post enctype=#{inputEnctype}>
     ^{inputWidget}
-    <button .btn .btn-default .save type=submit name=action value=save>_{MsgSave}
-    <button .btn .btn-default .delete type=submit name=action value=delete>_{MsgDelete}
+    <div .text-left>
+        <button .btn .btn-default .save type=submit name=action value=save>_{MsgSave}
+        <button .btn .btn-default .delete type=submit name=action value=delete>_{MsgDelete}
         |]
             
         toWidget        
@@ -55,7 +56,7 @@ getEditEntryR entryId = do
                 });
             |]
         
-        markItUpWidget format (Format "html")
+        editorWidget format
 
 postEditEntryR :: EntryId -> Handler Html
 postEditEntryR  entryId = do

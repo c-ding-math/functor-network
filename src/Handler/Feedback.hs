@@ -48,7 +48,8 @@ getFeedbackR = do
     <h3>_{MsgSendFeedback}
     <form .feedback-form method=post action=@{FeedbackR} enctype=#{feedbackEnctype}>
         ^{feedbackWidget}
-        <button type="submit" .btn.btn-primary>_{MsgSend}
+        <div .text-left>    
+            <button type="submit" .btn.btn-primary>_{MsgSend}
         |]
 
 postFeedbackR :: Handler Html

@@ -4,7 +4,7 @@ module Handler.EditHelp where
 
 import Import
 import Yesod.Form.Bootstrap3
-import Handler.Parser(markItUpWidget)
+import Handler.Parser(editorWidget)
 
 data EntryInput=EntryInput
     { inputFormat::Format
@@ -19,7 +19,7 @@ entryForm inputs=renderBootstrap3 BootstrapBasicForm $ EntryInput
     <*> aopt textareaField preambleSettings (preamble <$> inputs)
     <*> aopt textareaField editorSettings  (body  <$> inputs)
     <*> aopt textareaField citationSettings (citation  <$> inputs) where  
-        inputFormats = [("Markdown", Format "md"), ("LaTeX", Format "tex")]::[(Text, Format)] 
+        inputFormats = [(MsgMarkdownWithLaTeX, Format "md"), (MsgPureLaTeX, Format "tex")]
         formatSettings =  FieldSettings
             { fsLabel = SomeMessage MsgFormat
             , fsTooltip = Nothing
@@ -80,7 +80,7 @@ getEditHelpR "syntax" = do
             <form .editor-demo>
                 ^{entryWidget}  
         |]
-        markItUpWidget format (Format "html")
+        editorWidget format
 
 getEditHelpR "editor" = do
     let title="Editor Help" :: Text
@@ -118,6 +118,6 @@ getEditHelpR "editor" = do
             <form .editor-demo>
                 ^{entryWidget}  
         |]
-        markItUpWidget format (Format "html")
+        editorWidget format
 
 getEditHelpR _ = notFound

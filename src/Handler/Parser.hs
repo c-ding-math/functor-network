@@ -2,13 +2,13 @@
 {-# LANGUAGE OverloadedStrings     #-}
 --{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Handler.Parser (
     userTemporaryDirectory,
     parse,
-    jqueryUiWidget,
-    markItUpWidget,
-    postParserR
+    postParserR,
+    editorWidget
 )where
 
 import Import
@@ -18,6 +18,11 @@ import System.Environment (getExecutablePath)
 import System.FilePath
 import System.Random
 import Parse.Parser(mdToHtml,texToHtml,EditorData(..))
+--import qualified Data.CaseInsensitive as CI
+--import qualified Data.Text.Encoding as TE
+--import Text.Julius (rawJS)
+--import Yesod.Core.Handler (defaultCsrfCookieName, defaultCsrfHeaderName)
+--import Handler.Files (uploadForm)
 --import qualified Prelude
 --import Data.Time.Clock
 
@@ -30,7 +35,7 @@ postParserR inputFormat outputFormat = do
     subdirectoriesNumber<-liftIO $ countActiveSubdirectories $ takeDirectory userDir
     if subdirectoriesNumber > 0 then do
         let busyMessage::Text
-            busyMessage= "<span class='loading'>Busy</span>"
+            busyMessage= "Busy..."
         return $ RepPlain $ toContent $ busyMessage
     else do  
         let parser = case (inputFormat,outputFormat) of
@@ -41,96 +46,6 @@ postParserR inputFormat outputFormat = do
         return $ RepPlain $ toContent $ case preview of
             "\n"->""
             x->x
-
-jqueryUiWidget :: Widget
-jqueryUiWidget = do
-    addScript $ StaticR scripts_jquery_ui_jquery_ui_min_js
-    addStylesheet $ StaticR scripts_jquery_ui_jquery_ui_min_css
-    addStylesheet $ StaticR scripts_jquery_ui_jquery_ui_structure_min_css
-    addStylesheet $ StaticR scripts_jquery_ui_jquery_ui_additional_css
-
-markItUpWidget ::Format->Format-> Widget
-markItUpWidget inputFormat _=    do    --addScriptRemote "https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"
-        jqueryUiWidget
-
-        addStylesheet $ StaticR scripts_markItUp_markitup_skins_my_style_css
-        addScript $ StaticR scripts_markItUp_markitup_jquery_markitup_js
-        --addStylesheet $ StaticR scripts_markItUp_markitup_sets_markdown_style_css       
-        if inputFormat==Format "tex" then do
-            addScript $ StaticR scripts_markItUp_markitup_sets_tex_set_js
-        else do
-            addScript $ StaticR scripts_markItUp_markitup_sets_md_set_js
-        
-        let parserPath=case inputFormat of
-                Format "tex"->ParserR "tex" "html"
-                _->ParserR "md" "html"
-        toWidget [julius|
-$(document).ready(function(){
-    var textarea=$("textarea.editor");
-    var extraSettings={
-        onCtrlEnter: {keepDefault:false,},
-        previewInElement:'.markItUpFooter .entry-content-wrapper', 
-        previewParserPath: "@{parserPath}",
-        previewAutoRefresh:false,     
-        previewParser: function(content) {
-            var data={
-                    editorContent:content,
-                    editorPreamble: $('textarea[name="preamble"]').val(),
-                    editorCitation: $('textarea[name="citation"]').val(),
-                };
-                return (JSON.stringify(data));
-            },                                    
-    }
-    textarea.markItUp(editorSettings,extraSettings);              
-
-    //wrap textarea and preview area in a div
-    var parent = textarea.closest('.markItUpContainer');
-    parent.find('.markItUpHeader').addClass('menu');
-    var childrenToWrap = parent.children().not(':first-child');
-    var wrapperDiv = $('<div>').attr('class', 'markItUpWrapper');
-    childrenToWrap.wrapAll(wrapperDiv);  
-    var previewArea = $('<div/>',{class:'entry-content-wrapper'});  
-    previewArea.appendTo(parent.find('.markItUpFooter'));
-
-    //update preview on Ctrl + Enter
-    textarea.attr("placeholder","Your content goes here. Use shortcut [Ctrl + Enter] to update preview.");
-    textarea.keyup(function(e){
-		var updatePreviewButton = $(this).closest(".markItUp").find(".markItUpHeader .preview a[accesskey='0']").closest("li");
-		if ((e.keyCode == 10 || e.keyCode == 13) && (e.ctrlKey || e.metaKey)) {
-			updatePreviewButton.trigger("mouseup");	
-		}
-    });
-
-    //prevent refeshing page if the content is not saved
-    var originalContent=textarea.val();
-    $("form").submit(function(){
-        originalContent=textarea.val();
-    });
-    $(window).on('beforeunload', function(){
-        if (textarea.val()!=originalContent){
-            return confirm("You have unsaved changes. Are you sure you want to leave this page?");
-        }
-    });
-});
-
-$(document).ready(function(){
-    $('select').change(function(){
-        var selected=$(this).children("option:selected").val();
-        var format="md"
-        if (selected=="2"){
-            format="tex"
-        }
-        var currentUrl = window.location.href.split(/[?#]/)[0]+ '?format=' + format;
-        var elementId = window.location.href.match(/#[^?]*/);
-        if (elementId){
-            currentUrl=currentUrl+elementId;
-        }
-        
-        window.location.href = currentUrl 
-
-    });
-});
-        |]
 
 -- | Get user temporary directory
 userTemporaryDirectory :: Handler FilePath
@@ -194,3 +109,24 @@ isActiveDirectory dir = doesDirectoryExist dir >>= \exisitence ->
                 removeDirectoryRecursive dir 
                 return False
     else return False-}
+
+editorWidget :: Format -> Widget
+editorWidget inputFormat = do
+
+    addScript $ StaticR editor_src_min_ace_js
+    addScript $ StaticR editor_src_min_ext_language_tools_js
+    --urlRender <- getUrlRender
+
+    mcsrftoken <- fmap reqToken getRequest                                                                                                                  
+    let csrftoken = case mcsrftoken of                                                                                                                      
+                        Nothing -> "NO_TOKEN"                                                                                                               
+                        Just t  -> t   
+    let parserRoute =case inputFormat of
+            Format "tex"->ParserR "tex" "html"
+            _->ParserR "md" "html"
+
+    case inputFormat of
+        Format "tex" -> do
+            $(widgetFile "tex-editor")
+        _ -> do
+            $(widgetFile "md-editor")

@@ -162,11 +162,6 @@ instance Yesod App where
                             , menuItemAccessCallback = True
                             }
                         , NavbarRight $ MenuItem
-                            { menuItemLabel = "Files"
-                            , menuItemRoute = FilesR
-                            , menuItemAccessCallback = True
-                            }
-                        , NavbarRight $ MenuItem
                             { menuItemLabel = "Settings"
                             , menuItemRoute = SettingsR
                             , menuItemAccessCallback = True
@@ -198,7 +193,7 @@ instance Yesod App where
                             , menuItemAccessCallback = True
                             }
                         , FooterRight $ MenuItem
-                            { menuItemLabel = "Version 2024-06-29"
+                            { menuItemLabel = "Version 2024-08-08"
                             , menuItemRoute = PageR "Changelog"
                             , menuItemAccessCallback = True
                             }
@@ -280,6 +275,7 @@ instance Yesod App where
             addStylesheet $ StaticR css_bootstrap_min_css
             addStylesheet $ StaticR css_bootstrap_theme_css
             addScript $ StaticR js_bootstrap_min_js
+            --addScript $ StaticR js_bootstrap_theme_js
             
             --addStylesheet $ StaticR css_entry_css
                                     -- ^ generated from @Settings/StaticFiles.hs@

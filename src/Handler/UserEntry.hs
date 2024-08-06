@@ -5,7 +5,7 @@ module Handler.UserEntry where
 
 import Import
 --import Yesod.Form.Bootstrap3
-import Handler.Parser(markItUpWidget)
+import Handler.Parser(editorWidget)
 import Parse.Parser(scaleHeader)
 import Handler.EditComment(getChildIds,newCommentForm,CommentInput(..))
 import Handler.NewEntrySubscription(subscribeToEntryWidget)
@@ -126,17 +126,16 @@ getUserEntryR authorId entryId = do
         $maybe _ <- maybeUser
             <h3 #comment>_{MsgNewComment}
             <form method=post enctype=#{commentEnctype} action=@{EditCommentR entryId}>
-
                 ^{commentWidget}
-                <div>
-                    <button .btn.btn-primary type=submit>_{MsgComment}
+                <div .text-left>
+                    <button .btn.btn-primary type=button>_{MsgComment}
         $nothing
             <h3 #comment>_{MsgNewComment}
             <p>
                 You must <a href=@{AuthR LoginR}>log in</a> to post a comment.
                 
         |]
-        markItUpWidget format (Format "html")
+        editorWidget format
         subscribeToEntryWidget entryId
         menuWidget
 
@@ -144,6 +143,9 @@ getUserEntryR authorId entryId = do
 menuWidget::Widget
 menuWidget=do
     toWidget [julius|
+        $(".new-comment form button").click(function(){
+            $(".new-comment form").submit();   
+        });
         $(document).ready(function()	{
             /*$(".menu .print a").click(function(){
                 window.print();

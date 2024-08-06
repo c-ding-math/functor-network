@@ -93,8 +93,9 @@ LoginDeleted: Login method deleted
 EmailDeleted: Email deleted
 
 Format: Format
-LaTeX: LaTeX
-Markdown: Markdown
+
+PureLaTeX: Pure LaTeX
+MarkdownWithLaTeX: Markdown with LaTeX
 Post: Post
 Posts: Posts
 LatestPosts: Latest posts
@@ -139,7 +140,7 @@ Unsubscribe: Unsubscribe
 UnsubscribeAll: Unsubscribe all
 SubscribeToUser: Please enter your email address below. You will receive an email notification when the author publishes a new post.
 SubscribeToPost: Please enter your email address below. You will receive an email notification when the post receives a new comment.
-SubscribeToComment: Please enter your email address below. You will receive an email notification when your comment receives a reply.
+SubscribeToComment: Please enter your email address below. You will receive an email notification when the comment receives a reply.
 UserSubscriptionsDescription: You are subscribed to the following members. You will receive an email notification when they publish a new post.
 PostSubscriptionsDescription: You are subscribed to the following posts. You will receive an email notification when they receive a new comment.
 CommentSubscriptionsDescription: You are subscribed to the following comments. You will receive an email notification when they receive a reply.

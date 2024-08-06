@@ -212,7 +212,7 @@ getSettingsR = do
                         <p .text-muted>Follow your new post and comment via the above email by default. To ensure that the notification can reach you, please add <code>noreply@functor.network</code> to the whitelist with your email provider.                  
                         <button .btn .btn-default type=submit name=setting value=email>_{MsgSave}
                     <p>
-            <section .editor-setting>    
+            <section #editor-setting .editor-setting>    
                 <h2>_{MsgEditor}
                 <div>                    
                     <form .format-form method=post enctype=#{formatEnctype}>
