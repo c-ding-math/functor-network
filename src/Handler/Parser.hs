@@ -124,9 +124,9 @@ editorWidget inputFormat = do
     let parserRoute =case inputFormat of
             Format "tex"->ParserR "tex" "html"
             _->ParserR "md" "html"
-
+    $(widgetFile "editor")
     case inputFormat of
         Format "tex" -> do
-            $(widgetFile "tex-editor")
+            $(widgetFile "editor-tex")
         _ -> do
-            $(widgetFile "md-editor")
+            $(widgetFile "editor-md")

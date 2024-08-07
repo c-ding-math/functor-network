@@ -5,7 +5,7 @@
 module Handler.Files where
 
 import System.FilePath
-import System.Directory (removeFile, doesFileExist,createDirectoryIfMissing)
+import System.Directory (removeFile, createDirectoryIfMissing)
 import Import
 import Yesod.Form.Bootstrap3
 import qualified Data.Conduit.List as CL

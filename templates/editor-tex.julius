@@ -1,0 +1,257 @@
+$(refs.syntax).attr("href", $(refs.syntax).attr("href") + "?format=tex");
+$(refs.theorem).remove();
+$(refs.proof).remove();
+
+function theorem() {
+    return false;
+}
+function proof() {
+    return false;
+}
+
+function italic() {
+    var selectedText = editor.getSelectedText();
+    if (selectedText === "") {
+        editor.insertSnippet("\\textit{" + "${1:italic text}" + "}");
+    } else {
+        editor.session.replace(editor.getSelectionRange(), "\\textit{" + selectedText + "}");
+    }
+    editor.focus();
+    return false;
+}
+
+function bold() {
+    var selectedText = editor.getSelectedText();
+    if (selectedText === "") {
+        editor.insertSnippet("\\textbf{" + "${1:bold text}" + "}");
+    } else {
+        editor.session.replace(editor.getSelectionRange(), "\\textbf{" + selectedText + "}");
+    }
+    editor.focus();
+    return false;
+}
+
+function quote() {    
+    var theBlock=mathBlock();
+    var selectedText = editor.getSelectedText();
+    if (selectedText === "") {
+        editor.insertSnippet(theBlock.open+("\\begin{quote}\n${1:quote}\n\\end{quote}")+theBlock.close);
+    } else {
+        editor.session.replace(editor.getSelectionRange(), theBlock.open+("\\begin{quote}\n" + selectedText + "\n\\end{quote}")+theBlock.close);
+        editor.gotoLine(editor.getSelectionRange().end.row+1+1-theBlock.close.length);
+    }
+    editor.focus();
+    return false;
+}
+
+function heading() {
+    var theBlock=mathBlock();
+    var selectedText = editor.getSelectedText();
+    if (selectedText === "") {
+        editor.insertSnippet(theBlock.open+("\\section{${1:heading}}")+theBlock.close);
+    } else {
+        editor.session.replace(editor.getSelectionRange(), theBlock.open+("\\section{" + selectedText + "}")+theBlock.close);
+        editor.gotoLine(editor.getSelectionRange().end.row+1+1-theBlock.close.length);
+    }
+    editor.focus();
+    return false;
+}
+
+function unorderedList() {
+    var theBlock=mathBlock();
+    var selectedText = editor.getSelectedText();
+    if (selectedText === "") {
+        editor.insertSnippet(theBlock.open+("\\begin{itemize}\n${1:  \\\\item item\n  \\\\item item\n  \\\\item ...}\n\\end{itemize}")+theBlock.close);
+    } else {
+        editor.session.replace(editor.getSelectionRange(), theBlock.open+("\\begin{itemize}\n" + selectedText.replace(/^/gm, "  \\item ") + "\n\\end{itemize}")+theBlock.close);
+        editor.gotoLine(editor.getSelectionRange().end.row+1+1-theBlock.close.length);
+    }
+    editor.focus();
+    return false;
+}
+
+function orderedList() {
+    var theBlock=mathBlock();
+    var selectedText = editor.getSelectedText();
+    if (selectedText === "") {
+        editor.insertSnippet(theBlock.open+("\\begin{enumerate}\n${1:  \\\\item item\n  \\\\item item\n  \\\\item ...}\n\\end{enumerate}")+theBlock.close);
+    } else {
+        var n=1;
+        editor.session.replace(editor.getSelectionRange(), theBlock.open+("\\begin{enumerate}\n" + selectedText.replace(/^/gm, "  \\item ") + "\n\\end{enumerate}")+theBlock.close);
+        editor.gotoLine(editor.getSelectionRange().end.row+1+1-theBlock.close.length);
+    }
+    editor.focus();
+    return false;
+
+}
+
+function link() {
+    var selectedText = editor.getSelectedText()
+    , navTabs = $('<ul/>',{class:"nav nav-tabs", role:"tablist"})
+    , navTabTitle = $('<li/>',{class:"disabled"}).append($('<a/>',{html:"Insert Hyperlink"}))
+    , navTabUrl = $('<li/>',{role:"presentation", class:"active"}).append($('<a/>',{href:"#url", "aria-controls":"url", role:"tab", "data-toggle":"tab", html:"paste URL"}))
+    , navTabFile = $('<li/>',{role:"presentation"}).append($('<a/>',{href:"#file", "aria-controls":"file", role:"tab", "data-toggle":"tab", html:"select file"}))
+    , tabContent = $('<div/>',{class:"tab-content"})
+    , tabPaneUrl = $('<div/>',{class:"tab-pane active", role:"tabpanel", id:"url"})
+    , tabPaneFile = $('<div/>',{class:"tab-pane", role:"tabpanel", id:"file"})
+    , inputUrl = $('<input/>',{type:"text", class:"form-control", placeholder:"URL", value:"https://"})
+    , formFile = $('<form/>',{enctype:"multipart/form-data"}).append($('<input/>',{type:"hidden", name:"_token", value:#{csrftoken}})).append($('<div/>',{class:"form-group required"}).append('<label for="file-input">File</label><input type="file" name="f1" id="file-input" class="form-control required">'))
+    , buttonUrl = $('<button/>',{class:"btn btn-primary", type:"button", html:"Continue"}).click(function() {
+        var url = inputUrl.val();
+        if(selectedText === ""){
+            editor.insertSnippet("\\href{" + url + "}{" + "${1:link description}" + "}");
+        }else{
+            editor.session.replace(editor.getSelectionRange(), "\\href{" + url + "}{" + selectedText + "}");
+        }
+        modal.modal("hide");
+    })
+    , buttonFile = $('<button/>',{class:"btn btn-primary", type:"button", html:"Continue"}).click(function() {
+        //https://stackoverflow.com/questions/21044798/how-to-use-formdata-for-ajax-file-upload
+        var that=$(this);
+        var formData = new FormData(formFile[0]);
+        $.ajax({
+            url: "@{FilesR}",
+            type: "POST",
+            processData: false,
+            contentType: false,
+            cache: false,
+            data: formData, 
+            beforeSend: function() {
+                that.prop("disabled", true);
+                that.addClass("loading");
+                formFile.find(".form-group").removeClass("has-error").find(".help-block").remove();
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                formFile.find(".form-group").addClass("has-error").append('<span class="help-block">Error: ' + errorThrown + '</span>');
+            },
+            success: function(object, textStatus, jqXHR) {
+                if(selectedText === ""){
+                    editor.insertSnippet("\\href{" + object.url + "}{" + "${1:link description}" + "}");
+                }else{
+                    editor.session.replace(editor.getSelectionRange(), "\\href{" + object.url + "}{" + selectedText + "}");
+                }
+                modal.modal("hide");
+            },
+            complete: function() {
+                that.prop("disabled", false);
+                that.removeClass("loading");
+            },
+        });
+    });
+
+    var modal = newModal({
+        header: navTabs.append(navTabTitle).append(navTabUrl).append(navTabFile),
+        body: tabContent.append(tabPaneUrl.append($('<div/>',{class:"form-group required"}).append('<label>URL</label>').append(inputUrl)).append($('<div/>',{class:"text-right"}).append(buttonUrl))).append(tabPaneFile.append(formFile).append($('<div/>',{class:"text-right"}).append(buttonFile))),
+    });
+
+    modal.on('show.bs.modal', function() {
+        modal.find('.modal-header').css({"border-bottom":"none", "padding-bottom":0});
+        modal.find('.modal-header ul>li:first-child>a').css({"font-weight":"bold", "color":"#333", "padding-left":0});
+    });
+
+    modal.on('hidden.bs.modal', function() {
+        editor.focus();
+        modal.remove();
+    });
+        
+    modal.appendTo("body").modal({show: true});
+
+    return false;
+}
+
+function image() {
+    var selectedText = editor.getSelectedText()
+    , navTabs = $('<ul/>',{class:"nav nav-tabs", role:"tablist"})
+    , navTabTitle = $('<li/>',{class:"disabled"}).append($('<a/>',{html:"Add Image"}))
+    , navTabUrl = $('<li/>',{role:"presentation", class:"active"}).append($('<a/>',{href:"#url", "aria-controls":"url", role:"tab", "data-toggle":"tab", html:"paste URL"}))
+    , navTabFile = $('<li/>',{role:"presentation"}).append($('<a/>',{href:"#file", "aria-controls":"file", role:"tab", "data-toggle":"tab", html:"select file"}))
+    , tabContent = $('<div/>',{class:"tab-content"})
+    , tabPaneUrl = $('<div/>',{class:"tab-pane active", role:"tabpanel", id:"url"})
+    , tabPaneFile = $('<div/>',{class:"tab-pane", role:"tabpanel", id:"file"})
+    , inputUrl = $('<input/>',{type:"text", class:"form-control", placeholder:"URL", value:"https://"})
+    , formFile = $('<form/>',{enctype:"multipart/form-data"}).append($('<input/>',{type:"hidden", name:"_token", value:#{csrftoken}})).append($('<div/>',{class:"form-group required"}).append('<label for="file-input">File</label><input type="file" name="f1" id="file-input" class="form-control required">'))
+    , imageWidth ='<label>Image width</label><input type="text" class="form-control" placeholder="e.g., 100px" value="" name="width">'
+    , imageHeight ='<label>Image height</label><input type="text" class="form-control" placeholder="e.g., 100px" value="" name="height">'
+    , imageSize = '<div class="form-group" style="display:flex;">'+'<div style="flex:1;margin-right:0.5em;">'+imageWidth+'</div>'+'<div style="flex:1;margin-left:0.5em;">'+imageHeight+'</div>'+'</div>'
+    , buttonUrl = $('<button/>',{class:"btn btn-primary", type:"button", html:"Continue"}).click(function() {
+        var data = {
+            url: inputUrl.val(),
+            width: tabPaneUrl.find("input[name='width']").val(),
+            height: tabPaneUrl.find("input[name='height']").val(),
+        };
+        modalToEditor(data);
+        modal.modal("hide");
+    })
+    , buttonFile = $('<button/>',{class:"btn btn-primary", type:"button", html:"Continue"}).click(function() {
+        //https://stackoverflow.com/questions/21044798/how-to-use-formdata-for-ajax-file-upload
+        var that=$(this);
+        var formData = new FormData(formFile[0]);
+        $.ajax({
+            url: "@{FilesR}",
+            type: "POST",
+            processData: false,
+            contentType: false,
+            cache: false,
+            data: formData, 
+            beforeSend: function() {
+                that.prop("disabled", true);
+                that.addClass("loading");
+                formFile.find(".form-group").removeClass("has-error").find(".help-block").remove();
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                formFile.find(".form-group").addClass("has-error").append('<span class="help-block">Error: ' + errorThrown + '</span>');
+            },
+            success: function(object, textStatus, jqXHR) {
+                var data = {
+                    url: object.url,
+                    width: tabPaneFile.find("input[name='width']").val(),
+                    height: tabPaneFile.find("input[name='height']").val(),
+                };
+                modalToEditor(data);
+                modal.modal("hide");
+            },
+            complete: function() {
+                that.prop("disabled", false);
+                that.removeClass("loading");
+            },
+        });
+    });
+    var modalToEditor = function(data) {
+        var url = data.url, width = data.width, height = data.height;
+        var more = "";
+        if (width.trim() !== "" && height.trim() !== "") {
+            more = ", width="+width+", height="+height;
+        } else {
+            if (width.trim() !== "") {
+                more = ", width="+width;
+            } 
+            if (height.trim() !== "") {
+                more = ", height="+height;
+            }
+        }
+        if (selectedText === "") {
+            editor.insertSnippet("\\includegraphics"+"[alt={${1:image description}}" + more + "]{" + url + "}");
+        } else {
+            editor.session.replace(editor.getSelectionRange(), "\\includegraphics"+"[alt={${1:image description}}" + more + "]{" + url + "}");
+        }
+    }
+
+    var modal = newModal({
+        header: navTabs.append(navTabTitle).append(navTabUrl).append(navTabFile),
+        body: tabContent.append(tabPaneUrl.append($('<div/>',{class:"form-group required"}).append('<label>URL</label>').append(inputUrl)).append(imageSize).append($('<div/>',{class:"text-right"}).append(buttonUrl))).append(tabPaneFile.append(formFile).append(imageSize).append($('<div/>',{class:"text-right"}).append(buttonFile))),
+    });
+
+    modal.on('show.bs.modal', function() {
+        modal.find('.modal-header').css({"border-bottom":"none", "padding-bottom":0});
+        modal.find('.modal-header ul>li:first-child>a').css({"font-weight":"bold", "color":"#333", "padding-left":0});
+    });
+
+    modal.on('hidden.bs.modal', function() {
+        editor.focus();
+        modal.remove();
+    });
+        
+    modal.appendTo("body").modal({show: true});
+
+    return false;
+}
