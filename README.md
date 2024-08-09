@@ -30,3 +30,7 @@ In one word, all features are meticulously crafted for mathematicians.
 | bibliography | supports | maybe supports |
 | clean and neat | Yes. Our platform is designed with minimalism in mind. It even looks a bit abstract. | may have many unnecessary functions |
 | editor | provides a plain text editor with a preview window. You can focus more on the content itself rather than its appearance. | provides a WYSIWYG editor. This kind of editor may be annoying when handling math content. |
+
+## Development
+
+The project is developed on the [Yesod](https://www.yesodweb.com/) web framework. To build the project, you can follow the framework's instructions. 
