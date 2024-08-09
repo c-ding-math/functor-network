@@ -25,10 +25,12 @@ EnterPasswordResetEmail: Enter your e-mail address below, and a password reset e
 Or: or
 LogIn: Log in
 Login: Login
-LoginViaEmail: Login via email
+SignInWithEmail: Log in with email
 RegisterLong: Register a new account
-SignInWithGoogle: Sign in with Google
+SignInWithGoogle: Log in with Google
 NewGoogle: Connect to a new google account
+SignInWithORCID: Log in with ORCID
+NewORCID: Connect to a new ORCID account
 Email: Email
 Site: Site
 Profile: Profile
@@ -93,7 +95,6 @@ LoginDeleted: Login method deleted
 EmailDeleted: Email deleted
 
 Format: Format
-
 PureLaTeX: Pure LaTeX
 MarkdownWithLaTeX: Markdown with LaTeX
 Post: Post

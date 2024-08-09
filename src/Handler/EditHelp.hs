@@ -120,4 +120,36 @@ getEditHelpR "editor" = do
         |]
         editorWidget format
 
+getEditHelpR "format" = do
+    let title="Format Comparison" :: Text
+    mFormat <- runDB $ selectFirst [EntryTitle==.title,EntryType==.Page,EntryStatus==.Draft] [Desc EntryInserted]
+    defaultLayout $ do
+        setTitle "Edit Help"
+        [whamlet|
+            <article .entry>
+                <h1>#{title}
+                <div .entry-content>
+                    <div .entry-content-wrapper>
+                        $maybe (Entity _ entry)<-mFormat
+                            #{preEscapedToMarkup (entryBodyHtml entry)}
+                        $nothing     
+                            <p>_{MsgComingSoon}
+        |]
+
+getEditHelpR "shortcuts" = do
+    let title="Shortcuts" :: Text
+    mShortcuts <- runDB $ selectFirst [EntryTitle==.title,EntryType==.Page,EntryStatus==.Draft] [Desc EntryInserted]
+    defaultLayout $ do
+        setTitle "Edit Help"
+        [whamlet|
+            <article .entry>
+                <h1>#{title}
+                <div .entry-content>
+                    <div .entry-content-wrapper>
+                        $maybe (Entity _ entry)<-mShortcuts
+                            #{preEscapedToMarkup (entryBodyHtml entry)}
+                        $nothing     
+                            <p>_{MsgComingSoon}
+        |]
+
 getEditHelpR _ = notFound

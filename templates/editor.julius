@@ -73,7 +73,7 @@ buildDom(["div", { class: "editor-toolbar menu" },
         ["li", {class: "dropdown"},
             ["a", {href: "#", class: "dropdown-toggle", "data-toggle": "dropdown"}, "Help"],
             ["ul", {class: "dropdown-menu"},//Format, Syntax, Shortcuts, Default Settings
-                ["li", ["a", {href: '@{EditHelpR "format"}', target: "_blank"},"Format"],],
+                ["li", ["a", {href: '@{EditHelpR "format"}', target: "_blank"},"Format Comparison"],],
                 ["li", ["a", {ref: "syntax", href: '@{EditHelpR "syntax"}', target: "_blank"},"Syntax"],],
                 ["li", ["a", {href: '@{EditHelpR "shortcuts"}', target: "_blank"},"Shortcuts"],],
                 ["li", ["a", {href: "@{SettingsR}"+"#editor-setting", target: "_blank"},"Settings"],],

@@ -51,6 +51,19 @@ getFeedbackR = do
         <div .text-left>    
             <button type="submit" .btn.btn-primary>_{MsgSend}
         |]
+        toWidget [julius|
+            // Spam prevention
+            var t = true;
+            setTimeout(function(){
+                t=false;
+            }, 100);
+            $("form").submit(function(){
+                if(t){
+                    //alert("Please wait a moment before submitting the form.");
+                    return false;
+                }
+            });
+        |]
 
 postFeedbackR :: Handler Html
 postFeedbackR = do

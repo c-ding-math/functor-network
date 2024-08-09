@@ -160,11 +160,8 @@ textarea{
     content:"";
 }
 
-.entry-meta>span.at{
-    float:right;
-}
 .entry-meta>span.at:before{
-    content:"";
+    content:" \00B7 ";
 }
 
 .entry-meta>span.to:before{
@@ -321,6 +318,9 @@ select[name="format"]{
 .editor-toolbar>ul>li>a{
     display: inline-block;
     padding: 0.75em 1em;
+}
+.editor-toolbar>ul>li>ul>li>a{
+    text-transform: lowercase;
 }
 
 .ace_editor{

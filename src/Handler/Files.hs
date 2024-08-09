@@ -124,8 +124,10 @@ postFilesR = do
             let name = fileName fileInfo
                 fileSource' = fileSource fileInfo
                 
-                allowedExtensions = [".jpg", ".jpeg", ".png", ".svg", ".ico", ".gif", ".tiff", ".webp", "jp2", ".txt", ".tex", ".md", ".bib", ".pdf", ".djvu", "docx", "pptx", "xlsx", "odt", "odp", "ods", "rtf", "html", "epub"] -- Allowed extensions
-                fileExtension =toLower $ takeExtension $ unpack name
+                allowedExtensions = ["jpg", "jpeg", "png", "svg", "ico", "gif", "tiff", "webp", "jp2", "txt", "tex", "md", "bib", "pdf", "djvu", "docx", "pptx", "xlsx", "odt", "odp", "ods", "rtf", "html", "epub"] -- Allowed extensions
+                fileExtension =toLower $ case takeExtension (unpack name) of
+                    ('.':ext) -> ext
+                    _ -> ""
                 
             if (not $ fileExtension `elem` allowedExtensions) then do
                 if isAjax then

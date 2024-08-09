@@ -72,6 +72,8 @@ data AppSettings = AppSettings
     -- ^ email login password
     , appGoogleClientId         :: Text
     , appGoogleClientSecret     :: Text
+    , appORCIDClientId          :: Text
+    , appORCIDClientSecret      :: Text
     , appAdministratorEmail      :: Text
     }
 
@@ -108,6 +110,8 @@ instance FromJSON AppSettings where
         appEmailUser              <- o .: "email-user"
         appGoogleClientId         <- o .: "google-client-id"
         appGoogleClientSecret     <- o .: "google-client-secret"
+        appORCIDClientId          <- o .: "orcid-client-id"
+        appORCIDClientSecret      <- o .: "orcid-client-secret"
         appAdministratorEmail      <- o .: "administrator-email"
 
         return AppSettings {..}

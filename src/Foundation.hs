@@ -26,8 +26,10 @@ import Yesod.Auth.Dummy
 import           Yesod.Auth.Email
 import           Network.Mail.Mime
 import qualified Network.Mail.SMTP
+import qualified Text.Email.Validate 
+import qualified Data.Text.Encoding.Error 
 import           Text.Shakespeare.Text         (stext)
-import qualified Data.Text                     as TS
+import qualified Data.Text               
 import qualified Data.Text.Lazy 
 --import qualified Data.Text.Lazy.Encoding
 import           Text.Blaze.Html.Renderer.Utf8 (renderHtml)
@@ -39,6 +41,7 @@ import           Yesod.Form.Bootstrap3
 import           Data.Either.Extra()
 import qualified Yesod.Auth.OAuth2 (getUserResponseJSON)
 import qualified Yesod.Auth.OAuth2.Google
+import qualified Yesod.Auth.OAuth2.ORCID
 --import Yesod.Auth.OpenId    (authOpenId, IdentifierType (Claimed))
 import Yesod.Default.Util   (addStaticContentExternal)
 import Yesod.Core.Types     (Logger)
@@ -116,7 +119,7 @@ instance Yesod App where
     -- default session idle timeout is 120 minutes
     makeSessionBackend :: App -> IO (Maybe SessionBackend)
     makeSessionBackend _ = Just <$> defaultClientSessionBackend
-        120    -- timeout in minutes
+        1440  -- timeout in minutes
         "config/client_session_key.aes"
 
     -- Yesod Middleware allows you to run code before and after each handler function.
@@ -461,7 +464,9 @@ instance YesodAuth App where
         case plugin of 
             
             x| x=="email" || x=="email-verify" -> do
-                mEmail<-getBy $ UniqueEmail ident
+                mEmail<- case Text.Email.Validate.canonicalizeEmail (TE.encodeUtf8 ident) of -- canonicalize email address.
+                    Just address -> getBy $ UniqueEmail $ Data.Text.toLower $ TE.decodeUtf8With Data.Text.Encoding.Error.lenientDecode address --additional canonicalization of an email address (see Yesod.Auth.Email).
+                    _ -> return Nothing
                 case mEmail of
                     Just (Entity _ email) | emailVerified email -> do
                         let muid=emailUserId email
@@ -504,8 +509,8 @@ instance YesodAuth App where
                                 urlRender<-getUrlRender
                                 update uid [UserName=.(msgRender MsgUser <> " " <> (toPathPiece uid)),UserAbout=.(urlRender $ UserPageR uid "About")]
                                 case plugin of
-                                    "google" -> do
-                                        case Yesod.Auth.Extra.googleUserName <$> Yesod.Auth.OAuth2.getUserResponseJSON creds of
+                                    p| p `elem` ["google","orcid"] -> do
+                                        case Yesod.Auth.Extra.pluginUserName <$> Yesod.Auth.OAuth2.getUserResponseJSON creds of
                                                 Right n-> do
                                                     update uid [UserName=.n]
                                                     return ()
@@ -516,38 +521,15 @@ instance YesodAuth App where
                                 _<-insert $ Login {loginIdent=ident,loginPlugin=plugin,loginUserId=Just uid,loginToken=Nothing,loginVerified=True,loginInserted=currentTime}
                                 return $ Authenticated uid
                                 
-{-                                case eUser of
-                                    Left (Entity uid _) -> do
-                                        _<-insert $ Login {loginIdent=ident,loginPlugin=plugin,loginUserId=Just uid,loginToken=Nothing,loginVerified=True,loginInserted=currentTime}
-                                        return $ Authenticated uid
-                                    Right uid -> do
-                                        let name = case plugin of
-                                                "google"->
-                                                    case Yesod.Auth.Extra.googleUserName <$> Yesod.Auth.OAuth2.getUserResponseJSON creds of
-                                                        Right n->n
-                                                        _ -> (msgRender MsgUser) <>" " <> (toPathPiece uid)
-                                                _ -> (msgRender MsgUser) <>" " <> (toPathPiece uid)
-                                        _<-insert $ Login {loginIdent=ident,loginPlugin=plugin,loginUserId=Just uid,loginToken=Nothing,loginVerified=True,loginInserted=currentTime}
-                                        _<-update uid [UserName=.name]
-                                        return $ Authenticated uid
--}
     -- You can add other plugins like Google Email, email or OAuth here
     authPlugins :: App -> [AuthPlugin App]
-    authPlugins app = [authEmail] ++ [Yesod.Auth.OAuth2.Google.oauth2GoogleScopedWidget googleButtonWidget ["openid", "email", "profile"] (appGoogleClientId (appSettings app)) (appGoogleClientSecret (appSettings app))] ++ extraAuthPlugins
+    authPlugins app = [authEmail] ++ [
+                --Yesod.Auth.OAuth2.Google.oauth2GoogleScopedWidget googleButtonWidget ["openid", "email", "profile"] (appGoogleClientId (appSettings app)) (appGoogleClientSecret (appSettings app))
+                Yesod.Auth.OAuth2.Google.oauth2Google (appGoogleClientId (appSettings app)) (appGoogleClientSecret (appSettings app))
+                , Yesod.Auth.OAuth2.ORCID.oauth2ORCID (appORCIDClientId (appSettings app)) (appORCIDClientSecret (appSettings app))
+            ] ++ extraAuthPlugins
         -- Enable authDummy login if enabled.
         where 
-            googleButtonWidget = [whamlet|
-                <span .btn .btn-default .google-button>
-                    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" xmlns:xlink="http://www.w3.org/1999/xlink">
-                        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z">
-                        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z">
-                        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z">
-                        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z">
-                        <path fill="none" d="M0 0h48v48H0z"></path>
-                    
-                    <!--<img src=@{StaticR icons_google_logo_png}>-->
-                    <span>_{MsgSignInWithGoogle}
-            |]
             extraAuthPlugins = [authDummy | appAuthDummyLogin $ appSettings app]
 
 instance YesodAuthEmail App where
@@ -555,6 +537,8 @@ instance YesodAuthEmail App where
 
     afterPasswordRoute _ = HomeR
 
+    --normalizeEmailAddress _ = id
+    
     addUnverified email verkey = liftHandler $ runDB $ do
         maybeUserId<-maybeAuthId
         currentTime<-liftIO getCurrentTime
@@ -718,8 +702,7 @@ instance YesodAuthEmail App where
                     setTitle "Add a new email"
                     [whamlet|
                         <p>_{Msg.EnterEmail}
-                        <form .form-inline method="post" action="@{toParentRoute registerR}" enctype=#{enctype}>
-                            <div id="registerForm">
+                        <form #registerForm .form-inline method="post" action="@{toParentRoute registerR}" enctype=#{enctype}>
                                 ^{widget}
                                 <button .btn .btn-default>Add a new email
                     |]
@@ -730,14 +713,13 @@ instance YesodAuthEmail App where
                     <div .login-form-container>
                         <h3>_{Msg.Register}
                         <p>_{Msg.EnterEmail}
-                        <form method="post" action="@{toParentRoute registerR}" enctype=#{enctype}>
-                            <div id="registerForm">
+                        <form #registerForm method="post" action="@{toParentRoute registerR}" enctype=#{enctype}>
                                 ^{widget}
                                 
-                                <label>
-                                    <input type=checkbox name=agree-required>
-                                    I agree to the <a href="@{PageR "Terms of Use"}">Terms of Use</a> and <a href="@{PageR "Privacy Policy"}">Privacy Policy</a>                               
-                                <button .btn .btn-primary disabled>_{Msg.Register}
+                        <label>
+                            <input type=checkbox name=agree-required>
+                            I agree to the <a href="@{PageR "Terms of Use"}">Terms of Use</a> and <a href="@{PageR "Privacy Policy"}">Privacy Policy</a>                               
+                        <button .btn .btn-primary disabled form=registerForm type=submit>_{Msg.Register}
                                 
                     |]
                     loginStyle
@@ -779,14 +761,15 @@ instance YesodAuthEmail App where
                 }
             |]
             loginWidget=toWidget [julius|
-                $(document).ready(function(){
+                //$(document).ready(function(){
                     $("input[name='agree-required']").change(function(){
                         if(this.checked){
-                            $("#registerForm button").prop("disabled", false)
+                            $('button[type="submit"]').prop("disabled", false)
                         }else{
-                            $("#registerForm button").prop("disabled", true)
+                            $('button[type="submit"]').prop("disabled", true)
                         }
                     });
+
                     $("#registerForm").submit(function(){
                         var agree = $("input[name='agree-required']").is(":checked");
                         if (!agree){
@@ -794,7 +777,7 @@ instance YesodAuthEmail App where
                             return false;
                         }
                     });
-                });
+                //});
             |]
 
     forgotPasswordHandler = do
@@ -839,6 +822,18 @@ instance YesodAuthEmail App where
                             _{MsgForgotPassword}
                         <div .or>
                             <span>_{MsgOr}
+                        <a .google.btn.btn-default href="#">       
+                            <img src=@{StaticR icons_google_logo_svg}>
+                            <span>_{MsgSignInWithGoogle}
+                        <a .orcid.btn.btn-default href="#">
+                            <img src=@{StaticR icons_orcid_logo_svg}>
+                            <span>_{MsgSignInWithORCID}
+        |]
+        toWidget [julius|
+            $("a.google").attr("href", $("a:contains('google')").attr("href"));
+            $("a:contains('google')").remove();
+            $("a.orcid").attr("href", $("a:contains('orcid')").attr("href"));
+            $("a:contains('orcid')").remove();
         |]
         loginStyle
         
@@ -900,25 +895,9 @@ instance YesodAuthEmail App where
                 .login-form-container .or span{
                     padding:0 1em; 
                 }
-                .login-form-container + a{
-                    display:block;
-                    text-align:center;
-                    margin:0.5em auto;
-                    width:20em;
-                }
-                .google-button{
-                    display:flex;
-                    align-items: center;
-                }
-                .google-button svg{
+                .google img, .orcid img{
                     height: 1.5em;
-                }
-                .google-button span{
-                    flex-grow:1;
-                    text-align:center;
-                }
-                .login-form-container + a:hover{
-                    text-decoration:none;
+                    margin-right:0.5em;
                 }
                 |]
 
@@ -1028,7 +1007,7 @@ instance YesodAuthEmail App where
     
     checkPasswordSecurity :: AuthId site -> Text -> AuthHandler site (Either Text ())
     checkPasswordSecurity _ x
-        | TS.length x >= 8 = return $ Right ()
+        | Data.Text.length x >= 8 = return $ Right ()
         | otherwise = return $ Left "Password must be at least 8 characters"
 
 -- | send email 
