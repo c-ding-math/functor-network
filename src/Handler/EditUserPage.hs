@@ -7,7 +7,7 @@ module Handler.EditUserPage where
 
 import Import
 --import Yesod.Form.Bootstrap3
-import Handler.Parser(parse,markItUpWidget,userTemporaryDirectory)
+import Handler.Parser(editorWidget,userTemporaryDirectory)
 import Handler.EditUserEntry(EntryInput(..),entryInputForm,entry2Html)
 --import Parse.Parser (mdToHtml,texToHtml,EditorData(..))
 import Text.Shakespeare.Text
@@ -56,8 +56,9 @@ getEditUserPageR title = do
                 [whamlet|
         <form  method=post enctype=#{entryEnctype}>
             ^{entryWidget}
-            <button .btn .btn-primary type=submit name=action value=publish>_{MsgUpdate}
-            <button .btn .btn-default .delete type=submit name=action value=delete>_{MsgReset}
+            <div .text-left>
+                <button .btn .btn-primary type=submit name=action value=publish>_{MsgUpdate}
+                <button .btn .btn-default .delete type=submit name=action value=delete>_{MsgReset}
                 |]            
                 toWidget        
                     [julius|
@@ -68,7 +69,7 @@ getEditUserPageR title = do
                         });
                     |]
                 
-                markItUpWidget format (Format "html")
+                editorWidget format
         _ -> notFound
 
 

@@ -11,6 +11,7 @@ import Yesod.Form.Bootstrap3
 import Network.HTTP.Conduit (simpleHttp)
 import Text.HTML.DOM (parseLBS)
 import Text.XML.Cursor --(Cursor, attribute, attributeIs, element, fromDocument, ($//), (&//), (&/), content)
+import qualified Data.Text as T
 
 checkRelMeLink :: String -> Text ->  IO Bool
 checkRelMeLink url targetUrl = do
@@ -103,14 +104,15 @@ getSettingsR :: Handler Html
 getSettingsR = do 
     urlRender<-getUrlRender
     (userId, user)<-requireAuthPair
-    (emails, googles) <- runDB $ do
+    (emails, googles, orcids) <- runDB $ do
         --roleEntities<-selectList [RoleUserId==.userId,RoleType==.Administrator] []  
         --mSites<- mapM (get . roleSiteId . entityVal) roleEntities   
         --sites<-selectList[SiteUserId==.Just userId] [Desc SiteInserted]
         emails<-selectList [EmailUserId==.Just userId, EmailVerified==.True] [Desc EmailInserted]
         googles<-selectList [ LoginPlugin==."google",LoginUserId==.Just userId, LoginVerified==.True] [Desc LoginInserted]
+        orcids<-selectList [ LoginPlugin==."orcid",LoginUserId==.Just userId, LoginVerified==.True] [Desc LoginInserted]
         --mNotification <-selectFirst [NotificationEmailId<-.map entityKey emails] [Desc NotificationInserted]
-        return $ (emails, googles)
+        return $ (emails, googles,orcids)
 
     (nameWidget, nameEnctype) <- generateFormPost $ nameSettingForm user
     (aboutWidget, aboutEnctype) <- generateFormPost $ aboutSettingForm user
@@ -128,11 +130,9 @@ getSettingsR = do
             <section .login-setting>
                 <h2>_{MsgLogin}
                 <div>
-                    <label>_{MsgLoginViaEmail}
+                    <label>_{MsgEmail}
                     <div>
-                        $if null emails 
-                            <a .btn .btn-default href=@{AuthR registerR}>_{MsgNewEmail}
-                        $else
+                        $if not $ null emails 
                             <ul>
                                 $forall Entity emailId email<-emails
                                     <li>#{emailAddress email}
@@ -142,14 +142,12 @@ getSettingsR = do
                                                 <a href=@{EmailSettingR emailId}>delete
                                             <li>    
                                                 <a href=@{SubscriptionsR emailId}>manage subscriptions
-                            <a .btn .btn-default href=@{AuthR registerR}>_{MsgNewEmail}
+                        <a .btn .btn-default href=@{AuthR registerR}>_{MsgNewEmail}
                     <p>
                 
                     <label>_{MsgSignInWithGoogle}
                     <div>
-                        $if null googles 
-                            <a .btn .btn-default href=@{AuthR (PluginR "google" ["forward"])}>_{MsgNewGoogle}
-                        $else
+                        $if not $ null googles 
                             <ul>
                                 $forall Entity googleId google<-googles
                                     <li>Google ID. #{drop 11 (loginIdent google)}
@@ -158,7 +156,21 @@ getSettingsR = do
                                             <li>
                                                 <a href=@{LoginSettingR googleId}>delete
                                         
-                            <a .btn .btn-default href=@{AuthR (PluginR "google" ["forward"])}>_{MsgNewGoogle}
+                        <a .btn .btn-default href=@{AuthR (PluginR "google" ["forward"])}>_{MsgNewGoogle}
+                    <p>
+
+                    <label>_{MsgSignInWithORCID}
+                    <div>
+                        $if not $ null orcids
+                            <ul>
+                                $forall Entity pluginId pluginValue<-orcids
+                                    <li>ORCID ID. #{T.replace "\"" "" (loginIdent pluginValue)}
+                                      <span .menu>  
+                                        <ul>
+                                            <li>
+                                                <a href=@{LoginSettingR pluginId}>delete
+                                        
+                        <a .btn .btn-default href=@{AuthR (PluginR "orcid" ["forward"])}>_{MsgNewORCID}
                     <p>
 
             <!-- <section .site-setting>
@@ -207,12 +219,13 @@ getSettingsR = do
                 <h2>_{MsgNotification} 
                 <div>
                     <form .email-form method=post enctype=#{emailEnctype}>
-                        ^{emailWidget}        
+                        ^{emailWidget}
                         $#<p .text-muted>_{MsgNotifyMeViaEmail "noreply@functor.network"}
                         <p .text-muted>Follow your new post and comment via the above email by default. To ensure that the notification can reach you, please add <code>noreply@functor.network</code> to the whitelist with your email provider.                  
                         <button .btn .btn-default type=submit name=setting value=email>_{MsgSave}
+                        <a .btn .btn-default href=@{AuthR registerR}>_{MsgNewEmail}
                     <p>
-            <section .editor-setting>    
+            <section #editor-setting .editor-setting>    
                 <h2>_{MsgEditor}
                 <div>                    
                     <form .format-form method=post enctype=#{formatEnctype}>

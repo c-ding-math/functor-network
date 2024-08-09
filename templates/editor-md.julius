@@ -1,0 +1,385 @@
+
+$(refs.syntax).attr("href", $(refs.syntax).attr("href") + "?format=md");
+
+function theorem() {
+    var inputName = $('<input/>',{type:"text", class:"form-control", value:"Theorem"})
+    , inputIdentifier = $('<input/>',{type:"text", class:"form-control"})
+    , inputTitle = $('<input/>',{type:"text", class:"form-control"})
+    , inputNumbered = $('<input/>',{type:"checkbox", checked:false})
+    , note = $('<p/>',{class: "text-muted", html:"A theorem can be linked with <code>[description](#identifier)</code>. Leave the link description blank for auto-reference."});
+    var modal = newModal({
+        header: '<b>Theorem-like Environment</b>',
+        body: $('<div/>').append($('<div/>',{class:"form-group"}).append('<label>theorem name</label>').append(inputName)).append($('<div/>',{class:"form-group"}).append('<label>theorem identifier</label>').append(inputIdentifier)).append($('<div/>',{class:"form-group"}).append('<label>theorem title</label>').append(inputTitle)).append($('<div/>',{class:"input-group"}).append($('<span/>',{class: ""}).append(inputNumbered)).append('<label>numbered</label>')).append(note),
+        footer: [
+            $('<button/>',{class:"btn btn-primary",type:"button",html:"Continue"}).click(function() {
+                var data = {
+                    identifier: inputIdentifier.val(),
+                    name: inputName.val(),
+                    title: inputTitle.val(),
+                    number: inputNumbered.is(":checked"),
+                };
+                var attr=".theorem-like";
+                if(data.identifier){attr=attr+" #"+data.identifier}
+                if(data.name){attr=attr+' name="'+data.name+'"'}
+                if(data.title){attr=attr+' title="'+data.title+'"'}
+                if(!data.number){attr=attr+" .unnumbered"}
+                //block(function (selectedText) {return selectedText;},':::{'+attr+'}\n','\n:::')();
+                var theBlock=block();
+                var selectedText = editor.getSelectedText();
+                if (selectedText === "") {
+                    editor.insertSnippet(theBlock.open+(":::{"+attr+"}\n${1:statement}\n:::") + theBlock.close);
+                } else {
+                    editor.session.replace(editor.getSelectionRange(), theBlock.open+(":::{"+attr+"}\n" + selectedText + "\n:::") + theBlock.close);
+                    editor.gotoLine(editor.getSelectionRange().end.row+1+2-theBlock.close.length);
+                }
+                modal.modal("hide");
+
+            }),
+        ],
+    });
+
+    modal.on('hidden.bs.modal', function() {
+        editor.focus();
+        modal.remove();
+    });
+    modal.appendTo("body").modal({show: true});
+
+    return false;
+}
+
+function proof(){
+
+    var proofName = $('<input/>',{type:"text", class:"form-control", value:"Proof"});
+    var modal = newModal({
+        header: '<b>Proof Environment</b>',
+        body: $('<div/>').append($('<div/>',{class:"form-group"}).append('<label>proof name</label>').append(proofName)),
+        footer: [
+            $('<button/>',{class:"btn btn-primary",type:"button",html:"Continue"}).click(function() {
+                var data = {
+                    name: proofName.val(),
+                };
+                var attr=".proof-like";
+                if(data.name){attr=attr+' name="'+data.name+'"'}
+                //block(function (selectedText) {return selectedText;},':::{'+attr+'}\n','\n:::')();
+                var theBlock=block();
+                var selectedText = editor.getSelectedText();
+                if (selectedText === "") {
+                    editor.insertSnippet(theBlock.open+(":::{"+attr+"}\n${1:proof}\n:::") + theBlock.close);
+                } else {
+                    editor.session.replace(editor.getSelectionRange(), theBlock.open+(":::{"+attr+"}\n" + selectedText + "\n:::") + theBlock.close);
+                    editor.gotoLine(editor.getSelectionRange().end.row+1+2-theBlock.close.length);
+                }
+                modal.modal("hide");
+            }),
+        ],
+    });
+    
+    modal.on('hidden.bs.modal', function() {
+        editor.focus();
+        modal.remove();
+    });
+    modal.appendTo("body").modal({show: true});
+
+    return false;
+}
+
+function italic() {
+    var selectedText = editor.getSelectedText();
+    if (selectedText === "") {
+        editor.insertSnippet("*${1:italic text}*");
+    } else {
+        editor.session.replace(editor.getSelectionRange(), "*" + selectedText + "*");
+    }
+    editor.focus();
+    return false;
+}
+
+function bold() {
+    var selectedText = editor.getSelectedText();
+    if (selectedText === "") {
+        editor.insertSnippet("**${1:bold text}**");
+    } else {
+        editor.session.replace(editor.getSelectionRange(), "**" + selectedText + "**");
+    }
+    editor.focus();
+    return false;
+}
+
+function quote() {    
+    var theBlock=block();
+    var selectedText = editor.getSelectedText();
+    if (selectedText === "") {
+        editor.insertSnippet(theBlock.open+("> ${1:quoted text}")+theBlock.close);
+    } else {
+        editor.session.replace(editor.getSelectionRange(), theBlock.open+selectedText.replace(/^/gm, "> ")+theBlock.close);
+        editor.gotoLine(editor.getSelectionRange().end.row+1+2-theBlock.close.length);
+    }
+    editor.focus();
+    return false;
+}
+
+function heading() {
+    var theBlock=block();
+    var selectedText = editor.getSelectedText();
+    if (selectedText === "") {
+        editor.insertSnippet(theBlock.open+("### ${1:heading}")+theBlock.close);
+    } else {
+        editor.session.replace(editor.getSelectionRange(), theBlock.open+selectedText.replace(/^/gm, "### ")+theBlock.close);
+        editor.gotoLine(editor.getSelectionRange().end.row+1+2-theBlock.close.length);
+    }
+    editor.focus();
+    return false;
+}
+
+function unorderedList() {
+    var theBlock=block();
+    var selectedText = editor.getSelectedText();
+    if (selectedText === "") {
+        editor.insertSnippet(theBlock.open+("- ${1:item}")+theBlock.close);
+    } else {
+        editor.session.replace(editor.getSelectionRange(), theBlock.open+selectedText.replace(/^/gm, "- ")+theBlock.close);
+        editor.gotoLine(editor.getSelectionRange().end.row+1+2-theBlock.close.length);
+    }
+    editor.focus();
+    return false;
+}
+
+function orderedList() {
+    var theBlock=block();
+    var selectedText = editor.getSelectedText();
+    if (selectedText === "") {
+        editor.insertSnippet(theBlock.open+("1. ${1:item}")+theBlock.close);
+    } else {
+        var n=1;
+        editor.session.replace(editor.getSelectionRange(), theBlock.open+selectedText.replace(/^/gm, function() { return n++ + ". "; })+theBlock.close);
+        editor.gotoLine(editor.getSelectionRange().end.row+1+2-theBlock.close.length);
+    }
+    editor.focus();
+    return false;
+
+}
+
+function link() {
+    var selectedText = editor.getSelectedText()
+    , navTabs = $('<ul/>',{class:"nav nav-tabs", role:"tablist"})
+    , navTabTitle = $('<li/>',{class:"disabled"}).append($('<a/>',{html:"Insert Hyperlink"}))
+    , navTabUrl = $('<li/>',{role:"presentation", class:"active"}).append($('<a/>',{href:"#url", "aria-controls":"url", role:"tab", "data-toggle":"tab", html:"paste URL"}))
+    , navTabFile = $('<li/>',{role:"presentation"}).append($('<a/>',{href:"#file", "aria-controls":"file", role:"tab", "data-toggle":"tab", html:"select file"}))
+    , tabContent = $('<div/>',{class:"tab-content"})
+    , tabPaneUrl = $('<div/>',{class:"tab-pane active", role:"tabpanel", id:"url"})
+    , tabPaneFile = $('<div/>',{class:"tab-pane", role:"tabpanel", id:"file"})
+    , inputUrl = $('<input/>',{type:"text", class:"form-control", placeholder:"URL", value:"https://"})
+    , formFile = $('<form/>',{enctype:"multipart/form-data"}).append($('<input/>',{type:"hidden", name:"_token", value:#{csrftoken}})).append($('<div/>',{class:"form-group required"}).append('<label for="file-input">File</label><input type="file" name="f1" id="file-input" class="form-control required">'))
+    , buttonUrl = $('<button/>',{class:"btn btn-primary", type:"button", html:"Continue"}).click(function() {
+        var url = inputUrl.val();
+        if (selectedText === "") {
+            editor.insertSnippet("[${1:link description}](" + url + ")");
+        } else {
+            editor.session.replace(editor.getSelectionRange(), "[" + selectedText + "](" + url + ")");
+        }
+        modal.modal("hide");
+    })
+    , buttonFile = $('<button/>',{class:"btn btn-primary", type:"button", html:"Continue"}).click(function() {
+        //https://stackoverflow.com/questions/21044798/how-to-use-formdata-for-ajax-file-upload
+        var that=$(this);
+        var formData = new FormData(formFile[0]);
+        $.ajax({
+            url: "@{FilesR}",
+            type: "POST",
+            processData: false,
+            contentType: false,
+            cache: false,
+            data: formData, 
+            beforeSend: function() {
+                that.prop("disabled", true);
+                that.addClass("loading");
+                formFile.find(".form-group").removeClass("has-error").find(".help-block").remove();
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                formFile.find(".form-group").addClass("has-error").append('<span class="help-block">Error: ' + errorThrown + '</span>');
+            },
+            success: function(object, textStatus, jqXHR) {
+                if (selectedText === "") {
+                    editor.insertSnippet("[${1:link description}](" + object.url + ")");
+                } else {
+                    editor.session.replace(editor.getSelectionRange(), "[" + selectedText + "](" + object.url + ")");
+                }
+                modal.modal("hide");
+            },
+            complete: function() {
+                that.prop("disabled", false);
+                that.removeClass("loading");
+            },
+        });
+    });
+
+    var modal = newModal({
+        header: navTabs.append(navTabTitle).append(navTabUrl).append(navTabFile),
+        body: tabContent.append(tabPaneUrl.append($('<div/>',{class:"form-group required"}).append('<label>URL</label>').append(inputUrl)).append($('<div/>',{class:"text-right"}).append(buttonUrl))).append(tabPaneFile.append(formFile).append($('<div/>',{class:"text-right"}).append(buttonFile))),
+    });
+
+    modal.on('show.bs.modal', function() {
+        modal.find('.modal-header').css({"border-bottom":"none", "padding-bottom":0});
+        modal.find('.modal-header ul>li:first-child>a').css({"font-weight":"bold", "color":"#333", "padding-left":0});
+    });
+
+    modal.on('hidden.bs.modal', function() {
+        editor.focus();
+        modal.remove();
+    });
+        
+    modal.appendTo("body").modal({show: true});
+
+    return false;
+}
+
+function image() {
+    var selectedText = editor.getSelectedText()
+    , navTabs = $('<ul/>',{class:"nav nav-tabs", role:"tablist"})
+    , navTabTitle = $('<li/>',{class:"disabled"}).append($('<a/>',{html:"Add Image"}))
+    , navTabUrl = $('<li/>',{role:"presentation", class:"active"}).append($('<a/>',{href:"#url", "aria-controls":"url", role:"tab", "data-toggle":"tab", html:"paste URL"}))
+    , navTabFile = $('<li/>',{role:"presentation"}).append($('<a/>',{href:"#file", "aria-controls":"file", role:"tab", "data-toggle":"tab", html:"select file"}))
+    , tabContent = $('<div/>',{class:"tab-content"})
+    , tabPaneUrl = $('<div/>',{class:"tab-pane active", role:"tabpanel", id:"url"})
+    , tabPaneFile = $('<div/>',{class:"tab-pane", role:"tabpanel", id:"file"})
+    , inputUrl = $('<input/>',{type:"text", class:"form-control", placeholder:"URL", value:"https://"})
+    , formFile = $('<form/>',{enctype:"multipart/form-data"}).append($('<input/>',{type:"hidden", name:"_token", value:#{csrftoken}})).append($('<div/>',{class:"form-group required"}).append('<label for="file-input">File</label><input type="file" name="f1" id="file-input" class="form-control required">'))
+    , imageWidth ='<label>Image width</label><input type="text" class="form-control" placeholder="e.g., 100px" value="" name="width">'
+    , imageHeight ='<label>Image height</label><input type="text" class="form-control" placeholder="e.g., 100px" value="" name="height">'
+    , imageSize = '<div class="form-group" style="display:flex;">'+'<div style="flex:1;margin-right:0.5em;">'+imageWidth+'</div>'+'<div style="flex:1;margin-left:0.5em;">'+imageHeight+'</div>'+'</div>'
+    , buttonUrl = $('<button/>',{class:"btn btn-primary", type:"button", html:"Continue"}).click(function() {
+        var data = {
+            url: inputUrl.val(),
+            width: tabPaneUrl.find("input[name='width']").val(),
+            height: tabPaneUrl.find("input[name='height']").val(),
+        };
+        modalToEditor(data);
+        modal.modal("hide");
+    })
+    , buttonFile = $('<button/>',{class:"btn btn-primary", type:"button", html:"Continue"}).click(function() {
+        //https://stackoverflow.com/questions/21044798/how-to-use-formdata-for-ajax-file-upload
+        var that=$(this);
+        var formData = new FormData(formFile[0]);
+        $.ajax({
+            url: "@{FilesR}",
+            type: "POST",
+            processData: false,
+            contentType: false,
+            cache: false,
+            data: formData, 
+            beforeSend: function() {
+                that.prop("disabled", true);
+                that.addClass("loading");
+                formFile.find(".form-group").removeClass("has-error").find(".help-block").remove();
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                formFile.find(".form-group").addClass("has-error").append('<span class="help-block">Error: ' + errorThrown + '</span>');
+            },
+            success: function(object, textStatus, jqXHR) {
+                var data = {
+                    url: object.url,
+                    width: tabPaneFile.find("input[name='width']").val(),
+                    height: tabPaneFile.find("input[name='height']").val(),
+                };
+                modalToEditor(data);
+                modal.modal("hide");
+            },
+            complete: function() {
+                that.prop("disabled", false);
+                that.removeClass("loading");
+            },
+        });
+    });
+
+    var modalToEditor = function(data) {
+        var url = data.url, width = data.width, height = data.height;
+        var more = "";
+        if (width.trim() !== "" && height.trim() !== "") {
+            more = "{width="+width+" height="+height+"}";
+        } else {
+            if (width.trim() !== "") {
+                more = "{width="+width+"}";
+            } 
+            if (height.trim() !== "") {
+                more = "{height="+height+"}";
+            }
+        }
+        if (selectedText === "") {
+            editor.insertSnippet("![${1:image description}](" + url + ")"+more);
+        } else {
+            editor.session.replace(editor.getSelectionRange(), "![" + selectedText + "](" + url + ")"+more);
+        }
+    }
+
+    var modal = newModal({
+        header: navTabs.append(navTabTitle).append(navTabUrl).append(navTabFile),
+        body: tabContent.append(tabPaneUrl.append($('<div/>',{class:"form-group required"}).append('<label>URL</label>').append(inputUrl)).append(imageSize).append($('<div/>',{class:"text-right"}).append(buttonUrl))).append(tabPaneFile.append(formFile).append(imageSize).append($('<div/>',{class:"text-right"}).append(buttonFile))),
+    });
+
+    modal.on('show.bs.modal', function() {
+        modal.find('.modal-header').css({"border-bottom":"none", "padding-bottom":0});
+        modal.find('.modal-header ul>li:first-child>a').css({"font-weight":"bold", "color":"#333", "padding-left":0});
+    });
+
+    modal.on('hidden.bs.modal', function() {
+        editor.focus();
+        modal.remove();
+    });
+        
+    modal.appendTo("body").modal({show: true});
+
+    return false;
+}
+
+function block() {
+    var blockOpen = "", blockClose = "";
+    var selectedRange = editor.getSelectionRange()
+    , startRow = selectedRange.start.row
+    , startColumn = selectedRange.start.column
+    , endRow = selectedRange.end.row
+    , endColumn = selectedRange.end.column
+
+    if (editor.session.getLine(startRow).slice(0, startColumn).trim() !== '') {
+        blockOpen = "\n\n";
+    } else {
+        if (startColumn !== 0) {
+            blockOpen = "\n";
+        } else {
+            if (startRow !== 0) {
+                var lineBeforeStart = editor.session.getLine(startRow - 1);
+                if (lineBeforeStart.trim() !== '') {
+                    blockOpen = "\n";
+                }
+            }
+        }
+    }
+    
+    if (editor.session.getLine(endRow).slice(endColumn).trim() !== '') {
+        blockClose = "\n\n";
+    } else {
+        if (endColumn !== editor.session.getLine(endRow).length) {
+            blockClose = "\n";
+        } else {
+            if (endRow !== editor.session.getLength() - 1) {
+                var lineAfterEnd = editor.session.getLine(endRow + 1);
+                if (lineAfterEnd.trim() !== '') {
+                    blockClose ="\n";
+                }
+            }else{
+                blockClose = "\n\n";
+            }
+        }
+    }
+
+    return {open:blockOpen, close:blockClose};
+    /*var selectedText = editor.getSelectedText();
+    editor.session.replace(selectedRange, blockOpen + blockType(selectedText) + blockClose);
+
+    var newEndRow = endRow + blockOpen.split("\n").length - 1;
+    if (blockOpen==="") {
+        newEndRow = endRow;
+    }
+    editor.gotoLine(newEndRow + 1, editor.session.getLine(newEndRow).length);
+    editor.focus();
+    return false;*/
+}

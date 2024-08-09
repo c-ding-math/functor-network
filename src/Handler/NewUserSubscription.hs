@@ -5,7 +5,6 @@
 module Handler.NewUserSubscription where
 
 import Import
-import Handler.Parser(jqueryUiWidget)
 import Yesod.Form.Bootstrap3
 import Text.Shakespeare.Text 
 import qualified Crypto.Nonce as Nonce
@@ -74,38 +73,25 @@ subscribeToUserWidget authorId = do
         generateFormPost $ userSubscriptionForm $ (emailAddress . entityVal) <$> mCurrentUserEmail
     [whamlet|
         <a .btn.btn-default .subscribe href=#>_{MsgSubscribe}
-        <form style="display:none;" #subscribe-form method=post action=@{NewUserSubscriptionR authorId} enctype=#{subscribeEnctype}>
-            <p>_{MsgSubscribeToUser}
-            ^{subscribeWidget}
+        <div .modal.fade>
+            <div .modal-dialog>
+                <div .modal-content>
+                    <div .modal-header>
+                        <button type=button .close data-dismiss=modal>&times;
+                        <b .modal-title>_{MsgSubscribe}
+                    <div .modal-body>
+                        <form method=post action=@{NewUserSubscriptionR authorId} enctype=#{subscribeEnctype}>
+                            <p>_{MsgSubscribeToUser}
+                            ^{subscribeWidget}
+                            <.text-right>
+                                <button type=submit .btn.btn-primary>_{MsgSubscribe}
     |]
-    jqueryUiWidget
     toWidget [julius|
 $(document).ready(function(){
     $(".subscribe").click(function(e){
         e.preventDefault();
-		var prompt = $("#subscribe-form");
-		prompt.dialog({
-			modal: true,
-            title: "Subscribe",
-			buttons: [
-				{
-					html: "Subscribe",
-					class: "btn btn-primary",
-					click: function () {
-                        $(this).dialog("close");
-                        $(this).submit();
-                    },
-				},
-				{
-					html: "Cancel",
-					class:"btn btn-default",
-					click: function () {
-						$(this).dialog( "close" );
-					},
-				},
-			]
-		});        
-
+        var modal = $(this).next();
+        modal.modal("show");
     }); 
 });
     |]

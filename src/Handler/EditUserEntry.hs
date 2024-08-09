@@ -17,7 +17,7 @@ module Handler.EditUserEntry (
 import Import
 import Yesod.Form.Bootstrap3
 import Handler.EditComment(deleteEntryRecursive)
-import Handler.Parser(parse,markItUpWidget,userTemporaryDirectory)
+import Handler.Parser(parse,editorWidget,userTemporaryDirectory)
 import Handler.NewEntrySubscription(insertDefaultEntrySubscription)
 import Handler.NewUserSubscription(userSubscriptionNotification)
 import Parse.Parser(mdToHtml,mdToHtmlSimple,texToHtml,texToHtmlSimple,EditorData(..))
@@ -54,7 +54,7 @@ entryInputForm mEntryInput=renderBootstrap3 BootstrapBasicForm $ EntryInput
     <*> aopt textareaField preambleSettings (inputPreamble <$> mEntryInput)
     <*> aopt textareaField editorSettings (inputBody <$> mEntryInput)
     <*> aopt textareaField citationSettings (inputCitation <$> mEntryInput) where  
-        inputFormats = [(MsgMarkdown, Format "md"), (MsgLaTeX, Format "tex")]
+        inputFormats = [(MsgMarkdownWithLaTeX, Format "md"), (MsgPureLaTeX, Format "tex")]
         formatSettings =  FieldSettings
             { fsLabel = SomeMessage MsgBody
             , fsTooltip = Nothing
@@ -66,7 +66,7 @@ entryInputForm mEntryInput=renderBootstrap3 BootstrapBasicForm $ EntryInput
             , fsTooltip = Nothing
             , fsId = Nothing
             , fsName = Just "content"
-            , fsAttrs =[ ("class", "editor form-control"), ("placeholder", "Your content goes here. Press [Ctrl + 0] to preview.")]}
+            , fsAttrs =[ ("class", "editor form-control"), ("placeholder", "Your content goes here. Press [Ctrl + Enter] to preview.")]}
         preambleSettings = FieldSettings
             { fsLabel = ""
             , fsTooltip = Nothing
@@ -94,8 +94,8 @@ getNewUserEntryR =  do
             Just "tex" -> Format "tex"
             Just "md" -> Format "md"
             _->userDefaultFormat user
+    mEntry <- runDB $ selectFirst [EntryUserId ==.userId,EntryType==.UserPost] [Desc EntryInserted]
     entryInput <- runDB $ do 
-        mEntry <- selectFirst [EntryUserId ==.userId,EntryType==.UserPost] [Desc EntryInserted]
         mSamplePost<- case mEntry of
             Just _ -> return Nothing
             Nothing -> do  
@@ -125,8 +125,9 @@ getNewUserEntryR =  do
         [whamlet|
 <form  method=post enctype=#{inputEnctype}>
     ^{inputWidget}
-    <button .btn .btn-primary .publish type=submit name=action value=publish>_{MsgPublishPost}
-    <button .btn .btn-default .draft type=submit name=action value=draft>_{MsgSaveDraft}
+    <div .text-left> 
+        <button .btn .btn-primary .publish type=submit name=action value=publish>_{MsgPublishPost}
+        <button .btn .btn-default .draft type=submit name=action value=draft>_{MsgSaveDraft}
         |]
         toWidget        
             [julius|
@@ -140,7 +141,62 @@ getNewUserEntryR =  do
                     });
                 });
             |]
-        markItUpWidget format (Format "html")
+        editorWidget format
+        -- instruction for first post
+        when (isNothing mEntry) $ do
+            toWidget [julius|
+                $(document).ready(function(){
+                    //show tooltips on "post format", "meta" and "content" fields on click one by one
+                    
+                    var tooltips = [
+                        {
+                            element: $('select[name="format"]'),
+                            title: 'Choose the format of your post here. A comparison between formats can be found at the <a target=\"_blank\" href=\"@{EditHelpR "format"}\">format help page</a>.',
+                            placement: 'right'
+                        },
+                        {
+                            element: $('.editor-toolbar>ul>li:contains("Meta")'),
+                            title: 'Click here to include your latex preamble and citation. You can also set defaults at the <a target=\"_blank\" href=\"@{SettingsR}#editor-setting\">settings page</a>.',
+                            //title: 'Click the "meta" menu to include your latex preamble and citation data.',
+                            placement: 'bottom'
+                        },
+                        {
+                            element: $('.ace_editor'),
+                            title: 'The main content of your document goes here. The shortcut for preview refresh is Ctrl+Enter (on Windows) or Cmd+Enter (on Mac).',
+                            placement: 'bottom'
+                        },
+                        {
+                            element: $('.editor-toolbar>ul>li:contains("Help")'),
+                            title: 'Need help on syntax, shortcuts or anything else? Find more here.',
+                            placement: 'bottom'
+                        },
+                    ];
+
+                    tooltips.forEach(function(tooltip){
+                        tooltip.element.tooltip({
+                            html:true,
+                            placement:tooltip.placement,
+                            title:tooltip.title,
+                            trigger: 'manual'
+                        });
+                    });
+                    var tooltipContainer=$('<div/>',{style:"position:fixed;top:0;left:0;width:100%;height:100%;"}).appendTo('body');
+                    
+                    var i=1;
+                    tooltips[i-1].element.tooltip('show');
+                    tooltipContainer.click(function(){
+                        if(i<tooltips.length){
+                            tooltips[i-1].element.tooltip('destroy');
+                            tooltips[i].element.tooltip('show');
+                            i++;
+                        }else{
+                            tooltips[i-1].element.tooltip('destroy');
+                            tooltipContainer.remove();
+                        }
+                    });
+
+                });
+            |]
 
 
 getEditUserEntryR :: EntryId -> Handler Html
@@ -170,9 +226,10 @@ getEditUserEntryR entryId = do
         [whamlet|
 <form  method=post enctype=#{inputEnctype}>
     ^{inputWidget}
-    <button .btn .btn-primary .publish type=submit name=action value=publish>_{MsgPublishPost}
-    <button .btn .btn-default .draft type=submit name=action value=draft>_{MsgSaveDraft}
-    <button .btn .btn-default .delete type=submit name=action value=delete>_{MsgDelete}
+    <div .text-left> 
+        <button .btn .btn-primary .publish type=submit name=action value=publish>_{MsgPublishPost}
+        <button .btn .btn-default .draft type=submit name=action value=draft>_{MsgSaveDraft}
+        <button .btn .btn-default .delete type=submit name=action value=delete>_{MsgDelete}
         |]
             
         toWidget        
@@ -192,8 +249,7 @@ getEditUserEntryR entryId = do
                     });
                 });
             |]
-        
-        markItUpWidget format (Format "html")
+        editorWidget format
 
 postNewUserEntryR :: Handler Html
 postNewUserEntryR = do

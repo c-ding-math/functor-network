@@ -5,24 +5,19 @@
 module Handler.Files where
 
 import System.FilePath
-import System.Directory (removeFile, doesFileExist,createDirectoryIfMissing)
+import System.Directory (removeFile, createDirectoryIfMissing)
 import Import
 import Yesod.Form.Bootstrap3
 import qualified Data.Conduit.List as CL
 import qualified Data.ByteString as BS
 
-uploadForm :: Html -> MForm Handler (FormResult (FileInfo, Maybe Text, UTCTime), Widget)
-uploadForm = renderBootstrap3 BootstrapBasicForm $ (,,)
-    <$> fileAFormReq (bfs MsgNewFile)
-    <*> pure Nothing
-    <*> lift (liftIO getCurrentTime)
+uploadForm :: Html -> MForm Handler (FormResult (FileInfo), Widget)
+uploadForm = renderBootstrap3 BootstrapBasicForm $ fileAFormReq (bfs MsgNewFile)
 
 getFilesR :: Handler Html
 getFilesR = do
     userId <- requireAuthId
-    urlRender <- getUrlRender
-    let fileLink::File->Text
-        fileLink file=urlRender $ StaticR $ StaticRoute ["files","user",toPathPiece userId, pack (fileFilename file)] []
+    --urlRender <- getUrlRender
     ((_, uploadWidget), uploadEnctype) <- runFormPost uploadForm
     files <- runDB $ selectList [FileUserId==.userId] [Desc FileInserted]
     defaultLayout $ do
@@ -49,18 +44,15 @@ getFilesR = do
                 $forall Entity fileId file <- files
                     <tr>
                         <td>
-                            <a href=#{fileLink file}>
-                                #{fileFilename file}
-                        <!--<td>
-                            $maybe description <- fileDescription file
-                                #{description}-->
+                            <a href=@{fileLink (Entity fileId file)}>
+                                #{fileDescription file}
                         <td>
-                            <input type=text readonly value=#{fileLink file}>         
+                            <input type=text readonly value=@{fileLink (Entity fileId file)}>         
                         <td>
                             #{formatDateStr $ fileInserted file}
                         <td .actions>
                             <a href=# .copy-link data-toggle=tooltip data-placement="top" title="click to copy">_{MsgCopy}
-                            <a href=#{fileLink file} .view>_{MsgView}
+                            <a href=@{fileLink (Entity fileId file)} .view>_{MsgView}
                             <a .delete href=# data-delete-route=@{FileR fileId}>_{MsgDelete}
         
         <div>
@@ -115,7 +107,7 @@ getFilesR = do
         });
 
     });
-    |]
+        |]
 
 postFilesR :: Handler Html
 postFilesR = do
@@ -123,55 +115,88 @@ postFilesR = do
     userId <- requireAuthId
     userFileDirectory <- getUserStaticDir $ Just userId
     ((result, _), _) <- runFormPost uploadForm
+    msgRender <- getMessageRender
+    isAjax <- isAjaxRequest
+
     case result of
-        FormSuccess (fileInfo, info, date) -> do
+        FormSuccess (fileInfo) -> do
             --urlRender <- getUrlRender
             let name = fileName fileInfo
                 fileSource' = fileSource fileInfo
                 
-                maxSizeInMb = 16::Int
-                maxSize = maxSizeInMb * 1024 * 1024  -- Maximum file size in bytes (e.g., 10MB)
-                allowedExtensions = [".jpg", ".jpeg", ".png", ".svg", ".ico", ".gif", ".tiff", ".webp", "jp2", ".txt", ".tex", ".md", ".bib", ".pdf", ".djvu", "docx", "pptx", "xlsx", "odt", "odp", "ods", "rtf", "html", "epub"] -- Allowed extensions
-                fileExtension = takeExtension $ unpack name
-            size <- liftIO $ runConduitRes $ fileSource' .| CL.foldM (\acc bs -> pure (acc + fromIntegral (BS.length bs))) 0
-            if (size > maxSize) then do
-                setMessageI $ MsgFileTooLarge maxSizeInMb
-                redirect FilesR
-            else 
-                if (not $ fileExtension `elem` allowedExtensions) then do
-                    setMessageI MsgFileTypeNotAllowed
-                    redirect FilesR
+                allowedExtensions = ["jpg", "jpeg", "png", "svg", "ico", "gif", "tiff", "webp", "jp2", "txt", "tex", "md", "bib", "pdf", "djvu", "docx", "pptx", "xlsx", "odt", "odp", "ods", "rtf", "html", "epub"] -- Allowed extensions
+                fileExtension =toLower $ case takeExtension (unpack name) of
+                    ('.':ext) -> ext
+                    _ -> ""
+                
+            if (not $ fileExtension `elem` allowedExtensions) then do
+                if isAjax then
+                    sendResponseStatus status415 $ msgRender $ MsgFileTypeNotAllowed
                 else do
-                    eFile <- runDB $ insertBy (File {fileDirectory=userFileDirectory, fileFilename=unpack name, fileDescription= info, fileInserted= date, fileUserId=userId})
-                    case eFile of 
-                        Left _ -> setMessageI (MsgFileExists name)
-                        Right _-> do
-                            liftIO $ createDirectoryIfMissing True $ userFileDirectory
-                            liftIO $ fileMove fileInfo $ userFileDirectory </> (unpack name)
-                            setMessageI MsgFileSaved
-                    redirect FilesR
-        _ -> do
-            setMessageI MsgSomethingWrong
-            redirect FilesR
+                    setMessageI MsgFileTypeNotAllowed
+                    redirect FilesR     
+            else do
+                let maxSizeInMb = 16::Int
+                    maxSize = maxSizeInMb * 1024 * 1024  -- Maximum file size in bytes (e.g., 10MB)
+                size <- liftIO $ runConduitRes $ fileSource' .| CL.foldM (\acc bs -> pure (acc + fromIntegral (BS.length bs))) 0      
+                if (size > maxSize) then do
+                    if isAjax then
+                        sendResponseStatus status413 $ msgRender $ MsgFileTooLarge maxSizeInMb
+                        
+                    else do 
+                        setMessageI $ MsgFileTooLarge maxSizeInMb
+                        redirect FilesR
+
+                else do
+                    currentTime <- liftIO getCurrentTime
+                    let file = File {fileUserId =userId, fileFormat = Format (pack fileExtension), fileInserted = currentTime, fileDescription = name}
+                    fileId  <- runDB $ insert file
+                    liftIO $ do 
+                        createDirectoryIfMissing True $ userFileDirectory
+                        fileMove fileInfo $ userFileDirectory </> unpack (toPathPiece fileId) <.> fileExtension
+                    if isAjax then do 
+                        urlRender <- getUrlRender
+                        sendResponseStatus status201 $ object ["url" .= urlRender (fileLink (Entity fileId file))]
+                        
+                    else do
+                        setMessageI MsgFileSaved
+                        redirect FilesR
+        FormFailure _ -> 
+            if isAjax then
+                sendResponseStatus status400 $ msgRender $ MsgFormFailure
+            else do
+                setMessageI MsgFormFailure
+                redirect FilesR
+        _ -> 
+            if isAjax then
+                sendResponseStatus status400 $ msgRender $ MsgFormMissing
+            else do
+                setMessageI MsgFormMissing
+                redirect FilesR
+    
+    
 
 deleteFileR :: FileId -> Handler ()
 deleteFileR fileId = do
     file <- runDB $ get404 fileId
     userFileDirectory <- getUserStaticDir $ Just $ fileUserId file
-    let filePath = userFileDirectory </> (unpack (fileFilename file))
+    let filePath = userFileDirectory </> case fileFormat file of
+            Format extension -> unpack (toPathPiece fileId) <.> unpack extension
+
     liftIO $ removeFile filePath
+    runDB $ delete fileId
+    setMessageI MsgFileDeleted
+    redirect FilesR
 
-    -- only delete from database if file has been removed from server
-    stillExists <- liftIO $ doesFileExist filePath
+isAjaxRequest :: Handler Bool
+isAjaxRequest = do
+    maybeHeader <- lookupHeader "X-Requested-With"
+    case maybeHeader of
+        Just header -> return $ header == "XMLHttpRequest"
+        Nothing -> return False
 
-    case (stillExists) of 
-        True  -> do
-            setMessageI MsgSomethingWrong
-            redirect FilesR
-        _ -> do
-            runDB $ delete fileId
-            setMessageI MsgFileDeleted
-            redirect FilesR
+fileLink ::Entity File -> Route App
+fileLink (Entity fileId (File userId (Format extension) _ _)) = StaticR $ StaticRoute ["files","user", toPathPiece userId,  pack $ unpack (toPathPiece fileId) <.> unpack extension] []
 
 getUserStaticDir :: Maybe UserId -> Handler FilePath
 getUserStaticDir mUserId = do

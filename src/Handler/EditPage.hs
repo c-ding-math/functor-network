@@ -7,7 +7,7 @@ module Handler.EditPage where
 
 import Import
 import Yesod.Form.Bootstrap3
-import Handler.Parser(parse,markItUpWidget,userTemporaryDirectory)
+import Handler.Parser(parse,editorWidget,userTemporaryDirectory)
 import Parse.Parser (mdToHtml,texToHtml,EditorData(..))
 --import qualified Data.Text as T
 --import System.Directory
@@ -69,10 +69,11 @@ getEditPageR title = do
 <h1>#{title}
 <form  method=post enctype=#{entryEnctype}>
     ^{entryWidget}
-    <button .btn .btn-primary type=submit name=action value=publish>_{MsgPublish}
-    <button .btn .btn-default type=submit name=action value=draft>_{MsgSave}
-    $maybe _ <- mEntry
-        <button .btn .btn-default .delete type=submit name=action value=delete>_{MsgDelete}
+    <div .text-left>
+        <button .btn .btn-primary type=submit name=action value=publish>_{MsgPublish}
+        <button .btn .btn-default type=submit name=action value=draft>_{MsgSave}
+        $maybe _ <- mEntry
+            <button .btn .btn-default .delete type=submit name=action value=delete>_{MsgDelete}
         |]            
         toWidget        
             [julius|
@@ -83,7 +84,7 @@ getEditPageR title = do
                 });
             |]
         
-        markItUpWidget format (Format "html")
+        editorWidget format
 
 
 postEditPageR :: Text -> Handler Html

@@ -48,7 +48,21 @@ getFeedbackR = do
     <h3>_{MsgSendFeedback}
     <form .feedback-form method=post action=@{FeedbackR} enctype=#{feedbackEnctype}>
         ^{feedbackWidget}
-        <button type="submit" .btn.btn-primary>_{MsgSend}
+        <div .text-left>    
+            <button type="submit" .btn.btn-primary>_{MsgSend}
+        |]
+        toWidget [julius|
+            // Spam prevention
+            var t = true;
+            setTimeout(function(){
+                t=false;
+            }, 100);
+            $("form").submit(function(){
+                if(t){
+                    //alert("Please wait a moment before submitting the form.");
+                    return false;
+                }
+            });
         |]
 
 postFeedbackR :: Handler Html

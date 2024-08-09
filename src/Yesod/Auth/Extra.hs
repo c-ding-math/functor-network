@@ -10,8 +10,8 @@ data PasswordForm = PasswordForm { _passwordCurrent :: Text, _passwordNew :: Tex
 data UserForm = UserForm { _userFormEmail :: Text }
 data UserLoginForm = UserLoginForm { _loginEmail :: Text, _loginPassword :: Text }
 
-data GoogleUser = GoogleUser {googleUserName::Text}
-instance FromJSON GoogleUser where
-  parseJSON = withObject "GoogleUser" $ \o -> do
+data PluginUser = PluginUser {pluginUserName::Text}
+instance FromJSON PluginUser where
+  parseJSON = withObject "PluginUser" $ \o -> do
     name <- o .: "name"
-    return $ GoogleUser name
+    return $ PluginUser name

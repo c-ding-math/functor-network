@@ -5,7 +5,6 @@
 module Handler.NewEntrySubscription where
 
 import Import
-import Handler.Parser(jqueryUiWidget)
 import Yesod.Form.Bootstrap3
 import Text.Shakespeare.Text 
 import qualified Crypto.Nonce as Nonce
@@ -122,7 +121,7 @@ subscribeEntryForm mEmail = renderBootstrap3 BootstrapBasicForm $ areq emailFiel
 
 subscribeToEntryWidget :: EntryId -> Widget
 subscribeToEntryWidget entryId = do
-    messageRender <- getMessageRender
+    --messageRender <- getMessageRender
     (subscribeWidget, subscribeEnctype) <- handlerToWidget $ do
         mCurrentUser <- maybeAuth
         --mCurrentUserEmail <- runDB $ selectFirst [EmailUserId ==. mCurrentUserId, EmailVerified ==. True] [Desc EmailInserted]
@@ -131,48 +130,35 @@ subscribeToEntryWidget entryId = do
                 _ -> Nothing
         generateFormPost $ subscribeEntryForm $ mCurrentUserEmail
     entry <- handlerToWidget $ runDB $ get404 entryId
+    let subscribeFormId = "subscribe-form-" <> (toPathPiece entryId)
     [whamlet|
-        <form style="display:none;" #subscribe-form method=post enctype=#{subscribeEnctype} action=@{NewEntrySubscriptionR entryId}>
-            <p>
-                $if entryType entry == Post
-                    _{MsgSubscribeToPost}
-                $else
-                    _{MsgSubscribeToComment}
-            ^{subscribeWidget}
+<div .modal.fade #subscribe>
+    <div .modal-dialog>
+        <div .modal-content>
+            <div .modal-header>
+                <button type=button .close data-dismiss=modal>&times;
+                <b .modal-title>_{MsgFollow}
+            <div .modal-body>
+                <form ##{subscribeFormId} method=post enctype=#{subscribeEnctype} action=@{NewEntrySubscriptionR entryId}>
+                    <p>
+                        $if entryType entry == Post
+                            _{MsgSubscribeToPost}
+                        $else
+                            _{MsgSubscribeToComment}
+                    ^{subscribeWidget}
+                    <div .text-right>
+                        <button type=submit .btn.btn-primary>_{MsgFollow}
     |]
     toWidget [julius|
 $(document).ready(function(){
     $(".subscribe a").click(function(e){
         e.preventDefault();
-		var prompt = $("#subscribe-form");
-        prompt.attr("action", $(this).data("action"));
-
-		prompt.dialog({
-			modal: true,
-            title: #{messageRender MsgFollow},
-			buttons: [
-				{
-					html: #{messageRender MsgFollow},
-					class: "btn btn-primary",
-					click: function () {
-                        $(this).dialog("close");
-                        $(this).submit();
-                    },
-				},
-				{
-					html: #{messageRender MsgCancel},
-					class:"btn btn-default",
-					click: function () {
-						$(this).dialog( "close" );
-					},
-				},
-			]
-		});        
-
+		var subscribeForm = $("#"+ #{subscribeFormId});
+        subscribeForm.attr("action", $(this).data("action"));
+        subscribeForm.closest(".modal").modal("show");
     }); 
 });
     |]
-    jqueryUiWidget
 
 entrySubscriptionConfirmation :: Text -> Text -> AppEmail
 entrySubscriptionConfirmation url title = AppEmail emailSubject emailText emailHtml

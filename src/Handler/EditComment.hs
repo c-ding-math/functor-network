@@ -36,7 +36,7 @@ newCommentForm mCommentData =  renderBootstrap3 BootstrapBasicForm $ CommentInpu
     <*> areq textareaField editorSettings (body <$> mCommentData)
     <*> aopt textareaField citationSettings (citation <$> mCommentData)
     where   
-            inputFormats = [(MsgMarkdown, Format "md"), (MsgLaTeX, Format "tex")]
+            inputFormats = [(MsgMarkdownWithLaTeX, Format "md"), (MsgPureLaTeX, Format "tex")]
             formatSettings =  FieldSettings
                 { fsLabel = SomeMessage MsgComment
                 , fsTooltip = Nothing

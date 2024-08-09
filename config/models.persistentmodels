@@ -54,12 +54,11 @@ EntryTree
     parent EntryId
     
 File 
-    filename String
-    directory String
     userId UserId
+    format Format
     inserted UTCTime
-    description Text Maybe
-    UniqueFile directory filename
+    description Text
+
 
 UserSubscription
     email Text
