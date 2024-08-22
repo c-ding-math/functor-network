@@ -12,13 +12,25 @@ import Data.Text (toLower)
 import Handler.UserEntry (formatDateStr)
 
 searchForm :: Form Text
-searchForm = renderBootstrap3 BootstrapBasicForm $ areq (searchField False) searchFieldSettings Nothing where
+searchForm = renderBootstrap3 BootstrapBasicForm $ areq searchFieldWithAddon searchFieldSettings Nothing where
+    
+    aSearchFiled = searchField False
+    searchFieldWithAddon = aSearchFiled {
+        fieldView = \idAttr nameAttr otherAttrs eResult isReq ->
+            [whamlet|
+                <div .input-group>
+                    <input .form-control type=search id=#{idAttr} name=#{nameAttr} *{otherAttrs} :isReq:required :not isReq:autofocus>
+                    <span .input-group-btn>
+                        <button .btn .btn-default type=submit>
+                            _{MsgSearch}
+            |]
+    }
     searchFieldSettings = FieldSettings {
         fsLabel = "", 
         fsTooltip = Nothing,
         fsId = Nothing,
         fsName = Just "keyword",
-        fsAttrs = [("class","form-control"),("placeholder","Search...")]
+        fsAttrs = [("class","form-control"),("placeholder","keyword")]
     }
 
 getUserEntriesR :: UserId -> Handler Html

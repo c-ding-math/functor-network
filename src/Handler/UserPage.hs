@@ -31,10 +31,10 @@ getUserPageR userId _ = do
                 <li><strong>Homepage</strong>: 
                     <a href=@{UserHomeR userId}>@{UserHomeR userId}
     $if mCurrentUserId == Just userId
-        <div .menu>
-            <ul .entry-menu.list-inline>
+        <div.menu>
+            <ul.list-inline.text-lowercase>
                 <li>
-                    <a href=@{EditUserPageR "About"}>_{MsgEdit}
+                    <a.text-muted href=@{EditUserPageR "About"}>_{MsgEdit}
                     |]
                 
         Just (Entity _ entry) ->
@@ -53,9 +53,9 @@ getUserPageR userId _ = do
 
   $if mCurrentUserId == Just userId
     <div .menu>
-        <ul .entry-menu.list-inline>
+        <ul.list-inline.text-lowercase>
             <li>
-                <a href=@{EditUserPageR "About"}>_{MsgEdit}
+                <a.text-muted href=@{EditUserPageR "About"}>_{MsgEdit}
                 |]
 
 

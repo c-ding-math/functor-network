@@ -73,15 +73,15 @@ getSubscriptions address = do
                         <li>
                             <a href=@{UserHomeR userId}>#{userName user}
                             $maybe key <- userSubscriptionKey subscription
-                              <span .menu>  
-                                <ul>
+                              <span.menu>
+                                <ul.list-inline.text-lowercase>
                                     <li>
-                                        <a .unsubscribe href=@{EditUserSubscriptionR subscriptionId} data-key=#{key}>_{MsgUnsubscribe}
+                                        <a.text-muted .unsubscribe href=@{EditUserSubscriptionR subscriptionId} data-key=#{key}>_{MsgUnsubscribe}
                             $nothing
-                              <span .menu>
-                                <ul>
+                              <span.menu>
+                                <ul.list-inline.text-lowercase>
                                     <li>
-                                        <a .unsubscribe href=@{EditUserSubscriptionR subscriptionId} data-key="">_{MsgUnsubscribe}
+                                        <a.text-muted .unsubscribe href=@{EditUserSubscriptionR subscriptionId} data-key="">_{MsgUnsubscribe}
                     <!--<form .hidden #unsubscribe-form action="" method=post enctype=#{unsubscribeFormEnctype}>
                         ^{unsubscribeFormWidget}-->
             <h3>_{MsgPosts}
@@ -96,15 +96,15 @@ getSubscriptions address = do
                           
                             <a href=@{UserEntryR (entryUserId entry) entryId}>#{preEscapedToMarkup $ entryTitleHtml entry}
                             $maybe key <- entrySubscriptionKey subscription
-                              <span .menu>  
-                                <ul>
+                              <span.menu>
+                                <ul.list-inline.text-lowercase>
                                     <li>
-                                        <a .unsubscribe href=@{EditEntrySubscriptionR subscriptionId} data-key=#{key}>_{MsgUnsubscribe}
+                                        <a.text-muted .unsubscribe href=@{EditEntrySubscriptionR subscriptionId} data-key=#{key}>_{MsgUnsubscribe}
                             $nothing
-                              <span .menu>
-                                <ul>
+                              <span.menu>
+                                <ul.list-inline.text-lowercase>
                                     <li>
-                                        <a .unsubscribe href=@{EditEntrySubscriptionR subscriptionId} data-key="">_{MsgUnsubscribe}
+                                        <a.text-muted .unsubscribe href=@{EditEntrySubscriptionR subscriptionId} data-key="">_{MsgUnsubscribe}
             <form .hidden #unsubscribe-form action="" method=post enctype=#{unsubscribeFormEnctype}>
                 ^{unsubscribeFormWidget}
 
@@ -120,18 +120,24 @@ getSubscriptions address = do
                           
                             <a href=#{url}>#{text}
                             $maybe key <- entrySubscriptionKey subscription
-                              <span .menu>
-                                <ul>
+                              <span.menu>
+                                <ul.list-inline.text-lowercase>
                                     <li>
-                                        <a .unsubscribe href=@{EditEntrySubscriptionR subscriptionId} data-key=#{key}>_{MsgUnsubscribe}
+                                        <a.text-muted .unsubscribe href=@{EditEntrySubscriptionR subscriptionId} data-key=#{key}>_{MsgUnsubscribe}
                             $nothing
-                              <span .menu>
-                                <ul>
+                              <span.menu>
+                                <ul.list-inline.text-lowercase>
                                     <li>
-                                        <a .unsubscribe href=@{EditEntrySubscriptionR subscriptionId} data-key="">_{MsgUnsubscribe}
+                                        <a.text-muted .unsubscribe href=@{EditEntrySubscriptionR subscriptionId} data-key="">_{MsgUnsubscribe}
             <form .hidden #unsubscribe-form action="" method=post enctype=#{unsubscribeFormEnctype}>
                 ^{unsubscribeFormWidget}
                                     
+        |]
+        toWidget [lucius|
+            .menu ul {
+                display: inline-block;
+                margin-left:2em;
+            }
         |]
         toWidget [julius|
             $(document).ready(function() {

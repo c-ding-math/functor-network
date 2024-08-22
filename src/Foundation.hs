@@ -39,7 +39,7 @@ import           Yesod.Form.Bootstrap3
 
 --import           Database.Persist 
 import           Data.Either.Extra()
-import qualified Yesod.Auth.OAuth2 (getUserResponseJSON)
+--import qualified Yesod.Auth.OAuth2 (getUserResponseJSON)
 import qualified Yesod.Auth.OAuth2.Google
 import qualified Yesod.Auth.OAuth2.ORCID
 --import Yesod.Auth.OpenId    (authOpenId, IdentifierType (Claimed))
@@ -508,7 +508,7 @@ instance YesodAuth App where
                                     }
                                 urlRender<-getUrlRender
                                 update uid [UserName=.(msgRender MsgUser <> " " <> (toPathPiece uid)),UserAbout=.(urlRender $ UserPageR uid "About")]
-                                case plugin of
+                                {-case plugin of
                                     p| p `elem` ["google","orcid"] -> do
                                         case Yesod.Auth.Extra.pluginUserName <$> Yesod.Auth.OAuth2.getUserResponseJSON creds of
                                                 Right n-> do
@@ -516,7 +516,7 @@ instance YesodAuth App where
                                                     return ()
                                                 _ -> return ()
                                         
-                                    _ -> return ()
+                                    _ -> return ()-}
             
                                 _<-insert $ Login {loginIdent=ident,loginPlugin=plugin,loginUserId=Just uid,loginToken=Nothing,loginVerified=True,loginInserted=currentTime}
                                 return $ Authenticated uid

@@ -78,14 +78,15 @@ getUserEntryR authorId entryId = do
         $else
             _{MsgComingSoon}
   <div .menu>
-    <ul>
+    <ul.list-inline.text-lowercase>
         <li .reply>
-            <a href=#comment data-action=@{EditCommentR entryId}>comment
-        <!--<li .print><a href=#>print</a>-->
+            <a.text-muted href=#comment data-action=@{EditCommentR entryId}>_{MsgComment}
+        <!--<li .print><a.text-muted href=#>print</a>-->
         <li .subscribe>
-            <a href=# data-action=@{NewEntrySubscriptionR entryId}>_{MsgFollow}     
+            <a.text-muted href=# data-action=@{NewEntrySubscriptionR entryId}>_{MsgFollow}     
         $if isAdministrator maybeUserId entry
-            <li .edit><a href=@{EditUserEntryR entryId}>edit</a>
+            <li .edit>
+                <a.text-muted href=@{EditUserEntryR entryId}>_{MsgEdit}
 
 <section #comments .comments  :entryStatus entry == Draft:.draft>    
     $if null comments
@@ -100,27 +101,30 @@ getUserEntryR authorId entryId = do
                           <a href=#{userAbout (entityVal author)}>#{userName $ entityVal author}
                       $nothing 
                           _{MsgUnregisteredUser}
-                  <span .at>#{formatDateStr (entryInserted comment)}
                   $maybe parentCommentId<-mCommentParentId
                     $if parentCommentId /= entryId
                         <span .to>
+                            <svg style="height:1em;vertical-align:middle;" class="bi bi-reply-fill" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M9.079 11.9l4.568-3.281a.719.719 0 0 0 0-1.238L9.079 4.1A.716.716 0 0 0 8 4.719V6c-1.5 0-6 0-7 8 2.5-4.5 7-4 7-4v1.281c0 .56.606.898 1.079.62z"/>
                             <a href=#entry-#{toPathPiece parentCommentId}>
                                 $maybe parentAuthor<-mCommentParentAuthor
                                     #{userName $ entityVal parentAuthor}
                                 $nothing
                                     _{MsgUnregisteredUser}
+                  <span .at>#{formatDateStr (entryInserted comment)}
+
 
               <div .entry-content>
                   <div .entry-content-wrapper>#{preEscapedToMarkup (entryBodyHtml comment)}  
-              <div .menu>
-                <ul>                
+              <div.menu>
+                <ul.list-inline.text-lowercase>                
                   <li .reply>
-                    <a href=#comment data-action=@{EditCommentR commentId}>reply
+                    <a.text-muted href=#comment data-action=@{EditCommentR commentId}>reply
                   <li .subscribe>
-                    <a href=# data-action=@{NewEntrySubscriptionR commentId}>_{MsgFollow}
+                    <a.text-muted href=# data-action=@{NewEntrySubscriptionR commentId}>_{MsgFollow}
                   $if isAdministrator maybeUserId entry || isAdministrator maybeUserId comment
                       <li .delete>
-                        <a href=@{EditCommentR commentId}>_{MsgDelete}
+                        <a.text-muted href=@{EditCommentR commentId}>_{MsgDelete}
 
 <section .new-comment>
         $maybe _ <- maybeUser

@@ -2,6 +2,24 @@ $(refs.syntax).attr("href", $(refs.syntax).attr("href") + "?format=tex");
 $(refs.theorem).remove();
 $(refs.proof).remove();
 
+function citation() {
+    var entryCitation = $('textarea[name="citation"]');
+    var modalCitation = $('<textarea/>',{class:"form-control",html:entryCitation.val()});
+    var modal = newModal({
+        header: '<b>Citation</b>',
+        body: $('<div/>').append('<p>Include bibliography (in BibLaTeX format) below.</p>').append($('<div/>',{class: "form-group"}).append(modalCitation)).append('<p class="text-muted">A biblography item can be cited with <code>\\cite{identifier}</code>.</div>'),
+        footer: [
+            $('<button/>',{class:"btn btn-primary",type:"button",html:"Save"}).click(function() {
+                entryCitation.val(modalCitation.val());
+                modal.modal("hide");
+                editor.focus();
+            }),
+        ],
+    });
+    modal.appendTo("body").modal({show: true});
+    return false;
+}
+
 function theorem() {
     return false;
 }

@@ -167,7 +167,7 @@ getNewUserEntryR =  do
                         },
                         {
                             element: $('.editor-toolbar>ul>li:contains("Help")'),
-                            title: 'Need help on syntax, shortcuts or anything else? Find more here.',
+                            title: 'More help can be found here. Refresh the page if you want to see the first-time instruction again.',
                             placement: 'bottom'
                         },
                     ];

@@ -52,11 +52,13 @@ getFeedbackR = do
             <button type="submit" .btn.btn-primary>_{MsgSend}
         |]
         toWidget [julius|
+        //$(document).ready(function(){
             // Spam prevention
             var t = true;
             setTimeout(function(){
                 t=false;
             }, 100);
+        //});
             $("form").submit(function(){
                 if(t){
                     //alert("Please wait a moment before submitting the form.");

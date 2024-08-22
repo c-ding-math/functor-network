@@ -90,7 +90,7 @@ defaultFormatSettingForm::User->Form DefaultFormatSetting
 defaultFormatSettingForm user=renderBootstrap3 BootstrapBasicForm $ DefaultFormatSetting
     <$> areq (selectFieldList inputFormats) (bfs MsgDefaultFormat) (Just(userDefaultFormat user))
     where
-        inputFormats = [("Markdown", Format "md"), ("LaTeX", Format "tex")]::[(Text, Format)]
+        inputFormats = [(MsgMarkdownWithLaTeX, Format "md"), (MsgPureLaTeX, Format "tex")]
 
 defaultPreambleSettingForm::User->Form DefaultPreambleSetting
 defaultPreambleSettingForm user=renderBootstrap3 BootstrapBasicForm $ DefaultPreambleSetting
@@ -136,12 +136,12 @@ getSettingsR = do
                             <ul>
                                 $forall Entity emailId email<-emails
                                     <li>#{emailAddress email}
-                                      <span .menu> 
-                                        <ul>
+                                      <span.menu>
+                                        <ul.list-inline.text-lowercase>
                                             <li>
-                                                <a href=@{EmailSettingR emailId}>delete
+                                                <a.text-muted href=@{EmailSettingR emailId}>delete
                                             <li>    
-                                                <a href=@{SubscriptionsR emailId}>manage subscriptions
+                                                <a.text-muted href=@{SubscriptionsR emailId}>manage subscriptions
                         <a .btn .btn-default href=@{AuthR registerR}>_{MsgNewEmail}
                     <p>
                 
@@ -151,10 +151,10 @@ getSettingsR = do
                             <ul>
                                 $forall Entity googleId google<-googles
                                     <li>Google ID. #{drop 11 (loginIdent google)}
-                                      <span .menu>  
-                                        <ul>
+                                      <span.menu>  
+                                        <ul.list-inline.text-lowercase>
                                             <li>
-                                                <a href=@{LoginSettingR googleId}>delete
+                                                <a.text-muted href=@{LoginSettingR googleId}>delete
                                         
                         <a .btn .btn-default href=@{AuthR (PluginR "google" ["forward"])}>_{MsgNewGoogle}
                     <p>
@@ -166,9 +166,9 @@ getSettingsR = do
                                 $forall Entity pluginId pluginValue<-orcids
                                     <li>ORCID ID. #{T.replace "\"" "" (loginIdent pluginValue)}
                                       <span .menu>  
-                                        <ul>
+                                        <ul.list-inline.text-lowercase>
                                             <li>
-                                                <a href=@{LoginSettingR pluginId}>delete
+                                                <a.text-muted href=@{LoginSettingR pluginId}>delete
                                         
                         <a .btn .btn-default href=@{AuthR (PluginR "orcid" ["forward"])}>_{MsgNewORCID}
                     <p>
@@ -263,10 +263,10 @@ getSettingsR = do
                 margin-top:2em;
                 border-top:1px solid #ccc;
             }
-            .menu {
-                margin-left:1.5em;
+            .menu ul{
+                display:inline-block;
+                margin-left:2em;
             }
-
             .name-form,.email-form select,.format-form{
                 max-width:15em;
             }

@@ -21,8 +21,8 @@ editor.setOptions({
 });
 var editorWrapper = $("<div/>");
 var refs = {};
-buildDom(["div", { class: "editor-toolbar menu" },
-    ["ul", {style:"width:100%;"},//Meta Text Math Edit Preview Format 
+buildDom(["div", { class: "editor-toolbar" },
+    ["ul", {class:"list-inline text-lowercase"},//Meta Text Math Edit Preview Format 
         ["li", {class: "dropdown"},
             ["a", {href: "#", class: "dropdown-toggle", "data-toggle": "dropdown"}, "Meta"],
             ["ul", {class: "dropdown-menu"},
@@ -54,7 +54,7 @@ buildDom(["div", { class: "editor-toolbar menu" },
                 ["li", ["a", {href: "#", onclick: numberedEquation},"Numbered Equation"],],
                 ["li", ["a", {href: "#", onclick: alignedEquation},"Aligned Equation"],],
                 ["li", ["a", {href: "#", onclick: equationReference},"Equation Reference"],],
-                ["li", ["a", {ref: "theorem", href: "#", onclick: theorem},"Theorem"],],
+                ["li", ["a", {ref: "theorem", href: "#", onclick: theorem},"Theorem-like environment"],],
                 ["li", ["a", {ref: "proof", href: "#", onclick: proof},"Proof"],],
             ],
         ],
@@ -87,37 +87,44 @@ buildDom(["div", { class: "editor-toolbar menu" },
 ], editorWrapper[0], refs);
 
 var commands = [
-    {name: "italic", bindKey: {win: "Alt-I", mac: "Command-Option-I"}, exec: italic},
-    {name: "bold", bindKey: {win: "Alt-B", mac: "Command-Option-B"}, exec: bold},
-    {name: "quote", bindKey: {win: "Alt-Q", mac: "Command-Option-Q"}, exec: quote},
-    {name: "heading", bindKey: {win: "Alt-H", mac: "Command-Option-H"}, exec: heading},
-    {name: "unorderedList", bindKey: {win: "Alt-U", mac: "Command-Option-U"}, exec: unorderedList},
-    {name: "orderedList", bindKey: {win: "Alt-O", mac: "Command-Option-O"}, exec: orderedList},
-    {name: "foldSelection", bindKey: {win: "Alt-L", mac: "Command-Option-L"}, exec: link},//link
-    {name: "image", bindKey: {win: "Alt-G", mac: "Command-Option-G"}, exec: image},
-    {name: "preamble", bindKey: {win: "Alt-P", mac: "Command-Option-P"}, exec: preamble},
-    {name: "citation", bindKey: {win: "Alt-C", mac: "Command-Option-C"}, exec: citation},
+    {name: "italic", bindKey: {win: "Alt-I", mac: "Option-I"}, exec: italic},
+    {name: "bold", bindKey: {win: "Alt-B", mac: "Option-B"}, exec: bold},
+    {name: "quote", bindKey: {win: "Alt-Q", mac: "Option-Q"}, exec: quote},
+    {name: "heading", bindKey: {win: "Alt-H", mac: "Option-H"}, exec: heading},
+    {name: "unorderedList", bindKey: {win: "Alt-U", mac: "Option-U"}, exec: unorderedList},
+    {name: "orderedList", bindKey: {win: "Alt-O", mac: "Option-O"}, exec: orderedList},
+    {name: "foldSelection", bindKey: {win: "Alt-L", mac: "Option-L"}, exec: link},//link
+    {name: "image", bindKey: {win: "Alt-G", mac: "Option-G"}, exec: image},
+    {name: "preamble", bindKey: {win: "Alt-P", mac: "Option-P"}, exec: preamble},
+    {name: "citation", bindKey: {win: "Alt-C", mac: "Option-C"}, exec: citation},
     {name: "render", bindKey: {win: "Ctrl-Enter", mac: "Command-Enter"}, exec: render},
-    {name: "inlineMath", bindKey: {win: "Alt-1", mac: "Command-Option-1"}, exec: inlineMath},
-    {name: "displayMath", bindKey: {win: "Alt-2", mac: "Command-Option-2"}, exec: displayMath},
-    {name: "numberedEquation", bindKey: {win: "Alt-3", mac: "Command-Option-3"}, exec: numberedEquation},
-    {name: "alignedEquation", bindKey: {win: "Alt-4", mac: "Command-Option-4"}, exec: alignedEquation},
-    {name: "equationReference", bindKey: {win: "Alt-5", mac: "Command-Option-5"}, exec: equationReference},
-    {name: "theorem", bindKey: {win: "Alt-6", mac: "Command-Option-6"}, exec: theorem},
-    {name: "proof", bindKey: {win: "Alt-7", mac: "Command-Option-7"}, exec: proof},
-    {name: "fullScreen", bindKey: {win: "F11", mac: "F11"}, exec: fullScreen},
+    {name: "inlineMath", bindKey: {win: "Alt-1", mac: "Option-1"}, exec: inlineMath},
+    {name: "displayMath", bindKey: {win: "Alt-2", mac: "Option-2"}, exec: displayMath},
+    {name: "numberedEquation", bindKey: {win: "Alt-3", mac: "Option-3"}, exec: numberedEquation},
+    {name: "alignedEquation", bindKey: {win: "Alt-4", mac: "Option-4"}, exec: alignedEquation},
+    {name: "equationReference", bindKey: {win: "Alt-5", mac: "Option-5"}, exec: equationReference},
+    {name: "theorem", bindKey: {win: "Alt-6", mac: "Option-6"}, exec: theorem},
+    {name: "proof", bindKey: {win: "Alt-7", mac: "Option-7"}, exec: proof},
+    {name: "fullScreen", bindKey: {win: "Alt-Enter", mac: "Option-Enter"}, exec: fullScreen},
 ];
 commands.forEach(function(command) {
     editor.commands.addCommand(command);
 });
+editor.commands.removeCommand("showSettingsMenu"); 
 
 var editorContainer = $(editor.container);
 var previewArea = $("<div/>",{class: "entry-content-wrapper"});
 var entryBody = $("textarea[name='content']");
 editor.session.setValue(entryBody.val());
 editorWrapper.append(editorContainer).append($("<div/>",{class: "editor-preview"}).append(previewArea)).insertAfter(entryBody).css({width: "100%", border:entryBody.css("border"), "border-radius":entryBody.css("border-radius")});
-//var entryFormat = $("select[name='format']");
-//$(".editor-toolbar>ul>li:last-child").append(entryFormat);
+$(".editor-toolbar>ul>li>a").addClass("text-muted");
+
+var entryFormat = $("select[name='format']");
+var questionSvg = '<svg style="height:1em; vertical-align:middle;" class="bi bi-question-circle-fill" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM6.57 6.033H5.25C5.22 4.147 6.68 3.5 8.006 3.5c1.397 0 2.673.73 2.673 2.24 0 1.08-.635 1.594-1.244 2.057-.737.559-1.01.768-1.01 1.486v.355H7.117l-.007-.463c-.038-.927.495-1.498 1.168-1.987.59-.444.965-.736.965-1.371 0-.825-.628-1.168-1.314-1.168-.901 0-1.358.603-1.358 1.384zm1.251 6.443c-.584 0-1.009-.394-1.009-.927 0-.552.425-.94 1.01-.94.609 0 1.028.388 1.028.94 0 .533-.42.927-1.029.927z"/></svg>';
+entryFormat.wrap('<span class="format-wrapper"></span>').before($("<label/>",{html: "format:", class:"text-muted", style:"font-weight: normal;"})).after($("<a/>",{class:"text-muted", href: '@{EditHelpR "format"}', target: "_blank", html: questionSvg})).before(" ").after(" ");
+//$("<li/>",{style:"margin-left:auto;"}).appendTo(".editor-toolbar>ul").append(entryFormat);
+//$(".editor-toolbar>ul").css({display: "-webkit-flex", display: "-ms-flex", display: "flex", "align-items": "center"});
+
 entryBody.hide();
 window.editor = editor;
 editor.focus();
@@ -129,8 +136,8 @@ editor.on("blur", function() {
     editorContainer.removeClass("editor-focus");
 });
 
-
-$('select[name="format"]').change(function(){
+var originalFormatSelected=entryFormat.children("option:selected").val();
+entryFormat.change(function(){
     var selected=$(this).children("option:selected").val();
     var format="md"
     if (selected=="2"){
@@ -152,13 +159,18 @@ $("form").submit(function(){
 });
 $(window).on('beforeunload', function(){
     if (editor.getValue()!=originalContent){
-        return confirm("You have unsaved changes. Are you sure you want to leave this page?");
+        if(! confirm("You have unsaved changes. Are you sure you want to leave this page?")){
+            entryFormat.val(originalFormatSelected);
+            return false;
+        }
     }
 });
 
-if (editor.getValue() !== ""){
+$(document).ready(function(){//important! Otherwise the page may not load entirely
+    if (editor.getValue() !== ""){
         render();
     }
+});
 
 function render() {
     entryBody.val(editor.getValue());
@@ -270,24 +282,6 @@ function preamble() {
         footer: [
             $('<button/>',{class:"btn btn-primary",type:"button",html:"Save"}).click(function() {
                 entryPreamble.val(modalPreamble.val());
-                modal.modal("hide");
-                editor.focus();
-            }),
-        ],
-    });
-    modal.appendTo("body").modal({show: true});
-    return false;
-}
-
-function citation() {
-    var entryCitation = $('textarea[name="citation"]');
-    var modalCitation = $('<textarea/>',{class:"form-control",html:entryCitation.val()});
-    var modal = newModal({
-        header: '<b>Citation</b>',
-        body: $('<div/>').append('<p>Include bibliography (in BibLaTeX format) below.</p>').append($('<div/>',{class: "form-group"}).append(modalCitation)).append('<p class="text-muted">A biblography item can be cited with <code>[@idetifier]</code>.</div>'),
-        footer: [
-            $('<button/>',{class:"btn btn-primary",type:"button",html:"Save"}).click(function() {
-                entryCitation.val(modalCitation.val());
                 modal.modal("hide");
                 editor.focus();
             }),
