@@ -37,6 +37,7 @@
 /subscribe/entry/#EntryId NewEntrySubscriptionR POST
 
 /comment/#EntryId/edit EditCommentR POST DELETE !login 
+/feedback/#EntryId/edit EditFeedbackR POST DELETE !login
 /user/#UserId/comments CommentsR GET !user
 
 /edit/entry/#EntryId EditEntryR GET POST
@@ -47,3 +48,7 @@
 !/user/#UserId/#Text UserPageR GET !user
 
 
+
+/categories CategoriesR GET
+/category/#EntryId/edit EditCategoryR GET POST
+/category NewCategoryR GET POST

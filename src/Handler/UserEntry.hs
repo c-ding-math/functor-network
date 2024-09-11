@@ -16,35 +16,33 @@ getUserEntryR :: UserId ->  EntryId -> Handler Html
 getUserEntryR authorId entryId = do    
     maybeUserId<-maybeAuthId
     maybeUser<-maybeAuth
-    (entry,mEntryAuthor,comments,mCommentAuthors,mCommentParentIds,mCommentParentAuthors)<-runDB $ do
+    (entry,entryAuthor,commentListData)<-runDB $ do
         entry<-get404 entryId
         
         if (entryUserId entry==authorId) && (entryStatus entry==Publish || isAdministrator maybeUserId entry) && (entryType entry==UserPost)
           then do
-            mEntryAuthor<- selectFirst [UserId==.entryUserId entry] []
-            commentIds<- getChildIds entryId
-            comments<-selectList [EntryId <-. commentIds, EntryStatus==.Publish, EntryType==.Comment][Asc EntryInserted]     
-            --commentHtmls<-mapM (\x->getBy404 $ UniqueEntryHtml $ entityKey x) comments
-            mCommentAuthors<-mapM (\x-> selectFirst [UserId==.entryUserId (entityVal x)] []) comments
-            mCommentParentIds<-mapM (\comment -> do
-                mEntryTree<-selectFirst [EntryTreeNode==.entityKey comment] [] 
+            --mEntryAuthor<- selectFirst [UserId==.entryUserId entry] []
+            entryAuthor<-get404 $ entryUserId entry
+            commentIds <- getChildIds entryId
+            commentEntities <- selectList [EntryId <-. commentIds] [Asc EntryInserted]
+            commentAuthors <- mapM (\(Entity _ comment) -> do
+                commentAuthor<-get404 $ entryUserId comment
+                return (entryUserId comment, userName commentAuthor)
+                ) commentEntities
+            parentCommentMetas <- mapM (\commentEntity -> do
+                mEntryTree <- selectFirst [EntryTreeNode==.entityKey commentEntity] []
                 case mEntryTree of
-                    Just tree -> return $ Just $ entryTreeParent $ entityVal tree
-                    Nothing -> return Nothing
-                ) comments
-
-            mCommentParentAuthors<-mapM (\mCommentParentId -> do
-                case mCommentParentId of
-                    Just parentId -> do
-                        mParentComment<-get parentId
-                        case mParentComment of
-                            Just parentComment -> do
-                                mCommentParentAuthor<- selectFirst [UserId==.entryUserId parentComment] []
-                                return mCommentParentAuthor
-                            Nothing -> return Nothing
-                    Nothing -> return Nothing
-                ) mCommentParentIds
-            return $ (entry,mEntryAuthor,comments,mCommentAuthors,mCommentParentIds,mCommentParentAuthors)        
+                    Just tree -> do
+                        let parentCommentId = entryTreeParent $ entityVal tree
+                        if parentCommentId == entryId
+                            then return Nothing
+                            else do
+                                parentComment <- get404 parentCommentId
+                                parentCommentAuthor <- get404 $ entryUserId parentComment
+                                return $ Just (parentCommentId, userName parentCommentAuthor)
+                    _ -> return Nothing
+                ) commentEntities
+            return $ (entry,entryAuthor,zip3 commentEntities commentAuthors parentCommentMetas)       
           else notFound
 
     formatParam <- lookupGetParam "format"
@@ -66,10 +64,7 @@ getUserEntryR authorId entryId = do
   <h1 .entry-title>#{preEscapedToMarkup(scaleHeader 1 (entryTitleHtml entry))}
   <div .entry-meta>
       <span .by>
-          $maybe author<-mEntryAuthor      
-              <a href=#{userAbout (entityVal author)}>#{userName $ entityVal author}
-          $nothing 
-              _{MsgUnregisteredUser}
+        <a href=@{UserHomeR (entryUserId entry)}>#{userName entryAuthor}
       <span .at>#{formatDateStr (entryInserted entry)}
   <div .entry-content>
       <div .entry-content-wrapper>
@@ -87,44 +82,35 @@ getUserEntryR authorId entryId = do
         $if isAdministrator maybeUserId entry
             <li .edit>
                 <a.text-muted href=@{EditUserEntryR entryId}>_{MsgEdit}
-
 <section #comments .comments  :entryStatus entry == Draft:.draft>    
-    $if null comments
+    $if null commentListData
         <p style="display:none">_{MsgNoComment}
     $else
         <h3>_{MsgComments}
-        $forall (Entity commentId comment,mCommentAuthor,mCommentParentId,mCommentParentAuthor)<-zip4 comments mCommentAuthors mCommentParentIds mCommentParentAuthors
+        $forall (Entity commentId comment,(commentAuthorId, commentAuthorName),mParentCommentMeta)<-commentListData
             <article .comment id=entry-#{toPathPiece commentId}> 
-              <div .entry-meta>
-                  <span .by>
-                      $maybe author<-mCommentAuthor                           
-                          <a href=#{userAbout (entityVal author)}>#{userName $ entityVal author}
-                      $nothing 
-                          _{MsgUnregisteredUser}
-                  $maybe parentCommentId<-mCommentParentId
-                    $if parentCommentId /= entryId
+                <div .entry-meta>
+                    <span .by>                  
+                        <a href=@{UserHomeR commentAuthorId}>#{commentAuthorName}
+                    $maybe (parentCommentId, parentCommentAuthorName)<-mParentCommentMeta
                         <span .to>
                             <svg style="height:1em;vertical-align:middle;" class="bi bi-reply-fill" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M9.079 11.9l4.568-3.281a.719.719 0 0 0 0-1.238L9.079 4.1A.716.716 0 0 0 8 4.719V6c-1.5 0-6 0-7 8 2.5-4.5 7-4 7-4v1.281c0 .56.606.898 1.079.62z"/>
                             <a href=#entry-#{toPathPiece parentCommentId}>
-                                $maybe parentAuthor<-mCommentParentAuthor
-                                    #{userName $ entityVal parentAuthor}
-                                $nothing
-                                    _{MsgUnregisteredUser}
-                  <span .at>#{formatDateStr (entryInserted comment)}
+                                #{parentCommentAuthorName}
+                    <span .at>#{formatDateStr (entryInserted comment)}
 
-
-              <div .entry-content>
-                  <div .entry-content-wrapper>#{preEscapedToMarkup (entryBodyHtml comment)}  
-              <div.menu>
-                <ul.list-inline.text-lowercase>                
-                  <li .reply>
-                    <a.text-muted href=#comment data-action=@{EditCommentR commentId}>reply
-                  <li .subscribe>
-                    <a.text-muted href=# data-action=@{NewEntrySubscriptionR commentId}>_{MsgFollow}
-                  $if isAdministrator maybeUserId entry || isAdministrator maybeUserId comment
-                      <li .delete>
-                        <a.text-muted href=@{EditCommentR commentId}>_{MsgDelete}
+                <div .entry-content>
+                    <div .entry-content-wrapper>#{preEscapedToMarkup (entryBodyHtml comment)}  
+                <div.menu>
+                    <ul.list-inline.text-lowercase>                
+                        <li .reply>
+                            <a.text-muted href=#comment data-action=@{EditCommentR commentId}>reply
+                        <li .subscribe>
+                            <a.text-muted href=# data-action=@{NewEntrySubscriptionR commentId}>_{MsgFollow}
+                        $if isAdministrator maybeUserId entry || isAdministrator maybeUserId comment
+                            <li .delete>
+                                <a.text-muted href=@{EditCommentR commentId}>_{MsgDelete}
 
 <section .new-comment>
         $maybe _ <- maybeUser
@@ -140,12 +126,13 @@ getUserEntryR authorId entryId = do
                 
         |]
         editorWidget format
-        subscribeToEntryWidget entryId
         menuWidget
 
         
 menuWidget::Widget
 menuWidget=do
+    subscribeToEntryWidget
+    msgRender<-getMessageRender
     toWidget [julius|
         $(".new-comment form button").click(function(){
             $(".new-comment form").submit();   
@@ -171,19 +158,30 @@ menuWidget=do
             }); */
 
             $(".entry .menu .reply a").click(function(){
-                $("#comment").html("Add a comment");
+                $("#comment").html(commentLabel);
                 var handlerUrl=$(this).attr("data-action");
                 $(".new-comment form").attr("action", handlerUrl);
             });
+            var commentLabel=$("#comment").html();
             $(".comment .menu .reply a").click(function(){
-                var handlerUrl=$(this).attr("data-action");
-                $(".new-comment form").attr("action", handlerUrl);
-                var parentId=$(this).closest(".comment").attr("id").replace("entry-","");
-                var parentCommentAuthor=$(this).closest(".comment").find(".entry-meta .by a").html();
-                $("#comment").html("Reply to <a href=#entry-"+parentId+">"+parentCommentAuthor+"</a>");
+                var parent=$(this).parent();
+                if (parent.hasClass("ing")){
+                    parent.removeClass("ing");
+                    $(this).html("reply");
+                    $(".entry .menu .reply a").click();
+                } else {
+                    $(".reply.ing").removeClass("ing").find("a").html("reply");
+                    parent.addClass("ing");
+                    $(this).html("cancel reply");
+                    var handlerUrl=$(this).attr("data-action");
+                    $(".new-comment form").attr("action", handlerUrl);
+                    var parentId=$(this).closest(".comment").attr("id").replace("entry-","");
+                    var parentCommentAuthor=$(this).closest(".comment").find(".entry-meta .by a").html();
+                    $("#comment").html("Reply to <a href=#entry-"+parentId+">"+parentCommentAuthor+"</a>");
+                }
             });
             $(".menu .delete a").click(function(event){  
-                if (confirm("Are you sure that you want to delete the comment?")) {
+                if (confirm(#{msgRender MsgCommentDeletionConfirmation})) {
             
                     var that =$(this);
                     var url=$(this).attr("href");

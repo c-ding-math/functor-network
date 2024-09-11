@@ -120,6 +120,7 @@ Comment: Comment
 Comments: Comments
 CommentPublished: Comment published
 CommentDeleted: Comment deleted
+CommentDeletionConfirmation: Are you sure that you want to delete the comment? The replies (if any) to your comment will also be deleted.
 Reply: Reply
 
 AboutPageReset: Your about page has been reset.
@@ -151,8 +152,10 @@ EmailAddress: Email address
 SubscriptionVerified: Your subscription has been verified.
 SubscriptionDeleted: Subscription deleted
 VerificationEmailSent email@Text: A verification email has been sent to #{email}. Please click the link in the email to verify your account.
+OtherSubscriptions: Other subscriptions
 
 Feedback: Feedback
+YourFeedback: Your feedback
 FeedbackSentDescription: Your feedback has been sent. Thank you!
 Send: Send
 SendFeedback: Send feedback

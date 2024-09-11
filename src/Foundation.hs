@@ -323,6 +323,7 @@ instance Yesod App where
     isAuthorized FilesR _ = isAuthenticated
     --isAuthorized (ParserR _ _) _ = isAuthenticated
     isAuthorized (EditCommentR _) _ = isAuthenticated
+    isAuthorized (EditFeedbackR _) _ = isAuthenticated
     isAuthorized NewUserEntryR _ = isAuthenticated
 
     -- owner routes
@@ -1049,6 +1050,10 @@ sendAppEmail email appEmail= do
                     }
                         
             return ()
+
+-- | UTCTime to Date String
+utcToDate :: UTCTime -> String
+utcToDate t = formatTime defaultTimeLocale "%e %b %Y" t
 
 -- | Access function to determine if a user is logged in.
 isAuthenticated :: Handler AuthResult

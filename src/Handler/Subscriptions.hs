@@ -48,6 +48,7 @@ getSubscriptions address = do
         return (userSubscriptionEntities,userEntities,entrySubscriptionEntities,entryEntities)
     let postList = [ x | x <- entryList, entryType (entityVal x) == UserPost]
     let commentList = [ x | x <- entryList, entryType (entityVal x) == Comment]
+    let feedbackList = [ x | x <- entryList, entryType (entityVal x) == Feedback]
     entryLinkList <- runDB $ do
         mapM (\(Entity entryId entry) -> do
             case entryType entry of
@@ -82,8 +83,7 @@ getSubscriptions address = do
                                 <ul.list-inline.text-lowercase>
                                     <li>
                                         <a.text-muted .unsubscribe href=@{EditUserSubscriptionR subscriptionId} data-key="">_{MsgUnsubscribe}
-                    <!--<form .hidden #unsubscribe-form action="" method=post enctype=#{unsubscribeFormEnctype}>
-                        ^{unsubscribeFormWidget}-->
+
             <h3>_{MsgPosts}
             <p>_{MsgPostSubscriptionsDescription}
             $if null postList
@@ -105,8 +105,6 @@ getSubscriptions address = do
                                 <ul.list-inline.text-lowercase>
                                     <li>
                                         <a.text-muted .unsubscribe href=@{EditEntrySubscriptionR subscriptionId} data-key="">_{MsgUnsubscribe}
-            <form .hidden #unsubscribe-form action="" method=post enctype=#{unsubscribeFormEnctype}>
-                ^{unsubscribeFormWidget}
 
             <h3>_{MsgComments}
             <p>_{MsgCommentSubscriptionsDescription}
@@ -129,6 +127,27 @@ getSubscriptions address = do
                                 <ul.list-inline.text-lowercase>
                                     <li>
                                         <a.text-muted .unsubscribe href=@{EditEntrySubscriptionR subscriptionId} data-key="">_{MsgUnsubscribe}
+            <h3>_{MsgOtherSubscriptions}
+            
+            $if null feedbackList
+                <p>_{MsgNoSubscription}
+            $else
+                <ul>
+                    $forall (Entity subscriptionId subscription, Entity entryId entry)<- zip entrySubscriptionList entryList
+                      $if entryType entry == Feedback
+                        <li>
+                          
+                            <a href=@{FeedbackR}#entry-#{toPathPiece entryId}>#{preEscapedToMarkup $ entryTitleHtml entry}
+                            $maybe key <- entrySubscriptionKey subscription
+                              <span.menu>
+                                <ul.list-inline.text-lowercase>
+                                    <li>
+                                        <a.text-muted .unsubscribe href=@{EditEntrySubscriptionR subscriptionId} data-key=#{key}>_{MsgUnsubscribe}
+                            $nothing
+                              <span.menu>
+                                <ul.list-inline.text-lowercase>
+                                    <li>
+   
             <form .hidden #unsubscribe-form action="" method=post enctype=#{unsubscribeFormEnctype}>
                 ^{unsubscribeFormWidget}
                                     

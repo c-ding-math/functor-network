@@ -42,7 +42,8 @@ newCommentForm mCommentData =  renderBootstrap3 BootstrapBasicForm $ CommentInpu
                 , fsTooltip = Nothing
                 , fsId = Nothing
                 , fsName = Just "format"
-                , fsAttrs =[("class", "input-sm form-control format-selector")]}
+                , fsAttrs =[("class", "input-sm form-control format-selector")]
+                }
             editorSettings = FieldSettings
                 { fsLabel = ""
                 , fsTooltip = Nothing

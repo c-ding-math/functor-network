@@ -7,7 +7,7 @@ module Handler.EditUserPage where
 
 import Import
 --import Yesod.Form.Bootstrap3
-import Handler.Parser(editorWidget,userTemporaryDirectory)
+import Handler.Parser(editorWidget)
 import Handler.EditUserEntry(EntryInput(..),entryInputForm,entry2Html)
 --import Parse.Parser (mdToHtml,texToHtml,EditorData(..))
 import Text.Shakespeare.Text

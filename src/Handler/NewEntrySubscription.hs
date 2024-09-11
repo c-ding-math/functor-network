@@ -119,9 +119,9 @@ insertDefaultEntrySubscription entryId = do
 subscribeEntryForm ::Maybe Text -> Form Text 
 subscribeEntryForm mEmail = renderBootstrap3 BootstrapBasicForm $ areq emailField (bfs MsgEmail) mEmail
 
-subscribeToEntryWidget :: EntryId -> Widget
-subscribeToEntryWidget entryId = do
-    --messageRender <- getMessageRender
+subscribeToEntryWidget :: Widget
+subscribeToEntryWidget = do
+    messageRender <- getMessageRender
     (subscribeWidget, subscribeEnctype) <- handlerToWidget $ do
         mCurrentUser <- maybeAuth
         --mCurrentUserEmail <- runDB $ selectFirst [EmailUserId ==. mCurrentUserId, EmailVerified ==. True] [Desc EmailInserted]
@@ -129,22 +129,18 @@ subscribeToEntryWidget entryId = do
                 Just (Entity _ user) -> userEmail user
                 _ -> Nothing
         generateFormPost $ subscribeEntryForm $ mCurrentUserEmail
-    entry <- handlerToWidget $ runDB $ get404 entryId
-    let subscribeFormId = "subscribe-form-" <> (toPathPiece entryId)
+    --entry <- handlerToWidget $ runDB $ get404 entryId
+    --let subscriptionFormId = "subscribe-form-" <> (toPathPiece entryId)
     [whamlet|
-<div .modal.fade #subscribe>
+<div .modal.fade>
     <div .modal-dialog>
         <div .modal-content>
             <div .modal-header>
                 <button type=button .close data-dismiss=modal>&times;
                 <b .modal-title>_{MsgFollow}
             <div .modal-body>
-                <form ##{subscribeFormId} method=post enctype=#{subscribeEnctype} action=@{NewEntrySubscriptionR entryId}>
-                    <p>
-                        $if entryType entry == Post
-                            _{MsgSubscribeToPost}
-                        $else
-                            _{MsgSubscribeToComment}
+                <form .subscription-form method=post enctype=#{subscribeEnctype}>
+                    <p .subscription-form-text>
                     ^{subscribeWidget}
                     <div .text-right>
                         <button type=submit .btn.btn-primary>_{MsgFollow}
@@ -153,9 +149,14 @@ subscribeToEntryWidget entryId = do
 $(document).ready(function(){
     $(".subscribe a").click(function(e){
         e.preventDefault();
-		var subscribeForm = $("#"+ #{subscribeFormId});
-        subscribeForm.attr("action", $(this).data("action"));
-        subscribeForm.closest(".modal").modal("show");
+		var subscriptionForm = $(".subscription-form");
+        subscriptionForm.attr("action", $(this).data("action"));
+        if ($(this).closest("#comments").length > 0){
+            subscriptionForm.find(".subscription-form-text").text(#{messageRender MsgSubscribeToComment});
+        } else {
+            subscriptionForm.find(".subscription-form-text").text(#{messageRender MsgSubscribeToPost});
+        }
+        subscriptionForm.closest(".modal").modal("show");
     }); 
 });
     |]
