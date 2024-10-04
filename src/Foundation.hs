@@ -138,92 +138,33 @@ instance Yesod App where
         --master <- getYesod
         mmsg <- getMessage
 
-        muser <- maybeAuthPair
+        --muser <- maybeAuthPair
         muid <- maybeAuthId
         mcurrentRoute <- getCurrentRoute
         mAuthorEntity<-routeUserEntity mcurrentRoute
 
         -- Get the breadcrumbs, as defined in the YesodBreadcrumbs instance.
         (title, parents) <- breadcrumbs
-        (homeTitle, homeRoute, aboutRoute)<- case mAuthorEntity of
-            Just (Entity userId user) -> return (userName user, UserHomeR userId, UserPageR userId "About")
-            Nothing -> return (appName, HomeR, PageR "About")
+        (homeTitle, homeRoute)<- case mAuthorEntity of
+            Just (Entity userId user) -> return (userName user, UserHomeR userId)
+            Nothing -> return (appName, HomeR)
 
         -- Define the menu items of the header.
-        let mUserRoutePath = entityKey <$> mAuthorEntity
         let menuItems =
-                case muid of 
-                    Just uid | mUserRoutePath == muid->
-                        [ NavbarRight $ MenuItem
+                case mAuthorEntity of
+                    Just (Entity userId _) -> 
+                        [ NavbarLeft $ MenuItem
                             { menuItemLabel = "Posts"
-                            , menuItemRoute = UserHomeR uid
+                            , menuItemRoute = UserEntriesR userId
                             , menuItemAccessCallback = True
                             }
-                        , NavbarRight $ MenuItem
-                            { menuItemLabel = "Comments"
-                            , menuItemRoute = CommentsR uid
-                            , menuItemAccessCallback = True
-                            }
-                        , NavbarRight $ MenuItem
-                            { menuItemLabel = "Settings"
-                            , menuItemRoute = SettingsR
+                        , NavbarLeft $ MenuItem
+                            { menuItemLabel = "Categories"
+                            , menuItemRoute = CategoriesR userId
                             , menuItemAccessCallback = True
                             }
                         ]
-                    Just uid | otherwise ->
-                        [ NavbarRight $ MenuItem
-                            { menuItemLabel = "Home"
-                            , menuItemRoute = UserHomeR uid
-                            , menuItemAccessCallback = True
-                            }
-                        ]
-                    _ -> []
-                ++[ NavbarRight $ MenuItem
-                    { menuItemLabel = "Login"
-                    , menuItemRoute = AuthR LoginR
-                    , menuItemAccessCallback = isNothing muser
-                    }
-                , NavbarRight $ MenuItem
-                    { menuItemLabel = "Logout"
-                    , menuItemRoute = AuthR LogoutR
-                    , menuItemAccessCallback = isJust muser
-                    }
-                ] ++ case isJust mUserRoutePath of
-                    True | mcurrentRoute == Just (SettingsR) ->
-                        [ FooterLeft $ MenuItem
-                            { menuItemLabel = "Feedback"
-                            , menuItemRoute = FeedbackR
-                            , menuItemAccessCallback = True
-                            }
-                        , FooterRight $ MenuItem
-                            { menuItemLabel = "Version 2024-08-08"
-                            , menuItemRoute = PageR "Changelog"
-                            , menuItemAccessCallback = True
-                            }
-                        ]
-                    True | otherwise-> 
-                        [ FooterLeft $ MenuItem
-                            { menuItemLabel = "About the author"
-                            , menuItemRoute = aboutRoute
-                            , menuItemAccessCallback = True
-                            }
-                        , FooterRight $ MenuItem
-                            { menuItemLabel = "Feedback"
-                            , menuItemRoute = FeedbackR
-                            , menuItemAccessCallback = True
-                            }
-                        , FooterRight $ MenuItem
-                            { menuItemLabel = "Privacy"
-                            , menuItemRoute = PageR "Privacy Policy"
-                            , menuItemAccessCallback = True
-                            }
-                        , FooterRight $ MenuItem
-                            { menuItemLabel = "Network"
-                            , menuItemRoute = HomeR
-                            , menuItemAccessCallback = True
-                            }
-                        ]
-                    False -> 
+                    _ -> 
                         [ NavbarLeft $ MenuItem
                             { menuItemLabel = "Posts"
                             , menuItemRoute = EntriesR
@@ -234,23 +175,72 @@ instance Yesod App where
                             , menuItemRoute = UsersR
                             , menuItemAccessCallback = True
                             }
-                        , FooterLeft $ MenuItem
-                            { menuItemLabel = "About"
-                            , menuItemRoute = PageR "About"
-                            , menuItemAccessCallback = True
-                            }
-                        , FooterLeft $ MenuItem
-                            { menuItemLabel = "Privacy"
-                            , menuItemRoute = PageR "Privacy Policy"
-                            , menuItemAccessCallback = True
-                            }
-                        , FooterLeft $ MenuItem
-                            { menuItemLabel = "Feedback"
-                            , menuItemRoute = FeedbackR
-                            , menuItemAccessCallback = True
-                            }
-
                         ]
+                ++  case muid of 
+                        Just uid ->
+                            [ NavbarRight $ MenuItem
+                                { menuItemLabel = "Write"
+                                , menuItemRoute = NewUserEntryR
+                                , menuItemAccessCallback = (entityKey <$> mAuthorEntity) == muid
+                                }
+                            ,NavbarRight $ MenuItem
+                                { menuItemLabel = "Home"
+                                , menuItemRoute = UserHomeR uid
+                                , menuItemAccessCallback = (entityKey <$> mAuthorEntity) /= muid
+                                }
+                            , NavbarRight $ MenuItem
+                                { menuItemLabel = "Settings"
+                                , menuItemRoute = SettingsR
+                                , menuItemAccessCallback = (entityKey <$> mAuthorEntity) == muid
+                                }
+                            , NavbarRight $ MenuItem
+                                { menuItemLabel = "Logout"
+                                , menuItemRoute = AuthR LogoutR
+                                , menuItemAccessCallback = True
+                                }
+                            ]
+                        _ ->
+                            [ NavbarRight $ MenuItem
+                                { menuItemLabel = "Login"
+                                , menuItemRoute = AuthR LoginR
+                                , menuItemAccessCallback = True
+                                }
+                            ]
+                ++  case mcurrentRoute == Just (SettingsR) of
+                        True -> 
+                            [ FooterLeft $ MenuItem
+                                { menuItemLabel = "Feedback"
+                                , menuItemRoute = FeedbackR
+                                , menuItemAccessCallback =  mcurrentRoute == Just (SettingsR)
+                                }
+                            , FooterRight $ MenuItem
+                                { menuItemLabel = "Version 2024-08-08"
+                                , menuItemRoute = PageR "Changelog"
+                                , menuItemAccessCallback =  mcurrentRoute == Just (SettingsR)
+                                }
+                            ]
+                        False -> 
+                            [ FooterLeft $ MenuItem
+                                { menuItemLabel = "About"
+                                , menuItemRoute = PageR "About"
+                                , menuItemAccessCallback = isNothing mAuthorEntity
+                                }
+                            , FooterLeft $ MenuItem
+                                { menuItemLabel = "Network"
+                                , menuItemRoute = HomeR
+                                , menuItemAccessCallback = isJust mAuthorEntity
+                                }
+                            , FooterLeft $ MenuItem
+                                { menuItemLabel = "Privacy"
+                                , menuItemRoute = PageR "Privacy Policy"
+                                , menuItemAccessCallback = True
+                                }
+                            , FooterLeft $ MenuItem
+                                { menuItemLabel = "Feedback"
+                                , menuItemRoute = FeedbackR
+                                , menuItemAccessCallback = True
+                                }
+                            ]
 
         let navbarLeftMenuItems = [x | NavbarLeft x <- menuItems]
         let navbarRightMenuItems = [x | NavbarRight x <- menuItems]
@@ -303,6 +293,8 @@ instance Yesod App where
     isAuthorized (StaticR _) _ = return Authorized
     isAuthorized UsersR _ = return Authorized
     isAuthorized (UserHomeR _) _ = return Authorized
+    isAuthorized (UserEntriesR _) _ = return Authorized
+    isAuthorized (CategoriesR _) _ = return Authorized
     isAuthorized (UserPageR _ _) _ = return Authorized
     isAuthorized (UserEntryR _ _) _ = return Authorized
     isAuthorized (CommentsR _) _ = return Authorized
@@ -325,9 +317,12 @@ instance Yesod App where
     isAuthorized (EditCommentR _) _ = isAuthenticated
     isAuthorized (EditFeedbackR _) _ = isAuthenticated
     isAuthorized NewUserEntryR _ = isAuthenticated
+    isAuthorized NewCategoryR _ = isAuthenticated
+    isAuthorized (TreeR _) _ = isAuthenticated
 
     -- owner routes
     isAuthorized (EditUserEntryR entryId) _ = isAdmin entryId
+    isAuthorized (EditCategoryR entryId) _ = isAdmin entryId
     isAuthorized (LoginSettingR x) _ = isAdmin x
     isAuthorized (EmailSettingR x) _ = isAdmin x
     isAuthorized (FileR x) _ = isAdmin x
@@ -401,7 +396,7 @@ instance YesodBreadcrumbs App where
                     _ -> "Anonymous User"
             return (siteName, Just HomeR)
         UserPageR pathPiece _-> parentLink pathPiece
-        -- EntriesR pathPiece -> parentLink pathPiece
+        UserEntriesR pathPiece -> parentLink pathPiece
         HomeR -> return ("Home", Nothing)
         AuthR _ -> return ("Home", Just HomeR)
         _ -> return ("home", Nothing)
@@ -1052,8 +1047,8 @@ sendAppEmail email appEmail= do
             return ()
 
 -- | UTCTime to Date String
-utcToDate :: UTCTime -> String
-utcToDate t = formatTime defaultTimeLocale "%e %b %Y" t
+utcToDate :: UTCTime -> Text
+utcToDate t = Data.Text.strip $ Data.Text.pack $ formatTime defaultTimeLocale "%e %b %Y" t
 
 -- | Access function to determine if a user is logged in.
 isAuthenticated :: Handler AuthResult
@@ -1102,7 +1097,8 @@ routeUserEntity (Just route)
         UserHomeR userId -> returnEntityIfExist userId
         UserPageR userId _ -> returnEntityIfExist userId
         CommentsR userId -> returnEntityIfExist userId
-        --EntriesR userId -> returnEntityIfExist userId
+        UserEntriesR userId -> returnEntityIfExist userId
+        CategoriesR userId -> returnEntityIfExist userId
         UserEntryR userId _ -> returnEntityIfExist userId
         _ -> do
             (userId, user) <- requireAuthPair

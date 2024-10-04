@@ -163,10 +163,14 @@ getChildIds entryId = do
 
 getRootEntryId :: EntryId -> ReaderT SqlBackend (HandlerFor App) EntryId
 getRootEntryId entryId = do
-    mEntryTree<-selectFirst [EntryTreeNode==.entryId] []
-    case mEntryTree of
-        Nothing -> return entryId
-        Just tree -> getRootEntryId $ entryTreeParent $ entityVal tree
+    entry <- get404 entryId
+    if entryType entry `elem` [UserPost, Post, UserPage, Page]
+        then return entryId
+        else do
+            mEntryTree<-selectFirst [EntryTreeNode==.entryId] []
+            case mEntryTree of
+                Nothing -> return entryId
+                Just tree -> getRootEntryId $ entryTreeParent $ entityVal tree
 
 commentLink :: EntryId -> ReaderT SqlBackend (HandlerFor App) (Text, Text) -- (url,text)
 commentLink commentId = do

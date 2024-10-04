@@ -45,6 +45,7 @@ import Handler.Home
 import Handler.Users
 import Handler.EditUserEntry
 import Handler.UserHome
+import Handler.UserEntries
 import Handler.Settings
 --import Handler.EmailSetting
 import Handler.LoginSetting
@@ -74,7 +75,7 @@ import Handler.Maintenance
 import Handler.EditEntry
 import Handler.Categories
 import Handler.EditCategory
-import Handler.NewCategory
+import Handler.Tree
 
 -- This line actually creates our YesodDispatch instance. It is the second half
 -- of the call to mkYesodData which occurs in Foundation.hs. Please see the

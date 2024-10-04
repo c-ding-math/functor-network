@@ -9,7 +9,7 @@ import Parse.Parser (scaleHeader)
 import Yesod.Form.Bootstrap3
 import Handler.NewUserSubscription (subscribeToUserWidget)
 import Data.Text (toLower)
-import Handler.UserEntry (formatDateStr)
+import Handler.Entries (entryListWidget)
 
 searchForm :: Form Text
 searchForm = renderBootstrap3 BootstrapBasicForm $ areq searchFieldWithAddon searchFieldSettings Nothing where
@@ -83,7 +83,7 @@ getUserEntriesR authorId = do
                 $else
                     <p>_{MsgNoPost}
             $else
-                ^{entryListWidget entryList}
+                ^{entryListWidget "no-author" entryList}
         |]
         toWidget [hamlet|
             <div style="display:none;"><a href=@{CommentsR authorId}>Comments</a></div>
@@ -111,33 +111,5 @@ getUserEntriesR authorId = do
             }
         |]
         
-entryListWidget :: [Entity Entry] -> Widget
-entryListWidget entryList = do
-    
-    toWidget [hamlet|
-    <div .entries>
-        <ul>
-            $forall Entity entryId entry <- entryList 
-                
-                    <li :entryStatus entry == Draft:.draft data-date=#{formatDateStr (entryInserted entry)}>
-                        <a href=@{UserEntryR (entryUserId entry) entryId}>
-                            <h3 .entry-title>#{preEscapedToMarkup (scaleHeader 3 (entryTitleHtml entry))}
-                        
-                            
-    |]
-    toWidget [lucius|
-.entries>ul{   
-    list-style:none;
-    padding-left:0;
-}
-.entries>ul>li::before {
-    content: attr(data-date);
-    color: #b4bcc2;
-}
-.entries>ul>li>a>h3{
-    color:black;
-    margin:0.2em 0 1em;
-}
 
-    |]
 

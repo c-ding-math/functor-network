@@ -61,6 +61,8 @@ Edit: Edit
 View: View
 Save: Save
 Update: Update
+Public: Public
+Private: Private
 Reset: Reset
 Title: Title
 Body: Body
@@ -163,3 +165,20 @@ SendFeedback: Send feedback
 Search: Search
 SearchReultsFor query@Text: Search results for "#{query}"
 PostsContaining query@Text: Posts containing "#{query}"
+
+Keyword: Keyword
+Visibility: Visibility
+Category: Category
+Categories: Categories
+SelectCategories: Select categories
+Categorize: Categorize
+NewCategory: New category
+NoCategory: No category found.
+CreateACategory: Create a category.
+CreateCategory: Create category
+CategoryCreated: Category created
+CategorySaved: Category saved
+PostCategorized: Post categorized
+NoPostInCategory: No post found in this category.
+BrowsePosts: Browse posts on the network
+TooLongByCharCount charCount@Int: Too long by #{show charCount} characters.
