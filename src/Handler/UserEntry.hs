@@ -17,12 +17,14 @@ getUserEntryR :: UserId ->  EntryId -> Handler Html
 getUserEntryR authorId entryId = do    
     maybeUserId<-maybeAuthId
     maybeUser<-maybeAuth
-    (entry,entryAuthor,commentListData)<-runDB $ do
+    (entry,entryAuthor,entryCategoryEntities, commentListData)<-runDB $ do
         entry<-get404 entryId
         
         if (entryUserId entry==authorId) && (entryStatus entry==Publish || isAdministrator maybeUserId entry) && (entryType entry==UserPost)
           then do
             --mEntryAuthor<- selectFirst [UserId==.entryUserId entry] []
+            entryCategoryIds<- map (entryTreeParent . entityVal) <$> selectList [EntryTreeNode ==. entryId] []
+            entryCategoryEntities<- selectList [EntryId <-. entryCategoryIds] [Desc EntryInserted]
             entryAuthor<-get404 $ entryUserId entry
             commentIds <- getChildIds entryId
             commentEntities <- selectList [EntryId <-. commentIds] [Asc EntryInserted]
@@ -43,7 +45,7 @@ getUserEntryR authorId entryId = do
                                 return $ Just (parentCommentId, userName parentCommentAuthor)
                     _ -> return Nothing
                 ) commentEntities
-            return $ (entry,entryAuthor,zip3 commentEntities commentAuthors parentCommentMetas)       
+            return $ (entry,entryAuthor,entryCategoryEntities,zip3 commentEntities commentAuthors parentCommentMetas)       
           else notFound
 
     formatParam <- lookupGetParam "format"
@@ -70,7 +72,36 @@ getUserEntryR authorId entryId = do
         <a href=@{UserHomeR (entryUserId entry)}>#{userName entryAuthor}
       <li .at>
         <span title="date"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clock" viewBox="0 0 16 16"><path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71z"/><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0"/></svg>
-        #{utcToDate (entryInserted entry)}
+        $if entryInserted entry == entryUpdated entry
+            #{utcToDate (entryInserted entry)}
+        $else
+            <span .dropdown>
+                <a .text-muted.dropdown-toggle data-toggle=dropdown>
+                    #{utcToDate (entryInserted entry)}
+                    <span .caret>
+                <ul .dropdown-menu>
+                    <li>
+                        <a .text-muted onclick="return false;" href=#>
+                            created #{utcToDateTime (entryInserted entry)}
+                    <li>
+                        <a .text-muted onclick="return false;" href=#>
+                            updated #{utcToDateTime (entryUpdated entry)}
+
+      $if not (null entryCategoryEntities)
+        <li .in>
+            <span title="category"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-folder" viewBox="0 0 16 16"><path d="M.54 3.87.5 3a2 2 0 0 1 2-2h3.672a2 2 0 0 1 1.414.586l.828.828A2 2 0 0 0 9.828 3h3.982a2 2 0 0 1 1.992 2.181l-.637 7A2 2 0 0 1 13.174 14H2.826a2 2 0 0 1-1.991-1.819l-.637-7a2 2 0 0 1 .342-1.31zM2.19 4a1 1 0 0 0-.996 1.09l.637 7a1 1 0 0 0 .995.91h10.348a1 1 0 0 0 .995-.91l.637-7A1 1 0 0 0 13.81 4zm4.69-1.707A1 1 0 0 0 6.172 2H2.5a1 1 0 0 0-1 .981l.006.139q.323-.119.684-.12h5.396z"/></svg>
+            <span .dropdown>
+                <a .text-muted.dropdown-toggle data-toggle=dropdown>
+                    #{show $ length entryCategoryEntities} #
+                    $if length entryCategoryEntities <= 1
+                        category 
+                    $else
+                        categories 
+                    <span .caret>
+                <ul .dropdown-menu>
+                    $forall (Entity categoryId category)<-entryCategoryEntities
+                        <li>
+                            <a href=@{CategoriesR (entryUserId category)}#{"#entry-" <> toPathPiece categoryId}>#{preEscapedToMarkup $ entryTitleHtml category}
   <div .entry-content>
       <div .entry-content-wrapper>
         $if strip (entryBodyHtml entry) /= "" 

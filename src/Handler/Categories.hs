@@ -58,8 +58,8 @@ getCategoriesR authorId = do
                                     <a .btn.btn-default.cancel href=#>_{MsgCancel}
                     $forall ((category, entryList), (formWidget, enctype)) <- zip categoryAndEntryListList editCategoryFormList
                         <li>
-                            <div .category> 
-                                <h4 .entry-title style="display:inline-block;margin-right:1em;">#{preEscapedToMarkup $ scaleHeader 4 $ entryTitleHtml $ entityVal category}
+                            <div .category #entry-#{toPathPiece (entityKey category)}> 
+                                <h4 .entry-title style="display:inline;margin-right:1em;">#{preEscapedToMarkup $ scaleHeader 4 $ entryTitleHtml $ entityVal category}
                                 $if isAuthor
                                     <a .text-muted.text-lowercase .edit-entry href=@{EditCategoryR $ entityKey category}>_{MsgEdit}
                                     <form .edit-category-form .form-inline style="display:none;" method=post action=@{EditCategoryR $ entityKey category} enctype=#{enctype}>

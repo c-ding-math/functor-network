@@ -1048,7 +1048,10 @@ sendAppEmail email appEmail= do
 
 -- | UTCTime to Date String
 utcToDate :: UTCTime -> Text
-utcToDate t = Data.Text.strip $ Data.Text.pack $ formatTime defaultTimeLocale "%e %b %Y" t
+utcToDate = Data.Text.pack . unwords . words . (formatTime defaultTimeLocale "%e %b %Y")
+
+utcToDateTime :: UTCTime -> Text
+utcToDateTime = Data.Text.pack . unwords . words . (formatTime defaultTimeLocale "%e %b %Y %H:%M")
 
 -- | Access function to determine if a user is logged in.
 isAuthenticated :: Handler AuthResult

@@ -161,7 +161,7 @@ textarea{
     content:" (draft)";
 }
 
-.entry-meta>ul>li>span{
+.entry-meta>ul>li>span:first-child {
     vertical-align: -0.125em;
     font-size: 1em;
 }
@@ -189,9 +189,6 @@ ul.entry-list>li>a>.entry-title{
 }
 ul.no-author>li>.entry-meta>ul>li.by{
     display:none;
-}
-ul.no-author>li>.entry-meta>ul>li>span{
-    display: none;
 }
 
 ul.category-list{

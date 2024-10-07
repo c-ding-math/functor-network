@@ -49,7 +49,7 @@ getFilesR = do
                         <td>
                             <input type=text readonly value=@{fileLink (Entity fileId file)}>         
                         <td>
-                            #{formatDateStr $ fileInserted file}
+                            #{utcToDate $ fileInserted file}
                         <td .actions>
                             <a href=# .copy-link data-toggle=tooltip data-placement="top" title="click to copy">_{MsgCopy}
                             <a href=@{fileLink (Entity fileId file)} .view>_{MsgView}
@@ -213,6 +213,3 @@ getUserStaticDir mUserId = do
 
 --openConnectionCount :: Int
 --openConnectionCount = 10
-
-formatDateStr :: UTCTime -> String
-formatDateStr t = formatTime defaultTimeLocale "%e %b %Y" t

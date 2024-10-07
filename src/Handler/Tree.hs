@@ -45,13 +45,13 @@ treeWidget entryId = do
     maybeUserId <- maybeAuthId
     case maybeUserId of
         Just userId -> do
-            (widget, enctype, noCategory) <- handlerToWidget $ do
+            (widget, enctype, categories) <- handlerToWidget $ do
                 (parentIds, categories) <- runDB $ do
                     categories <- selectList [EntryUserId ==. userId, EntryType ==. Category] [Desc EntryInserted]
                     entryTreeEntities <- selectList [EntryTreeNode ==. entryId] []
                     return ([x | x <- map entityKey categories , x <- map (entryTreeParent . entityVal) entryTreeEntities], categories)
                 (widget, enctype) <- generateFormPost $ treeForm userId $ Just $ Parents $ Just parentIds
-                return (widget, enctype, null categories)
+                return (widget, enctype, categories)
             [whamlet|
         <div .modal.fade>
             <div .modal-dialog>
@@ -60,25 +60,48 @@ treeWidget entryId = do
                         <button type=button .close data-dismiss=modal>&times;
                         <b .modal-title>_{MsgCategorize}
                     <div .modal-body>
-                        $if noCategory
+                        $if null categories
                             <div #category-form>
                                 <p>There are no categories available for selection. You can go to the <a target=_blabk href=@{CategoriesR userId}>categories page</a> to create a category first.
                                 <div .text-right>
                                     <a .btn.btn-primary target=_blabk href=@{CategoriesR userId}>_{MsgCreateACategory}
                         $else    
-                            <form #category-form method=post action="" enctype=#{enctype}>
+                            <div .list-group>
+                                <label>_{MsgSelectCategories}
+                                $forall Entity categoryId category <- categories
+                                    <a.list-group-item href=# data-id=#{toPathPiece categoryId}>#{preEscapedToMarkup $ entryTitleHtml category}
+
+                            <form .hidden #category-form method=post action="" enctype=#{enctype}>
                                 ^{widget}
-                                <p .text-muted>Press <code>Ctrl</code> or <code>Cmd</code> to select multiple categories.
-                                <div .text-right>
-                                    <button .btn.btn-primary type=submit>_{MsgCategorize}
+                            <div .text-right>
+                                <button form=category-form .btn.btn-primary type=submit>_{MsgCategorize}
                                 
             |]
             toWidget [julius|
                 $(document).ready(function(){
+                    var categoryForm = $("#category-form");
+                    var categoryListGroup = categoryForm.siblings(".list-group");
                     $(".categorize a").click(function(){
-                        var categoryForm = $("#category-form");
+                        
                         categoryForm.attr("action", $(this).data("action"));
+                        //if option is selected, set corresponding list item to active
+                        var selected = categoryForm.find("option:selected");
+                        if (selected.length > 0) {
+                            categoryForm.find("a").removeClass("active");
+                            selected.each(function(){
+                                categoryListGroup.find("a[data-id=" + $(this).val() + "]").addClass("active");
+                            });
+                        }
                         categoryForm.closest(".modal").modal("show");
+                        return false;
+                    });
+                    categoryListGroup.find("a").click(function(){
+                        var id = $(this).data("id");
+                        var option = categoryForm.find("option[value=" + id + "]");
+                        if (option.length > 0) {
+                            option.prop("selected", !option.prop("selected"));
+                            $(this).toggleClass("active");
+                        }
                         return false;
                     });
                 });
