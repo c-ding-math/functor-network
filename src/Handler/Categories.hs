@@ -8,6 +8,8 @@ import Import
 import Handler.EditCategory (categoryForm, CategoryInput(..))
 import Handler.Entries (entryListWidget)
 import Parse.Parser (scaleHeader)
+import Handler.NewEntrySubscription(subscribeToEntryWidget)
+
 
 getCategoriesR :: UserId ->  Handler Html
 getCategoriesR authorId = do 
@@ -59,14 +61,19 @@ getCategoriesR authorId = do
                     $forall ((category, entryList), (formWidget, enctype)) <- zip categoryAndEntryListList editCategoryFormList
                         <li>
                             <div .category #entry-#{toPathPiece (entityKey category)}> 
-                                <h4 .entry-title style="display:inline;margin-right:1em;">#{preEscapedToMarkup $ scaleHeader 4 $ entryTitleHtml $ entityVal category}
-                                $if isAuthor
-                                    <a .text-muted.text-lowercase .edit-entry href=@{EditCategoryR $ entityKey category}>_{MsgEdit}
-                                    <form .edit-category-form .form-inline style="display:none;" method=post action=@{EditCategoryR $ entityKey category} enctype=#{enctype}>
-                                        ^{formWidget}
-                                        <button .btn.btn-primary type=submit name=action value=publish>_{MsgSave}
-                                        <button .btn.btn-default.delete type=button name=action value=delete>_{MsgDelete}
-                                        <a .btn.btn-default.cancel href=#>_{MsgCancel}
+                                <h4 .entry-title style="display:inline;">#{preEscapedToMarkup $ scaleHeader 4 $ entryTitleHtml $ entityVal category}
+                                <span style="display:inline-block;margin-left:2em;">
+                                    <ul.list-inline.text-lowercase>
+                                        <li .subscribe>
+                                            <a.text-muted href=# data-action=@{NewEntrySubscriptionR $ entityKey category}>_{MsgFollow}
+                                        $if isAuthor
+                                            <li .edit-entry>
+                                                <a .text-muted href=@{EditCategoryR $ entityKey category}>_{MsgEdit}
+                                                <form .edit-category-form .form-inline style="display:none;" method=post action=@{EditCategoryR $ entityKey category} enctype=#{enctype}>
+                                                    ^{formWidget}
+                                                    <button .btn.btn-primary type=submit name=action value=publish>_{MsgSave}
+                                                    <button .btn.btn-default.delete type=button name=action value=delete>_{MsgDelete}
+                                                    <a .btn.btn-default.cancel href=#>_{MsgCancel}
                             $if null entryList
                                 <p style="margin-bottom:1.5em;">_{MsgNoPostInCategory} #
                                     $if isAuthor   
@@ -74,7 +81,8 @@ getCategoriesR authorId = do
                             $else
                                 ^{entryListWidget "list-unstyled" entryList}
 
-        |]    
+        |]
+        subscribeToEntryWidget    
         toWidget [julius|
             $(document).ready(function() {
                 $('.category-form .cancel').click(function() {
@@ -105,7 +113,7 @@ getCategoriesR authorId = do
                     return false;
                 });
 
-                $('.edit-entry').click(function() {  
+                $('.edit-entry>a').click(function() {  
                     var editCategoryForm = $(this).siblings('form');
                     editCategoryForm.siblings().hide();
                     editCategoryForm[0].reset();

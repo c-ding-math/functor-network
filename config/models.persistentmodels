@@ -52,6 +52,7 @@ Entry
 EntryTree
     node EntryId
     parent EntryId
+    UniqueEntryTree node parent
     
 File 
     userId UserId

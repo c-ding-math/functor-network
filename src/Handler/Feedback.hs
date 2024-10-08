@@ -12,7 +12,7 @@ import Parse.Parser(mdToHtml,texToHtml,EditorData(..))
 import Handler.Parser(editorWidget)
 import Handler.Parser(parse,userTemporaryDirectory)
 import Handler.NewEntrySubscription(entrySubscriptionNotification,insertDefaultEntrySubscription)
-import Handler.EditComment(deleteEntryRecursive,deleteEditCommentR)
+import Handler.EditComment(deleteEditCommentR)
 
 data FeedbackInput = FeedbackInput
     { subject :: Text

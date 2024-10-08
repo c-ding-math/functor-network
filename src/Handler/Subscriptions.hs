@@ -46,6 +46,7 @@ getSubscriptions address = do
             return $ Entity entryId entry
             ) entrySubscriptionEntities
         return (userSubscriptionEntities,userEntities,entrySubscriptionEntities,entryEntities)
+    let categoryList = [ x | x <- entryList, entryType (entityVal x) == Category]
     let postList = [ x | x <- entryList, entryType (entityVal x) == UserPost]
     let commentList = [ x | x <- entryList, entryType (entityVal x) == Comment]
     let feedbackList = [ x | x <- entryList, entryType (entityVal x) == Feedback]
@@ -83,6 +84,27 @@ getSubscriptions address = do
                                 <ul.list-inline.text-lowercase>
                                     <li>
                                         <a.text-muted .unsubscribe href=@{EditUserSubscriptionR subscriptionId} data-key="">_{MsgUnsubscribe}
+
+            <h3>_{MsgCategories}
+            <p>_{MsgCategorySubscriptionsDescription}
+            $if null categoryList
+                <p>_{MsgNoSubscription}
+            $else
+                <ul>
+                    $forall (Entity subscriptionId subscription, Entity entryId entry)<- zip entrySubscriptionList entryList
+                      $if entryType entry == Category
+                        <li>
+                            <a href=@{CategoriesR (entryUserId entry)}#entry-#{toPathPiece entryId}>#{preEscapedToMarkup $ entryTitleHtml entry}
+                            $maybe key <- entrySubscriptionKey subscription
+                              <span.menu>
+                                <ul.list-inline.text-lowercase>
+                                    <li>
+                                        <a.text-muted .unsubscribe href=@{EditEntrySubscriptionR subscriptionId} data-key=#{key}>_{MsgUnsubscribe}
+                            $nothing
+                              <span.menu>
+                                <ul.list-inline.text-lowercase>
+                                    <li>
+                                        <a.text-muted .unsubscribe href=@{EditEntrySubscriptionR subscriptionId} data-key="">_{MsgUnsubscribe}
 
             <h3>_{MsgPosts}
             <p>_{MsgPostSubscriptionsDescription}

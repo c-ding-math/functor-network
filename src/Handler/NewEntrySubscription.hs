@@ -51,6 +51,7 @@ postNewEntrySubscriptionR entryId= do
                                         Just (Entity _ tree) -> do
                                             parent <- get404 $ entryTreeParent tree
                                             case entryType parent of
+                                                Category -> return $ entryTitle entry
                                                 Comment -> do
                                                     parentAuthor <- get404 $ entryUserId parent
                                                     return $ "Reply to " <> userName parentAuthor
@@ -82,18 +83,25 @@ postNewEntrySubscriptionR entryId= do
             --redirect $ HomeR authorId
         FormFailure _ -> setMessageI MsgFormFailure
         _ -> setMessageI MsgFormMissing
-    (rootEntryUserId, rootEntryId) <- runDB $ do 
-        rootEntryId <- getRootEntryId entryId
-        rootEntry <- get404 rootEntryId
-        return (entryUserId rootEntry, rootEntryId)
-    redirect $ UserEntryR rootEntryUserId rootEntryId
+    case entryType entry of
+        Category -> redirect $ CategoriesR (entryUserId entry)-- :#: ("entry-" <> toPathPiece entryId)
+        _ -> do 
+            (rootEntryUserId, rootEntryId) <- runDB $ do 
+                rootEntryId <- getRootEntryId entryId
+                rootEntry <- get404 rootEntryId
+                return (entryUserId rootEntry, rootEntryId)
+            redirect $ UserEntryR rootEntryUserId rootEntryId
 
 getRootEntryId :: EntryId -> ReaderT SqlBackend (HandlerFor App) EntryId
 getRootEntryId entryId = do
-    mEntryTree<-selectFirst [EntryTreeNode==.entryId] []
-    case mEntryTree of
-        Nothing -> return entryId
-        Just tree -> getRootEntryId $ entryTreeParent $ entityVal tree
+    entry <- get404 entryId
+    if entryType entry `elem` [UserPost, Post, UserPage, Page]
+        then return entryId
+        else do
+            mEntryTree<-selectFirst [EntryTreeNode==.entryId] []
+            case mEntryTree of
+                Nothing -> return entryId
+                Just tree -> getRootEntryId $ entryTreeParent $ entityVal tree
 
 insertDefaultEntrySubscription :: EntryId -> ReaderT SqlBackend (HandlerFor App) ()
 insertDefaultEntrySubscription entryId = do
@@ -210,5 +218,25 @@ Manage your subscriptions at #{unsubscribeUrl}.
 <p>#{appName}
             |]
 
+categorySubscriptionNotification :: Text -> Text -> Text -> Text -> AppEmail
+categorySubscriptionNotification unsubscribeUrl entryUrl nodeTitle parentTitle = AppEmail emailSubject emailText emailHtml
+    where
+        emailSubject= "New post categorized in " <> parentTitle
+        emailText = [stext|
+There is a new post added to the category "#{parentTitle}":
+
+#{nodeTitle}
+
+View it at #{entryUrl}.
+
+Manage your subscriptions at #{unsubscribeUrl}.
+#{appName}
+            |]
+        emailHtml = [shamlet|
+<p>There is a new post added to the category "#{parentTitle}":
+<p>#{nodeTitle}
+<p><a href=#{entryUrl}>View</a><span> | </span><a href=#{unsubscribeUrl}>Manage subscriptions</a>
+<p>#{appName}
+            |]
 
 

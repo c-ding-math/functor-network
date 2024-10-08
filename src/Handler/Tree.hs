@@ -4,7 +4,9 @@
 module Handler.Tree where
 
 import Import
+import Data.List (intersect)
 import Yesod.Form.Bootstrap3
+import Handler.NewEntrySubscription (categorySubscriptionNotification)
 
 data Parents = Parents
     { _ids :: Maybe [EntryId]
@@ -23,14 +25,26 @@ postTreeR node = do
     ((result, _), _) <- runFormPost $ treeForm userId Nothing
     case result of
         FormSuccess parents -> do
-            runDB $ do
-                deleteWhere [EntryTreeNode ==. node]
+                --deleteWhere [EntryTreeNode ==. node]
                 case _ids parents of
-                    Just entryIds -> do
-                        forM_ entryIds $ \entryId -> do
-                            parent <- get404 entryId
+                    Just parentIds -> do
+                        forM_ parentIds $ \parentId -> do
+                            parent <- runDB $ get404 parentId
                             when (entryType parent == Category) $ do
-                                insert_ $ EntryTree node entryId
+                                eTree <- runDB $ insertBy $ EntryTree node parentId
+                                case eTree of
+                                    Left _ -> return ()
+                                    Right _ -> do
+                                        urlRenderParams <- getUrlRenderParams
+                                        subscribers <- runDB $ selectList [EntrySubscriptionEntryId ==. parentId, EntrySubscriptionVerified ==. True] []
+                                        forM_ subscribers $ \(Entity subscriptionId subscription) -> do
+                                            
+                                            let unsubscribeUrl= urlRenderParams (EditEntrySubscriptionR subscriptionId) $ case entrySubscriptionKey subscription of
+                                                    Just key -> [("key", key)] 
+                                                    Nothing -> []
+                                                entryUrl= urlRenderParams (CategoriesR (entryUserId parent)) [] <> "#entry-" <> toPathPiece parentId
+                                            sendAppEmail (entrySubscriptionEmail subscription) $ categorySubscriptionNotification unsubscribeUrl entryUrl (entryTitle entry) (entryTitle parent)                        
+
                         setMessageI $ MsgPostCategorized
                     Nothing -> return ()
             
@@ -49,7 +63,7 @@ treeWidget entryId = do
                 (parentIds, categories) <- runDB $ do
                     categories <- selectList [EntryUserId ==. userId, EntryType ==. Category] [Desc EntryInserted]
                     entryTreeEntities <- selectList [EntryTreeNode ==. entryId] []
-                    return ([x | x <- map entityKey categories , x <- map (entryTreeParent . entityVal) entryTreeEntities], categories)
+                    return (Data.List.intersect (map entityKey categories) (map (entryTreeParent . entityVal) entryTreeEntities), categories)
                 (widget, enctype) <- generateFormPost $ treeForm userId $ Just $ Parents $ Just parentIds
                 return (widget, enctype, categories)
             [whamlet|

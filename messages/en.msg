@@ -182,3 +182,4 @@ PostCategorized: Post categorized
 NoPostInCategory: No post found in this category.
 BrowsePosts: Browse posts on the network
 TooLongByCharCount charCount@Int: Too long by #{show charCount} characters.
+CategorySubscriptionsDescription: You are subscribed to the following categories. You will receive an email notification when a post is added to the category.
