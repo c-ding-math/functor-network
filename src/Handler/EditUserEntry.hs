@@ -278,6 +278,7 @@ postNewUserEntryR = do
                             , entryCitation=inputCitation formData
                             , entryTitleHtml=titleHtml
                             , entryBodyHtml=bodyHtml
+                            , entryFeatured=isFeatured bodyHtml
                             }
                         insertDefaultEntrySubscription entryId
                         return entryId
@@ -311,6 +312,7 @@ postNewUserEntryR = do
                             , entryCitation=inputCitation formData
                             , entryTitleHtml=titleHtml
                             , entryBodyHtml=bodyHtml
+                            , entryFeatured=isFeatured bodyHtml
                             }
                         insertDefaultEntrySubscription entryId
                         return entryId
@@ -367,6 +369,7 @@ postEditUserEntryR  entryId = do
                         ,EntryCitation=.inputCitation formData
                         ,EntryTitleHtml=.titleHtml
                         ,EntryBodyHtml=.bodyHtml
+                        ,EntryFeatured=.isFeatured bodyHtml
                         ] 
                     setMessage $ [hamlet|
                                     Your post, #
@@ -392,6 +395,7 @@ postEditUserEntryR  entryId = do
                             ,EntryCitation=.inputCitation formData
                             ,EntryTitleHtml=.titleHtml
                             ,EntryBodyHtml=.bodyHtml
+                            ,EntryFeatured=.isFeatured bodyHtml
                             ] 
                         
                     setMessage $ [hamlet|
@@ -411,3 +415,5 @@ postEditUserEntryR  entryId = do
                 |]
             redirect $ EditUserEntryR entryId
 
+isFeatured :: Text -> Bool
+isFeatured html = not $ any (`isInfixOf` html) ["lost proof","parser-message","filter-information"]

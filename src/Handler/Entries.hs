@@ -12,8 +12,8 @@ import Parse.Parser (scaleHeader)
 
 getEntriesR :: Handler Html
 getEntriesR = do
-    entries<-runDB $ selectList [EntryType==.UserPost,EntryStatus==.Publish] [Desc EntryInserted]
-    let entryList = [x | x<-entries, not (any (`isInfixOf` (entryBodyHtml (entityVal x))) ["lost proof","parser-message","filter-information"])]   
+    entryList<-runDB $ selectList [EntryType==.UserPost,EntryStatus==.Publish, EntryFeatured==.True] [Desc EntryInserted, LimitTo 1000]
+    --let entryList = [x | x<-entries, not (any (`isInfixOf` (entryBodyHtml (entityVal x))) ["lost proof","parser-message","filter-information"])]   
     defaultLayout $ do
         setTitleI MsgPosts
         [whamlet|
@@ -46,7 +46,7 @@ entryListWidget style entryList = do
     [whamlet|
 <ul .entry-list .#{style}>
     $forall (Entity entryId entry, author, entryCategoryEntities)<- listData
-        <li :entryStatus entry == Draft:.draft>
+        <li .entry-item :entryStatus entry == Draft:.draft>
             <div .entry-meta>
                 <ul.list-inline>
                     <li .by>

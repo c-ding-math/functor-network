@@ -47,6 +47,7 @@ Entry
     citation Textarea Maybe
     titleHtml Text
     bodyHtml Text
+    featured Bool default=False
 
 EntryTree
     node EntryId

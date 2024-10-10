@@ -112,6 +112,7 @@ postEditCommentR entryId = do
                         ,entryInserted=currentTime
                         ,entryUpdated=currentTime
                         ,entryStatus=Publish
+                        ,entryFeatured=False
                         }
                 
             commentId <- runDB $ do

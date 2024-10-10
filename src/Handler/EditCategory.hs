@@ -51,6 +51,7 @@ postNewCategoryR = do
                             , entryCitation=Nothing
                             , entryTitleHtml=titleHtml
                             , entryBodyHtml=""
+                            , entryFeatured=False
                             }
             
             return $ object ["id" .= categoryId, "title" .= titleHtml]

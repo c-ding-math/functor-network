@@ -112,6 +112,7 @@ postEditUserAboutR = do
                         , entryCitation=inputCitation formData
                         , entryTitleHtml=titleHtml
                         , entryBodyHtml=bodyHtml
+                        , entryFeatured=False
                         }
                     return ()
             setMessageI MsgChangeSaved

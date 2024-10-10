@@ -284,6 +284,7 @@ postEditFeedbackR entryId = do
                         ,entryInserted=currentTime
                         ,entryUpdated=currentTime
                         ,entryStatus=Draft
+                        ,entryFeatured=False
                         }
                 
             commentId <- runDB $ do

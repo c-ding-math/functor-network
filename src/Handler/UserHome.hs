@@ -37,7 +37,7 @@ getUserHomeR authorId = do
                 return $ length $ concat $ trees
             return (publishedPosts, categorizedPosts, comments)
         mAbout <- selectFirst [EntryUserId ==. authorId, EntryType ==. UserPage] [Desc EntryInserted]
-        return (author, statics, activities, mAbout)
+        return (author, statics, take 100 activities, mAbout)
                 
 
     defaultLayout $ do

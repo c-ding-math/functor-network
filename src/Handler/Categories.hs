@@ -52,6 +52,14 @@ getCategoriesR authorId = do
             $else
                 <ul .category-list>
                     $if isAuthor
+                        <li style="list-style:none;margin-bottom:1em;">
+                            <form .form-inline>
+                                <div .form-group>
+                                    <label.text-lowercase for=filter>_{MsgPostFilter}
+                                    <select #filter .form-control>
+                                        <option value="all">_{MsgAllPosts}
+                                        <option value="own">_{MsgMyOwnPostsOnly}
+                                        <option value="others">_{MsgOthersPosts}
                         <li style="display:none;" .new-item>
                             <div .category>
                                 <form .category-form .form-inline method=post action=@{NewCategoryR} enctype=#{enctype}>
@@ -69,11 +77,11 @@ getCategoriesR authorId = do
                                         $if isAuthor
                                             <li .edit-entry>
                                                 <a .text-muted href=@{EditCategoryR $ entityKey category}>_{MsgEdit}
-                                                <form .edit-category-form .form-inline style="display:none;" method=post action=@{EditCategoryR $ entityKey category} enctype=#{enctype}>
-                                                    ^{formWidget}
-                                                    <button .btn.btn-primary type=submit name=action value=publish>_{MsgSave}
-                                                    <button .btn.btn-default.delete type=button name=action value=delete>_{MsgDelete}
-                                                    <a .btn.btn-default.cancel href=#>_{MsgCancel}
+                                <form .edit-category-form .form-inline style="display:none;" method=post action=@{EditCategoryR $ entityKey category} enctype=#{enctype}>
+                                    ^{formWidget}
+                                    <button .btn.btn-primary type=submit name=action value=publish>_{MsgSave}
+                                    <button .btn.btn-default.delete type=button name=action value=delete>_{MsgDelete}
+                                    <a .btn.btn-default.cancel href=#>_{MsgCancel}
                             $if null entryList
                                 <p style="margin-bottom:1.5em;">_{MsgNoPostInCategory} #
                                     $if isAuthor   
@@ -114,7 +122,7 @@ getCategoriesR authorId = do
                 });
 
                 $('.edit-entry>a').click(function() {  
-                    var editCategoryForm = $(this).siblings('form');
+                    var editCategoryForm = $(this).closest('.category').find('.edit-category-form');
                     editCategoryForm.siblings().hide();
                     editCategoryForm[0].reset();
                     editCategoryForm.show();
@@ -134,5 +142,21 @@ getCategoriesR authorId = do
                         }
                     });
                     return false;
+                });
+
+                $('#filter').change(function() {
+                    var filter = $(this).val();
+                    switch (filter) {
+                        case 'own':
+                            $('.entry-item').hide();
+                            $('.by>a[href="@{UserHomeR authorId}"]').closest('.entry-item').show();
+                            break;
+                        case 'others':
+                            $('.entry-item').show();
+                            $('.by>a[href="@{UserHomeR authorId}"]').closest('.entry-item').hide();
+                            break;
+                        default:
+                            $('.entry-item').show();
+                    }
                 });
             });|]    
