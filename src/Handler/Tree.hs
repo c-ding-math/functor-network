@@ -6,7 +6,7 @@ module Handler.Tree where
 import Import
 import Data.List (intersect)
 import Yesod.Form.Bootstrap3
-import Handler.NewEntrySubscription (categorySubscriptionNotification)
+import Text.Shakespeare.Text (stext)
 
 data Parents = Parents
     { _ids :: Maybe [EntryId]
@@ -123,3 +123,36 @@ treeWidget entryId = do
         Nothing ->  toWidget [julius|
             $(".categorize  a").attr("href", "@{AuthR LoginR}");
                     |]
+
+categorySubscriptionNotification :: Text -> Text -> Text -> Text -> AppEmail
+categorySubscriptionNotification unsubscribeUrl entryUrl nodeTitle parentTitle = AppEmail emailSubject emailText emailHtml
+    where
+        emailSubject= "New post categorized in " <> parentTitle
+        emailText = [stext|
+There is a new post added to the category "#{parentTitle}":
+
+#{nodeTitle}
+
+View it at #{entryUrl}.
+
+Manage your subscriptions at #{unsubscribeUrl}.
+#{appName}
+            |]
+        emailHtml = [shamlet|
+<p>There is a new post added to the category "#{parentTitle}":
+<p>#{nodeTitle}
+<p><a href=#{entryUrl}>View</a><span> | </span><a href=#{unsubscribeUrl}>Manage subscriptions</a>
+<p>#{appName}
+            |]
+
+
+getRootEntryId :: EntryId -> ReaderT SqlBackend (HandlerFor App) EntryId
+getRootEntryId entryId = do
+    entry <- get404 entryId
+    if entryType entry `elem` [UserPost, Post, UserPage, Page]
+        then return entryId
+        else do
+            mEntryTree<-selectFirst [EntryTreeNode==.entryId] []
+            case mEntryTree of
+                Nothing -> return entryId
+                Just tree -> getRootEntryId $ entryTreeParent $ entityVal tree

@@ -29,7 +29,7 @@ categoryForm mInput = renderBootstrap3 BootstrapBasicForm $ CategoryInput
 
 postNewCategoryR :: Handler Value
 postNewCategoryR = do
-    (userId,user) <- requireAuthPair
+    userId <- requireAuthId
     ((result, _), _) <- runFormPost $ categoryForm Nothing
     case result of
         FormSuccess categoryInput -> do

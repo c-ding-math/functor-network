@@ -6,7 +6,7 @@ module Handler.Comments where
 
 import Import
 import Handler.Entries (entryListWidget)
-import Handler.EditComment (getRootEntryId)
+import Handler.Tree (getRootEntryId)
 
 getCommentsR :: UserId -> Handler Html
 getCommentsR piece = do

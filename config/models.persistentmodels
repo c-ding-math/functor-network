@@ -4,12 +4,11 @@
 User json
     --ident Text 
     name Text
-    about Text --url
     password Text Maybe
     inserted UTCTime default=CURRENT_TIME
     logged UTCTime default=CURRENT_TIME
     --modified UTCTime -- change the ident
-    --avatar Text Maybe -- url
+    avatar Text Maybe -- url
     email Text Maybe -- the email to receive notifications
     defaultFormat Format 
     defaultPreamble Textarea Maybe

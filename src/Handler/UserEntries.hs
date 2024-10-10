@@ -5,7 +5,6 @@
 module Handler.UserEntries where
 
 import Import
-import Parse.Parser (scaleHeader)
 import Yesod.Form.Bootstrap3
 import Handler.NewUserSubscription (subscribeToUserWidget)
 import Data.Text (toLower)

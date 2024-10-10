@@ -183,3 +183,14 @@ NoPostInCategory: No post found in this category.
 BrowsePosts: Browse posts on the network
 TooLongByCharCount charCount@Int: Too long by #{show charCount} characters.
 CategorySubscriptionsDescription: You are subscribed to the following categories. You will receive an email notification when a post is added to the category.
+
+RecentActivities: Recent activities
+NoActivity: No activity yet.
+PublishedPosts: Published posts
+CategorizedPosts: Categorized posts
+PostedComments: Posted comments
+NoAbout: I think, therefore I am
+SelfIntroduction: Self introduction
+Settings: Settings
+ChangeAvatar: Change avatar
+Upload: Upload

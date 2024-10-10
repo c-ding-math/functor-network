@@ -9,6 +9,7 @@ import Yesod.Form.Bootstrap3
 import Text.Shakespeare.Text 
 import qualified Crypto.Nonce as Nonce
 import System.IO.Unsafe (unsafePerformIO)
+import Handler.Tree(getRootEntryId)
 
 postNewEntrySubscriptionR ::EntryId -> Handler Html
 postNewEntrySubscriptionR entryId= do
@@ -91,17 +92,6 @@ postNewEntrySubscriptionR entryId= do
                 rootEntry <- get404 rootEntryId
                 return (entryUserId rootEntry, rootEntryId)
             redirect $ UserEntryR rootEntryUserId rootEntryId
-
-getRootEntryId :: EntryId -> ReaderT SqlBackend (HandlerFor App) EntryId
-getRootEntryId entryId = do
-    entry <- get404 entryId
-    if entryType entry `elem` [UserPost, Post, UserPage, Page]
-        then return entryId
-        else do
-            mEntryTree<-selectFirst [EntryTreeNode==.entryId] []
-            case mEntryTree of
-                Nothing -> return entryId
-                Just tree -> getRootEntryId $ entryTreeParent $ entityVal tree
 
 insertDefaultEntrySubscription :: EntryId -> ReaderT SqlBackend (HandlerFor App) ()
 insertDefaultEntrySubscription entryId = do
@@ -218,25 +208,5 @@ Manage your subscriptions at #{unsubscribeUrl}.
 <p>#{appName}
             |]
 
-categorySubscriptionNotification :: Text -> Text -> Text -> Text -> AppEmail
-categorySubscriptionNotification unsubscribeUrl entryUrl nodeTitle parentTitle = AppEmail emailSubject emailText emailHtml
-    where
-        emailSubject= "New post categorized in " <> parentTitle
-        emailText = [stext|
-There is a new post added to the category "#{parentTitle}":
-
-#{nodeTitle}
-
-View it at #{entryUrl}.
-
-Manage your subscriptions at #{unsubscribeUrl}.
-#{appName}
-            |]
-        emailHtml = [shamlet|
-<p>There is a new post added to the category "#{parentTitle}":
-<p>#{nodeTitle}
-<p><a href=#{entryUrl}>View</a><span> | </span><a href=#{unsubscribeUrl}>Manage subscriptions</a>
-<p>#{appName}
-            |]
 
 

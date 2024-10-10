@@ -8,6 +8,7 @@ import Yesod.Form.Bootstrap3
 import Handler.Parser(parse,userTemporaryDirectory)
 import Handler.NewEntrySubscription(entrySubscriptionNotification,insertDefaultEntrySubscription)
 import Parse.Parser(mdToHtml,texToHtml,EditorData(..))
+import Handler.Tree(getRootEntryId)
 --import Text.Shakespeare.Text
 
 deleteEditCommentR :: EntryId -> Handler ()
@@ -160,17 +161,6 @@ getChildIds entryId = do
             let childIds = entryTreeNode . entityVal <$> x
             childIds'<-mapM getChildIds childIds
             return $ childIds ++ (concat childIds')
-
-getRootEntryId :: EntryId -> ReaderT SqlBackend (HandlerFor App) EntryId
-getRootEntryId entryId = do
-    entry <- get404 entryId
-    if entryType entry `elem` [UserPost, Post, UserPage, Page]
-        then return entryId
-        else do
-            mEntryTree<-selectFirst [EntryTreeNode==.entryId] []
-            case mEntryTree of
-                Nothing -> return entryId
-                Just tree -> getRootEntryId $ entryTreeParent $ entityVal tree
 
 commentLink :: EntryId -> ReaderT SqlBackend (HandlerFor App) (Text, Text) -- (url,text)
 commentLink commentId = do

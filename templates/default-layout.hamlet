@@ -6,7 +6,7 @@
         $if length (navbarRightFilteredMenuItems ++ navbarLeftFilteredMenuItems) > 1
             
             <div .navbar-header>
-                <a .navbar-brand href=@{homeRoute}>#{homeTitle}
+                <a .navbar-brand href=@{homeRoute} style="max-width:16em;">#{homeTitle}
                 <button type="button" .navbar-toggle.collapsed data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
                     <span class="sr-only">Toggle navigation
                     <span class="icon-bar">
@@ -61,11 +61,7 @@ $else
         <ul .nav.navbar-nav.navbar-left style="margin-left:-15px">
             $forall MenuItem label route _ <- footerLeftFilteredMenuItems  
                 <li>
-                    $if label == "About the author"
-                        $maybe Entity _ author <- mAuthorEntity
-                            <a href=#{userAbout author}>#{label}
-                    $else
-                        <a href="@{route}">#{label}
+                    <a href="@{route}">#{label}
                     
         <!--<ul .footer-middle>
             $forall MenuItem label route _ <- footerMiddleFilteredMenuItems

@@ -295,7 +295,7 @@ instance Yesod App where
     isAuthorized (UserHomeR _) _ = return Authorized
     isAuthorized (UserEntriesR _) _ = return Authorized
     isAuthorized (CategoriesR _) _ = return Authorized
-    isAuthorized (UserPageR _ _) _ = return Authorized
+    --isAuthorized (UserPageR _ _) _ = return Authorized
     isAuthorized (UserEntryR _ _) _ = return Authorized
     isAuthorized (CommentsR _) _ = return Authorized
     isAuthorized (PageR _) _ = return Authorized
@@ -309,8 +309,9 @@ instance Yesod App where
     isAuthorized FeedbackR _ = return Authorized
 
     -- Routes requiring authentication.
-    isAuthorized (EditUserPageR _) _ = isAuthenticated
+    --isAuthorized (EditUserPageR _) _ = isAuthenticated
     isAuthorized SettingsR _ = isAuthenticated
+    isAuthorized EditUserAboutR _ = isAuthenticated
     isAuthorized AccountR _ = isAuthenticated
     isAuthorized FilesR _ = isAuthenticated
     --isAuthorized (ParserR _ _) _ = isAuthenticated
@@ -395,7 +396,7 @@ instance YesodBreadcrumbs App where
                     Just user -> userName user
                     _ -> "Anonymous User"
             return (siteName, Just HomeR)
-        UserPageR pathPiece _-> parentLink pathPiece
+        --UserPageR pathPiece _-> parentLink pathPiece
         UserEntriesR pathPiece -> parentLink pathPiece
         HomeR -> return ("Home", Nothing)
         AuthR _ -> return ("Home", Just HomeR)
@@ -491,7 +492,7 @@ instance YesodAuth App where
                                 --let uIdent = ident <> "@" <> plugin
                                 uid<-insert $ User
                                     {userName=""
-                                    ,userAbout=""
+                                    ,userAvatar=Nothing
                                     ,userPassword=Nothing
                                     --,userIdent=uIdent
                                     ,userInserted=currentTime
@@ -503,7 +504,7 @@ instance YesodAuth App where
                                     ,userDefaultCitation=Nothing
                                     }
                                 urlRender<-getUrlRender
-                                update uid [UserName=.(msgRender MsgUser <> " " <> (toPathPiece uid)),UserAbout=.(urlRender $ UserPageR uid "About")]
+                                update uid [UserName=.(msgRender MsgUser <> " " <> (toPathPiece uid))]
                                 {-case plugin of
                                     p| p `elem` ["google","orcid"] -> do
                                         case Yesod.Auth.Extra.pluginUserName <$> Yesod.Auth.OAuth2.getUserResponseJSON creds of
@@ -621,7 +622,7 @@ instance YesodAuthEmail App where
                 let insertNewUser = do
                         newUserId<-insert $ User 
                                 {userName=""
-                                ,userAbout=""
+                                ,userAvatar=Nothing
                                 ,userPassword=Nothing
                                 --,userIdent=emailAddress email
                                 ,userInserted=currentTime
@@ -633,7 +634,7 @@ instance YesodAuthEmail App where
                                 ,userDefaultCitation=Nothing
                                 }
                         urlRender<-getUrlRender
-                        update newUserId [UserName=.(msgRender MsgUser <> " " <> toPathPiece newUserId), UserAbout=.(urlRender $ UserPageR newUserId "About")]
+                        update newUserId [UserName=.(msgRender MsgUser <> " " <> toPathPiece newUserId)]
                         
                         return newUserId
                         {-case newUser of
@@ -882,15 +883,6 @@ instance YesodAuthEmail App where
                 .login-form-container h3{
                     text-align:center;
                 }
-                .login-form-container div.or{
-                    text-align:center;
-                    margin:1em 0 1.5em;
-                    border-bottom: 1px solid #dce4ec; 
-                    line-height: 1px;
-                }
-                .login-form-container .or span{
-                    padding:0 1em; 
-                }
                 .google img, .orcid img{
                     height: 1.5em;
                     margin-right:0.5em;
@@ -1098,7 +1090,7 @@ routeUserEntity Nothing= return Nothing
 routeUserEntity (Just route) 
     | "user" `member` routeAttrs route = case route of 
         UserHomeR userId -> returnEntityIfExist userId
-        UserPageR userId _ -> returnEntityIfExist userId
+        --UserPageR userId _ -> returnEntityIfExist userId
         CommentsR userId -> returnEntityIfExist userId
         UserEntriesR userId -> returnEntityIfExist userId
         CategoriesR userId -> returnEntityIfExist userId

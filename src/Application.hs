@@ -56,10 +56,10 @@ import Handler.UserEntry
 import Handler.Parser
 --import Handler.NewEntry
 import Handler.EditComment
-import Handler.EditUserPage
+--import Handler.EditUserPage
 import Handler.EditPage
 import Handler.Comments
-import Handler.UserPage
+--import Handler.UserPage
 import Handler.Page
 import Handler.Pages
 import Handler.EditHelp
@@ -76,6 +76,7 @@ import Handler.EditEntry
 import Handler.Categories
 import Handler.EditCategory
 import Handler.Tree
+import Handler.EditUserAbout
 
 -- This line actually creates our YesodDispatch instance. It is the second half
 -- of the call to mkYesodData which occurs in Foundation.hs. Please see the
