@@ -16,11 +16,18 @@
 /help/#Text EditHelpR GET
 /users UsersR GET
 /user/#UserId UserHomeR GET !user
+/user/#UserId/entries UserEntriesR GET !user
 
 --/user/#UserId/entries EntriesR GET !user
 /entry NewUserEntryR GET POST !user !login
 /user/#UserId/entry/#EntryId UserEntryR GET !user
 /entry/#EntryId/edit EditUserEntryR GET POST !user !admin
+/about/edit EditUserAboutR GET POST !user !admin
+
+/user/#UserId/categories CategoriesR GET !user
+/category/#EntryId/edit EditCategoryR POST DELETE !user !admin
+/category NewCategoryR POST !user !login
+/tree/node/#EntryId TreeR POST !login
 
 /files FilesR GET POST !user !login
 /file/#FileId FileR DELETE !admin
@@ -37,13 +44,14 @@
 /subscribe/entry/#EntryId NewEntrySubscriptionR POST
 
 /comment/#EntryId/edit EditCommentR POST DELETE !login 
+/feedback/#EntryId/edit EditFeedbackR POST DELETE !login
 /user/#UserId/comments CommentsR GET !user
 
 /edit/entry/#EntryId EditEntryR GET POST
 /edit/page/#Text EditPageR GET POST
-/page/#Text/edit EditUserPageR GET POST !user
+--/page/#Text/edit EditUserPageR GET POST !user
 /pages PagesR GET
 !/#Text PageR GET
-!/user/#UserId/#Text UserPageR GET !user
+--!/user/#UserId/#Text UserPageR GET !user
 
 

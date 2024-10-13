@@ -31,6 +31,7 @@ getEditEntryR entryId = do
     defaultLayout $ do
         setTitleI MsgEdit
         [whamlet|
+<a href=@{UserEntryR (entryUserId entry) entryId}>View
 <form  method=post enctype=#{inputEnctype}>
     ^{inputWidget}
     <div .text-left>

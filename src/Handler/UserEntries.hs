@@ -5,20 +5,31 @@
 module Handler.UserEntries where
 
 import Import
-import Parse.Parser (scaleHeader)
 import Yesod.Form.Bootstrap3
 import Handler.NewUserSubscription (subscribeToUserWidget)
 import Data.Text (toLower)
-import Handler.UserEntry (formatDateStr)
+import Handler.Entries (entryListWidget)
 
 searchForm :: Form Text
-searchForm = renderBootstrap3 BootstrapBasicForm $ areq (searchField False) searchFieldSettings Nothing where
+searchForm = renderBootstrap3 BootstrapBasicForm $ areq searchFieldWithAddon searchFieldSettings Nothing where
+    
+    aSearchFiled = searchField False
+    searchFieldWithAddon = aSearchFiled {
+        fieldView = \idAttr nameAttr otherAttrs eResult isReq ->
+            [whamlet|
+                <div .input-group>
+                    <input .form-control type=search id=#{idAttr} name=#{nameAttr} *{otherAttrs} :isReq:required :not isReq:autofocus>
+                    <span .input-group-btn>
+                        <button .btn .btn-default type=submit>
+                            _{MsgSearch}
+            |]
+    }
     searchFieldSettings = FieldSettings {
         fsLabel = "", 
         fsTooltip = Nothing,
         fsId = Nothing,
         fsName = Just "keyword",
-        fsAttrs = [("class","form-control"),("placeholder","Search...")]
+        fsAttrs = [("class","form-control"),("placeholder","keyword")]
     }
 
 getUserEntriesR :: UserId -> Handler Html
@@ -71,7 +82,7 @@ getUserEntriesR authorId = do
                 $else
                     <p>_{MsgNoPost}
             $else
-                ^{entryListWidget entryList}
+                ^{entryListWidget "no-author" entryList}
         |]
         toWidget [hamlet|
             <div style="display:none;"><a href=@{CommentsR authorId}>Comments</a></div>
@@ -99,33 +110,5 @@ getUserEntriesR authorId = do
             }
         |]
         
-entryListWidget :: [Entity Entry] -> Widget
-entryListWidget entryList = do
-    
-    toWidget [hamlet|
-    <div .entries>
-        <ul>
-            $forall Entity entryId entry <- entryList 
-                
-                    <li :entryStatus entry == Draft:.draft data-date=#{formatDateStr (entryInserted entry)}>
-                        <a href=@{UserEntryR (entryUserId entry) entryId}>
-                            <h3 .entry-title>#{preEscapedToMarkup (scaleHeader 3 (entryTitleHtml entry))}
-                        
-                            
-    |]
-    toWidget [lucius|
-.entries>ul{   
-    list-style:none;
-    padding-left:0;
-}
-.entries>ul>li::before {
-    content: attr(data-date);
-    color: #b4bcc2;
-}
-.entries>ul>li>a>h3{
-    color:black;
-    margin:0.2em 0 1em;
-}
 
-    |]
 

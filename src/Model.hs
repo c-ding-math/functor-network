@@ -22,7 +22,7 @@ import Database.Persist.Quasi
 -- at:
 -- http://www.yesodweb.com/book/persistent/
 
-data EntryType =  Post | Page | Comment | UserPage | UserPost | Feedback
+data EntryType =  Post | Page | Comment | UserPage | UserPost | Feedback | Category
     deriving (Show, Read, Eq)
 derivePersistField "EntryType"
 

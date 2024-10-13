@@ -7,11 +7,13 @@ module Handler.Settings where
 import Import
 import Yesod.Auth.Email (registerR,forgotPasswordR,setpassR)
 import Yesod.Form.Bootstrap3
+import qualified Data.Text as T
+import Handler.Files (uploadForm)
 
+{-
 import Network.HTTP.Conduit (simpleHttp)
 import Text.HTML.DOM (parseLBS)
 import Text.XML.Cursor --(Cursor, attribute, attributeIs, element, fromDocument, ($//), (&//), (&/), content)
-import qualified Data.Text as T
 
 checkRelMeLink :: String -> Text ->  IO Bool
 checkRelMeLink url targetUrl = do
@@ -25,11 +27,11 @@ checkRelMeLink url targetUrl = do
     
 relMeLink:: Text -> Text -> Text 
 relMeLink homeUrl text = "<a rel=\"me\" href=\""<>homeUrl<>"\">"<>text<>"</a>"
-
+-}
 
 data NameSetting=NameSetting{_name::Text}
-data AboutSetting=AboutSetting{_about::Maybe Text}
---data AvatarSetting=AvatarSetting{_avatar::Maybe Text}
+--data AboutSetting=AboutSetting{_about::Maybe Text}
+data AvatarSetting=AvatarSetting{_avatar::Maybe Text}
 --data NotificationSetting=NotificationSetting{_notificationEmailId::Maybe EmailId}
     --deriving Show
 data EmailSetting=EmailSetting{_email::Maybe Text}
@@ -39,9 +41,13 @@ data DefaultCitationSetting=DefaultCitationSetting{_defaultCitation::Maybe Texta
 
 nameSettingForm::User->Form NameSetting
 nameSettingForm user=renderBootstrap3 BootstrapBasicForm $ NameSetting
-    <$> areq textField (bfs MsgName) (Just(userName user))
+    <$> areq nameField (bfs MsgName) (Just(userName user))
+    where 
+        maxNameLength=64
+        nameField = check validateName textField
+        validateName name = if T.length name <= maxNameLength then Right name else Left $ MsgTooLongByCharCount (T.length name - maxNameLength)
 
-aboutSettingForm::User->Form AboutSetting
+{-aboutSettingForm::User->Form AboutSetting
 aboutSettingForm user=renderBootstrap3 BootstrapBasicForm $ AboutSetting
     <$> aopt urlField aboutSetting (Just (Just (userAbout user)))
     where 
@@ -55,9 +61,10 @@ aboutSettingForm user=renderBootstrap3 BootstrapBasicForm $ AboutSetting
                 , ("placeholder", "Leave it blank if you want to use the default about page.")
                 ]
             }
-{-avatarSettingForm::User->Form AvatarSetting
+-}
+avatarSettingForm::User->Form AvatarSetting
 avatarSettingForm user=renderBootstrap3 BootstrapBasicForm $ AvatarSetting
-    <$> aopt urlField (bfs MsgAvatar) (Just(userAvatar user))-}
+    <$> aopt urlField (bfs MsgAvatar) (Just(userAvatar user))
 
 {-notificationSettingForm:: [Entity Email]->Maybe EmailId->Form NotificationSetting
 notificationSettingForm maybeEmailEntities maybeEmailId= renderBootstrap3 BootstrapBasicForm $ NotificationSetting
@@ -90,7 +97,7 @@ defaultFormatSettingForm::User->Form DefaultFormatSetting
 defaultFormatSettingForm user=renderBootstrap3 BootstrapBasicForm $ DefaultFormatSetting
     <$> areq (selectFieldList inputFormats) (bfs MsgDefaultFormat) (Just(userDefaultFormat user))
     where
-        inputFormats = [("Markdown", Format "md"), ("LaTeX", Format "tex")]::[(Text, Format)]
+        inputFormats = [(MsgMarkdownWithLaTeX, Format "md"), (MsgPureLaTeX, Format "tex")]
 
 defaultPreambleSettingForm::User->Form DefaultPreambleSetting
 defaultPreambleSettingForm user=renderBootstrap3 BootstrapBasicForm $ DefaultPreambleSetting
@@ -102,7 +109,7 @@ defaultCitationSettingForm user=renderBootstrap3 BootstrapBasicForm $ DefaultCit
 
 getSettingsR :: Handler Html
 getSettingsR = do 
-    urlRender<-getUrlRender
+    --urlRender<-getUrlRender
     (userId, user)<-requireAuthPair
     (emails, googles, orcids) <- runDB $ do
         --roleEntities<-selectList [RoleUserId==.userId,RoleType==.Administrator] []  
@@ -115,8 +122,9 @@ getSettingsR = do
         return $ (emails, googles,orcids)
 
     (nameWidget, nameEnctype) <- generateFormPost $ nameSettingForm user
-    (aboutWidget, aboutEnctype) <- generateFormPost $ aboutSettingForm user
-    --(avatarWidget, avatarEnctype) <- generateFormPost $ avatarSettingForm user
+    --(aboutWidget, aboutEnctype) <- generateFormPost $ aboutSettingForm user
+    (avatarWidget, avatarEnctype) <- generateFormPost $ avatarSettingForm user
+    (uploadFileWidget, uploadFileEnctype) <- generateFormPost uploadForm
     --(notificationWidget, notificationEnctype) <- generateFormPost $ notificationSettingForm emails (notificationEmailId . entityVal <$> mNotification)
     (formatWidget, formatEnctype) <- generateFormPost $ defaultFormatSettingForm user
     (emailWidget, emailEnctype) <- generateFormPost $ emailSettingForm user (emailAddress . entityVal <$> emails)
@@ -136,12 +144,12 @@ getSettingsR = do
                             <ul>
                                 $forall Entity emailId email<-emails
                                     <li>#{emailAddress email}
-                                      <span .menu> 
-                                        <ul>
+                                      <span.menu>
+                                        <ul.list-inline.text-lowercase>
                                             <li>
-                                                <a href=@{EmailSettingR emailId}>delete
+                                                <a.text-muted href=@{EmailSettingR emailId}>delete
                                             <li>    
-                                                <a href=@{SubscriptionsR emailId}>manage subscriptions
+                                                <a.text-muted href=@{SubscriptionsR emailId}>manage subscriptions
                         <a .btn .btn-default href=@{AuthR registerR}>_{MsgNewEmail}
                     <p>
                 
@@ -151,10 +159,10 @@ getSettingsR = do
                             <ul>
                                 $forall Entity googleId google<-googles
                                     <li>Google ID. #{drop 11 (loginIdent google)}
-                                      <span .menu>  
-                                        <ul>
+                                      <span.menu>  
+                                        <ul.list-inline.text-lowercase>
                                             <li>
-                                                <a href=@{LoginSettingR googleId}>delete
+                                                <a.text-muted href=@{LoginSettingR googleId}>delete
                                         
                         <a .btn .btn-default href=@{AuthR (PluginR "google" ["forward"])}>_{MsgNewGoogle}
                     <p>
@@ -166,9 +174,9 @@ getSettingsR = do
                                 $forall Entity pluginId pluginValue<-orcids
                                     <li>ORCID ID. #{T.replace "\"" "" (loginIdent pluginValue)}
                                       <span .menu>  
-                                        <ul>
+                                        <ul.list-inline.text-lowercase>
                                             <li>
-                                                <a href=@{LoginSettingR pluginId}>delete
+                                                <a.text-muted href=@{LoginSettingR pluginId}>delete
                                         
                         <a .btn .btn-default href=@{AuthR (PluginR "orcid" ["forward"])}>_{MsgNewORCID}
                     <p>
@@ -187,33 +195,43 @@ getSettingsR = do
                                 <a .btn .btn-default href=@{EditSiteR (sitePath site)}>_{MsgEdit} 
                                 <a .btn .btn-default href=@{SiteR (sitePath site)}>_{MsgView}
                 <p> -->
-            <section .profile-setting>
+            <section .profile-setting #profile-setting>
                 <h2>_{MsgProfile}
                 <div>
                     <form .name-form method=post enctype=#{nameEnctype}>
                         ^{nameWidget}
                         <button .btn .btn-default type=submit name=setting value=name>_{MsgSave}
                     <p>
-                <!--<div>
-                    <div .avatar-container>
-                        <div .avatar-left>
-                            
-                            <form method=post enctype=#{avatarEnctype}>
-                                ^{avatarWidget}
-                                <button .btn .btn-default type=submit name=setting value=avatar>_{MsgSave}
-                        <div .avatar-right>
-                            
-                    <p>-->
+                <div>
+                    <label>_{MsgAvatar}
+                    <p>
+                        $maybe avatar <- userAvatar user
+                            <img.avatar.img-rounded src=#{avatar} alt=#{userName user}>
+                        $nothing
+                            <img.avatar.img-rounded src=@{StaticR $ StaticRoute ["icons","default-avatar.svg"] []} alt=#{userName user}>
+                    <button .btn .btn-default #avatar-button>_{MsgChangeAvatar}
+                    <div .modal.fade #avatar-modal>
+                        <div .modal-dialog>
+                            <div .modal-content>
+                                <div .modal-header>
+                                    <button type=button .close data-dismiss=modal>&times;
+                                    <b .modal-title>_{MsgChangeAvatar}
+                                <div .modal-body>
+                                    <form #file-form method=post enctype=#{uploadFileEnctype} action=@{FilesR}>
+                                        ^{uploadFileWidget}
+                                        <div .text-muted>Recommended avatar size: 128x128 pixels.
+                                        <div .text-right>
+                                            <button .btn .btn-default type=submit>_{MsgUpload}        
+                                    <form .hidden #avatar-form method=post enctype=#{avatarEnctype}>
+                                        ^{avatarWidget}
+                                        <button .btn .btn-default type=submit name=setting value=avatar>_{MsgSave}
+                    <p>
                 
                 <div>
-                    <form method=post enctype=#{aboutEnctype}>
-                        ^{aboutWidget}
-                        <p .text-muted>You may either use the default about page on our platform or use your own about page somewhere else. In the latter case, please  provide the URL of your page in the blank and paste <code>#{relMeLink (urlRender $ UserHomeR userId) (userName user)}</code> in your page for ownership verification (You may replace <code>#{userName user}</code> with any text you like). 
-
-                        <button .btn .btn-default type=submit name=setting value=about>_{MsgVerifyAndSave}
-
-                        <a .btn .btn-default href=#{userAbout user}>_{MsgView}
-                        
+                    <label>_{MsgAbout}
+                    <div>
+                        <a .btn .btn-default href=@{EditUserAboutR}>_{MsgEdit}
+                        <a .btn .btn-default href=@{UserHomeR userId}#about>_{MsgView}   
                     <p>
             <section .email-setting>
                 <h2>_{MsgNotification} 
@@ -263,23 +281,56 @@ getSettingsR = do
                 margin-top:2em;
                 border-top:1px solid #ccc;
             }
-            .menu {
-                margin-left:1.5em;
+            .menu ul{
+                display:inline-block;
+                margin-left:2em;
             }
-
             .name-form,.email-form select,.format-form{
                 max-width:15em;
             }
-            .avatar-container{
-                display:flex;
+            .avatar{
+                height:128px;
+                max-width:100%;
             }
-            .avatar-right{
-                width:15em;
-                background-color:#eee;
-            }
-            .avatar-left{
-                flex-grow:1;
-            }
+        |]
+        toWidget [julius|
+            $(function(){
+                $("#avatar-button").click(function(){
+                    $("#avatar-modal").modal("show");
+                });
+                $("#file-form button").click(function(e){
+                    e.preventDefault();
+                    var fileForm=$("#file-form");
+                    var that=$(this);
+                    var formData = new FormData(fileForm[0]);
+                    $.ajax({
+                        url: "@{FilesR}",
+                        type: "POST",
+                        processData: false,
+                        contentType: false,
+                        cache: false,
+                        data: formData, 
+                        beforeSend: function() {
+                            that.prop("disabled", true);
+                            that.addClass("loading");
+                            fileForm.find(".form-group").removeClass("has-error").find(".help-block").remove();
+                        },
+                        error: function(jqXHR, textStatus, errorThrown) {
+                            fileForm.find(".form-group").addClass("has-error").append('<span class="help-block">Error: ' + errorThrown + '</span>');
+                        },
+                        success: function(object, textStatus, jqXHR) {
+                            var url = object.url;
+                            $("#avatar-modal").modal("hide");
+                            $("#avatar-form input[type='url']").val(url);
+                            $("#avatar-form button").click();
+                        },
+                        complete: function() {
+                            that.prop("disabled", false);
+                            that.removeClass("loading");
+                        },
+                    });
+                });
+            });
         |]
 
 postSettingsR :: Handler Html
@@ -293,10 +344,17 @@ postSettingsR = do
             case result of
                 FormSuccess res -> do 
                     _<-runDB $ update userId [UserName =. _name res]
-                    setMessageI $ MsgChangeSaved
-                    redirect $ SettingsR
-                _ -> notFound
-        Just "about"-> do
+                    setMessageI $ MsgChangeSaved                 
+                FormFailure errors -> do
+                    msgRender <- getMessageRender
+                    setMessage [shamlet|
+                        $forall error <- errors
+                            #{ msgRender error}
+                        |]
+                _ -> setMessageI MsgFormMissing
+            redirect $ SettingsR
+
+        {-Just "about"-> do
             ((result,_), _) <- runFormPost $ aboutSettingForm user
             case result of
                 FormSuccess res -> do 
@@ -320,14 +378,15 @@ postSettingsR = do
                             setMessageI $ MsgChangeSaved
                     redirect $ SettingsR
                 _ -> notFound
-        {-Just "avatar"-> do
+        -}
+        Just "avatar"-> do
             ((result,_), _) <- runFormPost $ avatarSettingForm user
             case result of
                 FormSuccess res -> do 
                     _<-runDB $ update userId [UserAvatar =. _avatar res]
                     setMessageI $ MsgChangeSaved
                     redirect $ SettingsR
-                _ -> notFound -}
+                _ -> notFound
         {-Just "notification"-> do
             (emails, selected) <- runDB $ do
                 emails<-selectList [EmailUserId==.Just userId, EmailVerified==.True] [Desc EmailInserted]

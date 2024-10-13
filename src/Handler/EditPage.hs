@@ -132,6 +132,7 @@ postEditPageR title = do
                             ,entryStatus=Publish
                             ,entryTitleHtml=title
                             ,entryBodyHtml=bodyHtml
+                            ,entryFeatured=False
                             }
 
                         setMessage $ [hamlet|
@@ -177,6 +178,7 @@ postEditPageR title = do
                                 ,entryStatus=Draft
                                 ,entryTitleHtml=title
                                 ,entryBodyHtml=bodyHtml
+                                ,entryFeatured=False
                                 }
 
                             setMessage $ [hamlet|

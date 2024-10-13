@@ -4,7 +4,7 @@
 module Handler.Pages where
 
 import Import
-import Handler.UserEntries (entryListWidget)
+import Handler.Entries (entryListWidget)
 
 getPagesR :: Handler Html
 getPagesR = do
@@ -19,7 +19,7 @@ getPagesR = do
             $if null entryList
                 <div> _{MsgNoPage}
             $else
-                ^{entryListWidget entryList}
+                ^{entryListWidget "" entryList}
         |]
 
 

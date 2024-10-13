@@ -5,8 +5,8 @@
 module Handler.Comments where
 
 import Import
-import Handler.UserEntries (entryListWidget)
-import Handler.EditComment (getRootEntryId)
+import Handler.Entries (entryListWidget)
+import Handler.Tree (getRootEntryId)
 
 getCommentsR :: UserId -> Handler Html
 getCommentsR piece = do
@@ -27,5 +27,5 @@ getCommentsR piece = do
                 <div>_{MsgNoComment}
             $else
                 <p>You have comments on the following posts:
-                ^{entryListWidget entryList}
+                ^{entryListWidget "" entryList}
         |]

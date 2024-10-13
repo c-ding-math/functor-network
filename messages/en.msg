@@ -61,6 +61,8 @@ Edit: Edit
 View: View
 Save: Save
 Update: Update
+Public: Public
+Private: Private
 Reset: Reset
 Title: Title
 Body: Body
@@ -120,6 +122,7 @@ Comment: Comment
 Comments: Comments
 CommentPublished: Comment published
 CommentDeleted: Comment deleted
+CommentDeletionConfirmation: Are you sure that you want to delete the comment? The replies (if any) to your comment will also be deleted.
 Reply: Reply
 
 AboutPageReset: Your about page has been reset.
@@ -142,6 +145,7 @@ UnsubscribeAll: Unsubscribe all
 SubscribeToUser: Please enter your email address below. You will receive an email notification when the author publishes a new post.
 SubscribeToPost: Please enter your email address below. You will receive an email notification when the post receives a new comment.
 SubscribeToComment: Please enter your email address below. You will receive an email notification when the comment receives a reply.
+SubscribeToCategory: Please enter your email address below. You will receive an email notification when a post is added to the category.
 UserSubscriptionsDescription: You are subscribed to the following members. You will receive an email notification when they publish a new post.
 PostSubscriptionsDescription: You are subscribed to the following posts. You will receive an email notification when they receive a new comment.
 CommentSubscriptionsDescription: You are subscribed to the following comments. You will receive an email notification when they receive a reply.
@@ -151,8 +155,10 @@ EmailAddress: Email address
 SubscriptionVerified: Your subscription has been verified.
 SubscriptionDeleted: Subscription deleted
 VerificationEmailSent email@Text: A verification email has been sent to #{email}. Please click the link in the email to verify your account.
+OtherSubscriptions: Other subscriptions
 
 Feedback: Feedback
+YourFeedback: Your feedback
 FeedbackSentDescription: Your feedback has been sent. Thank you!
 Send: Send
 SendFeedback: Send feedback
@@ -160,3 +166,36 @@ SendFeedback: Send feedback
 Search: Search
 SearchReultsFor query@Text: Search results for "#{query}"
 PostsContaining query@Text: Posts containing "#{query}"
+
+Keyword: Keyword
+Visibility: Visibility
+Category: Category
+Categories: Categories
+SelectCategories: Select categories
+Categorize: Categorize
+NewCategory: New category
+NoCategory: No category found.
+CreateACategory: Create a category.
+CreateCategory: Create category
+CategoryCreated: Category created
+CategorySaved: Category saved
+PostCategorized: Post categorized
+NoPostInCategory: No post found in this category.
+BrowsePosts: Browse posts on the network
+TooLongByCharCount charCount@Int: Too long by #{show charCount} characters.
+CategorySubscriptionsDescription: You are subscribed to the following categories. You will receive an email notification when a post is added to the category.
+PostFilter: Post filter
+AllPosts: All posts
+MyOwnPosts: My own posts
+OthersPosts: Others' posts
+
+RecentActivities: Recent activities
+NoActivity: No activity yet.
+PublishedPosts: Published posts
+CategorizedPosts: Categorized posts
+PostedComments: Posted comments
+NoAbout: I think, therefore I am
+SelfIntroduction: Self introduction
+Settings: Settings
+ChangeAvatar: Change avatar
+Upload: Upload

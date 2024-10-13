@@ -8,6 +8,7 @@ import Yesod.Form.Bootstrap3
 import Handler.Parser(parse,userTemporaryDirectory)
 import Handler.NewEntrySubscription(entrySubscriptionNotification,insertDefaultEntrySubscription)
 import Parse.Parser(mdToHtml,texToHtml,EditorData(..))
+import Handler.Tree(getRootEntryId)
 --import Text.Shakespeare.Text
 
 deleteEditCommentR :: EntryId -> Handler ()
@@ -42,7 +43,8 @@ newCommentForm mCommentData =  renderBootstrap3 BootstrapBasicForm $ CommentInpu
                 , fsTooltip = Nothing
                 , fsId = Nothing
                 , fsName = Just "format"
-                , fsAttrs =[("class", "input-sm form-control format-selector")]}
+                , fsAttrs =[("class", "input-sm form-control format-selector")]
+                }
             editorSettings = FieldSettings
                 { fsLabel = ""
                 , fsTooltip = Nothing
@@ -71,13 +73,11 @@ newCommentForm mCommentData =  renderBootstrap3 BootstrapBasicForm $ CommentInpu
 postEditCommentR :: EntryId -> Handler ()
 postEditCommentR entryId = do
     Entity userId _ <- requireAuth
-    (rootEntryId, rootEntryAuthorId, entry, entryAuthorName) <- runDB $ do
+    (rootEntryId, rootEntryAuthorId) <- runDB $ do
         rootEntryId <- getRootEntryId entryId
-        entry <- get404 entryId
-        entryAuthor <- get404 $ entryUserId entry
         rootEntryAuthorId <- entryUserId <$> get404 rootEntryId  
    
-        return (rootEntryId, rootEntryAuthorId, entry, userName entryAuthor)  
+        return (rootEntryId, rootEntryAuthorId)  
 
     urlRenderParams <- getUrlRenderParams
     
@@ -110,11 +110,12 @@ postEditCommentR entryId = do
                         ,entryInserted=currentTime
                         ,entryUpdated=currentTime
                         ,entryStatus=Publish
+                        ,entryFeatured=False
                         }
                 
             commentId <- runDB $ do
                 commentId<-insert commentData
-                insert_ $ EntryTree commentId entryId
+                insert_ $ EntryTree commentId entryId currentTime
                 insertDefaultEntrySubscription commentId
                 return commentId
 
@@ -159,13 +160,6 @@ getChildIds entryId = do
             let childIds = entryTreeNode . entityVal <$> x
             childIds'<-mapM getChildIds childIds
             return $ childIds ++ (concat childIds')
-
-getRootEntryId :: EntryId -> ReaderT SqlBackend (HandlerFor App) EntryId
-getRootEntryId entryId = do
-    mEntryTree<-selectFirst [EntryTreeNode==.entryId] []
-    case mEntryTree of
-        Nothing -> return entryId
-        Just tree -> getRootEntryId $ entryTreeParent $ entityVal tree
 
 commentLink :: EntryId -> ReaderT SqlBackend (HandlerFor App) (Text, Text) -- (url,text)
 commentLink commentId = do
