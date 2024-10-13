@@ -4,9 +4,10 @@
 module Handler.Tree where
 
 import Import
-import Data.List (intersect)
+import qualified Data.List as DL
 import Yesod.Form.Bootstrap3
 import Text.Shakespeare.Text (stext)
+import qualified Prelude
 
 data Parents = Parents
     { _ids :: Maybe [EntryId]
@@ -24,29 +25,45 @@ postTreeR node = do
     entry <- runDB $ get404 node
     ((result, _), _) <- runFormPost $ treeForm userId Nothing
     case result of
-        FormSuccess parents -> do
-                --deleteWhere [EntryTreeNode ==. node]
-                case _ids parents of
-                    Just parentIds -> do
-                        forM_ parentIds $ \parentId -> do
-                            parent <- runDB $ get404 parentId
-                            when (entryType parent == Category) $ do
-                                eTree <- runDB $ insertBy $ EntryTree node parentId
-                                case eTree of
-                                    Left _ -> return ()
-                                    Right _ -> do
-                                        urlRenderParams <- getUrlRenderParams
-                                        subscribers <- runDB $ selectList [EntrySubscriptionEntryId ==. parentId, EntrySubscriptionVerified ==. True] []
-                                        forM_ subscribers $ \(Entity subscriptionId subscription) -> do
-                                            
-                                            let unsubscribeUrl= urlRenderParams (EditEntrySubscriptionR subscriptionId) $ case entrySubscriptionKey subscription of
-                                                    Just key -> [("key", key)] 
-                                                    Nothing -> []
-                                                entryUrl= urlRenderParams (CategoriesR (entryUserId parent)) [] <> "#entry-" <> toPathPiece parentId
-                                            sendAppEmail (entrySubscriptionEmail subscription) $ categorySubscriptionNotification unsubscribeUrl entryUrl (entryTitle entry) (entryTitle parent)                        
+        FormSuccess parents -> runDB $ do
+            urlRenderParams <- getUrlRenderParams
+            userCategoryIds <- selectKeysList [EntryUserId ==. userId, EntryType ==. Category] [Desc EntryInserted]
+            oldParentIds <- do
+                entryTreeEntities <- selectList [EntryTreeNode ==. node] []
+                return $  DL.intersect userCategoryIds $ map (entryTreeParent . entityVal) entryTreeEntities
+            let parentIds = DL.intersect userCategoryIds $ case _ids parents of
+                    Just x -> x
+                    Nothing -> []
+            let differnece = oldParentIds DL.\\ parentIds
+            deleteWhere [EntryTreeParent <-. differnece, EntryTreeNode ==. node]
 
-                        setMessageI $ MsgPostCategorized
-                    Nothing -> return ()
+            categoryEntities <- forM parentIds $ \parentId -> do
+                    parent <- get404 parentId
+                    currentTime <- liftIO getCurrentTime
+                    eTree <- insertBy $ EntryTree {entryTreeParent = parentId, entryTreeNode = node, entryTreeInserted = currentTime}
+                    case eTree of
+                        Left _ -> return ()
+                        Right _ -> when ((entryStatus entry == Publish)||(entryUserId entry == userId)) $ do
+                                subscribers <- selectList [EntrySubscriptionEntryId ==. parentId, EntrySubscriptionVerified ==. True] []
+                                forM_ subscribers $ \(Entity subscriptionId subscription) -> do
+                                    
+                                    let unsubscribeUrl= urlRenderParams (EditEntrySubscriptionR subscriptionId) $ case entrySubscriptionKey subscription of
+                                            Just key -> [("key", key)] 
+                                            Nothing -> []
+                                        entryUrl= urlRenderParams (CategoriesR (entryUserId parent)) [] <> "#entry-" <> toPathPiece parentId
+                                    lift $ sendAppEmail (entrySubscriptionEmail subscription) $ categorySubscriptionNotification unsubscribeUrl entryUrl (entryTitle entry) (entryTitle parent)                        
+                    return $ Entity parentId parent
+            setMessage $ [hamlet|
+                Post categorized in 
+                    $if null categoryEntities
+                        no category
+                    $else
+                        $forall (Entity categoryId category) <- categoryEntities
+                            <a href=@{CategoriesR userId}#entry-#{toPathPiece categoryId}>#{entryTitle category}
+                                $if categoryId /= entityKey (Prelude.last categoryEntities)
+                                    , 
+                |] urlRenderParams 
+            
             
         FormMissing -> do
             setMessageI MsgFormMissing
@@ -63,7 +80,7 @@ treeWidget entryId = do
                 (parentIds, categories) <- runDB $ do
                     categories <- selectList [EntryUserId ==. userId, EntryType ==. Category] [Desc EntryInserted]
                     entryTreeEntities <- selectList [EntryTreeNode ==. entryId] []
-                    return (Data.List.intersect (map entityKey categories) (map (entryTreeParent . entityVal) entryTreeEntities), categories)
+                    return (DL.intersect (map entityKey categories) (map (entryTreeParent . entityVal) entryTreeEntities), categories)
                 (widget, enctype) <- generateFormPost $ treeForm userId $ Just $ Parents $ Just parentIds
                 return (widget, enctype, categories)
             [whamlet|
@@ -79,9 +96,10 @@ treeWidget entryId = do
                                 <p>There are no categories available for selection. You can go to the <a target=_blabk href=@{CategoriesR userId}>categories page</a> to create a category first.
                                 <div .text-right>
                                     <a .btn.btn-primary target=_blabk href=@{CategoriesR userId}>_{MsgCreateACategory}
-                        $else    
-                            <div .list-group>
-                                <label>_{MsgSelectCategories}
+                        $else   
+                            <a.text-lowercase.text-muted.pull-right target=_blabk href=@{CategoriesR userId}>_{MsgNewCategory} 
+                            <label>_{MsgSelectCategories}     
+                            <div .list-group> 
                                 $forall Entity categoryId category <- categories
                                     <a.list-group-item href=# data-id=#{toPathPiece categoryId}>#{preEscapedToMarkup $ entryTitleHtml category}
 
@@ -149,10 +167,10 @@ Manage your subscriptions at #{unsubscribeUrl}.
 getRootEntryId :: EntryId -> ReaderT SqlBackend (HandlerFor App) EntryId
 getRootEntryId entryId = do
     entry <- get404 entryId
-    if entryType entry `elem` [UserPost, Post, UserPage, Page]
+    if entryType entry /= Comment
         then return entryId
         else do
-            mEntryTree<-selectFirst [EntryTreeNode==.entryId] []
+            mEntryTree<-selectFirst [EntryTreeNode==.entryId] [Asc EntryTreeInserted]
             case mEntryTree of
                 Nothing -> return entryId
                 Just tree -> getRootEntryId $ entryTreeParent $ entityVal tree

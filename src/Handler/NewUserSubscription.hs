@@ -66,13 +66,14 @@ userSubscriptionForm mEmail = renderBootstrap3 BootstrapBasicForm $ areq emailFi
 
 subscribeToUserWidget :: UserId -> Widget
 subscribeToUserWidget authorId = do
+    mCurrentUserId<-maybeAuthId
     (subscribeWidget, subscribeEnctype) <- handlerToWidget $ do
-        mCurrentUserId<-maybeAuthId
+        --mCurrentUserId<-maybeAuthId
         mCurrentUserEmail <- runDB $ selectFirst [EmailUserId ==. mCurrentUserId, EmailVerified ==. True] [Desc EmailInserted]
 
         generateFormPost $ userSubscriptionForm $ (emailAddress . entityVal) <$> mCurrentUserEmail
     [whamlet|
-        <a .btn.btn-default .subscribe href=#>_{MsgSubscribe}
+        <a .btn.btn-default :mCurrentUserId /= Just authorId:.btn-primary .subscribe href=#>_{MsgSubscribe}
         <div .modal.fade>
             <div .modal-dialog>
                 <div .modal-content>

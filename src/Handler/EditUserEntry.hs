@@ -137,6 +137,10 @@ getNewUserEntryR =  do
                         if(title.length>256){
                             alert("Title is too long. Please make it shorter.");
                             return false;
+                        }else{
+                            var progressBar=$('<div class="progress" style="width:60%;"><div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width:100%"></div></div>');
+                            $('<div/>',{style:"position: fixed;top: 0;right: 0;bottom: 0;left: 0;display: flex;justify-content: center;align-items: center;z-index: 2;"}).append(progressBar).appendTo('body');
+                            $('<div/>',{style:"position: fixed;top: 0;right: 0;bottom: 0;left: 0;display: flex;justify-content: center;align-items: center;z-index: 1;background-color:#000;opacity:0.5;"}).appendTo('body');
                         }
                     });
                 });
@@ -146,52 +150,52 @@ getNewUserEntryR =  do
         when (isNothing mEntry) $ do
             toWidget [julius|
                 $(document).ready(function(){
-                    //show tooltips on "post format", "meta" and "content" fields on click one by one
+                    //show popovers on "post format", "meta" and "content" fields on click one by one
                     
-                    var tooltips = [
+                    var popovers = [
                         {
                             element: $('select[name="format"]'),
-                            title: 'Choose the format of your post here. A comparison between formats can be found at the <a target=\"_blank\" href=\"@{EditHelpR "format"}\">format help page</a>.',
+                            content: 'Choose the format of your post here. A comparison between formats can be found at the <a target=\"_blank\" href=\"@{EditHelpR "format"}\">format help page</a>.',
                             placement: 'right'
                         },
                         {
                             element: $('.editor-toolbar>ul>li:contains("Meta")'),
-                            title: 'Click here to include your latex preamble and citation. You can also set defaults at the <a target=\"_blank\" href=\"@{SettingsR}#editor-setting\">settings page</a>.',
-                            //title: 'Click the "meta" menu to include your latex preamble and citation data.',
+                            content: 'Click here to include your latex preamble and citation. You can also set defaults at the <a target=\"_blank\" href=\"@{SettingsR}#editor-setting\">settings page</a>.',
+                            //content: 'Click the "meta" menu to include your latex preamble and citation data.',
                             placement: 'bottom'
                         },
                         {
                             element: $('.ace_editor'),
-                            title: 'The main content of your document goes here. The shortcut for preview refresh is Ctrl+Enter (on Windows) or Cmd+Enter (on Mac).',
+                            content: 'The main content of your document goes here. The shortcut for preview refresh is Ctrl+Enter (on Windows) or Cmd+Enter (on Mac).',
                             placement: 'bottom'
                         },
                         {
                             element: $('.editor-toolbar>ul>li:contains("Help")'),
-                            title: 'More help can be found here. Refresh the page if you want to see the first-time instruction again.',
+                            content: 'More help can be found here. Refresh the page if you want to see the first-time instruction again.',
                             placement: 'bottom'
                         },
                     ];
 
-                    tooltips.forEach(function(tooltip){
-                        tooltip.element.tooltip({
+                    popovers.forEach(function(popover){
+                        popover.element.popover({
                             html:true,
-                            placement:tooltip.placement,
-                            title:tooltip.title,
+                            placement:popover.placement,
+                            content:popover.content,
                             trigger: 'manual'
                         });
                     });
-                    var tooltipContainer=$('<div/>',{style:"position:fixed;top:0;left:0;width:100%;height:100%;"}).appendTo('body');
+                    var popoverContainer=$('<div/>',{style:"position:fixed;top:0;left:0;width:100%;height:100%;"}).appendTo('body');
                     
                     var i=1;
-                    tooltips[i-1].element.tooltip('show');
-                    tooltipContainer.click(function(){
-                        if(i<tooltips.length){
-                            tooltips[i-1].element.tooltip('destroy');
-                            tooltips[i].element.tooltip('show');
+                    popovers[i-1].element.popover('show');
+                    popoverContainer.click(function(){
+                        if(i<popovers.length){
+                            popovers[i-1].element.popover('destroy');
+                            popovers[i].element.popover('show');
                             i++;
                         }else{
-                            tooltips[i-1].element.tooltip('destroy');
-                            tooltipContainer.remove();
+                            popovers[i-1].element.popover('destroy');
+                            popoverContainer.remove();
                         }
                     });
 
@@ -245,6 +249,10 @@ getEditUserEntryR entryId = do
                         if(title.length>256){
                             alert("Title is too long. Please make it shorter.");
                             return false;
+                        }else{
+                            var progressBar=$('<div class="progress" style="width:60%;"><div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width:100%"></div></div>');
+                            $('<div/>',{style:"position: fixed;top: 0;right: 0;bottom: 0;left: 0;display: flex;justify-content: center;align-items: center;z-index: 2;"}).append(progressBar).appendTo('body');
+                            $('<div/>',{style:"position: fixed;top: 0;right: 0;bottom: 0;left: 0;display: flex;justify-content: center;align-items: center;z-index: 1;background-color:#000;opacity:0.5;"}).appendTo('body');
                         }
                     });
                 });

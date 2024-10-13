@@ -290,7 +290,7 @@ postEditFeedbackR entryId = do
             commentId <- runDB $ do
                 _ <- get404 entryId
                 commentId<-insert commentData
-                insert_ $ EntryTree commentId entryId
+                insert_ $ EntryTree commentId entryId currentTime
                 insertDefaultEntrySubscription commentId
                 return commentId
 

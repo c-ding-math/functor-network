@@ -124,6 +124,10 @@ function link() {
         modal.modal("hide");
     })
     , buttonFile = $('<button/>',{class:"btn btn-primary", type:"button", html:"Continue"}).click(function() {
+        if (#{isNothing maybeUserId}){
+            alert("Login required to upload files.");
+            return false;
+        }
         //https://stackoverflow.com/questions/21044798/how-to-use-formdata-for-ajax-file-upload
         var that=$(this);
         var formData = new FormData(formFile[0]);
@@ -201,6 +205,10 @@ function image() {
         modal.modal("hide");
     })
     , buttonFile = $('<button/>',{class:"btn btn-primary", type:"button", html:"Continue"}).click(function() {
+        if (#{isNothing maybeUserId}){
+            alert("Login required to upload files.");
+            return false;
+        }
         //https://stackoverflow.com/questions/21044798/how-to-use-formdata-for-ajax-file-upload
         var that=$(this);
         var formData = new FormData(formFile[0]);

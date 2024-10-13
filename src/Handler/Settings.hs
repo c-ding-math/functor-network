@@ -41,7 +41,11 @@ data DefaultCitationSetting=DefaultCitationSetting{_defaultCitation::Maybe Texta
 
 nameSettingForm::User->Form NameSetting
 nameSettingForm user=renderBootstrap3 BootstrapBasicForm $ NameSetting
-    <$> areq textField (bfs MsgName) (Just(userName user))
+    <$> areq nameField (bfs MsgName) (Just(userName user))
+    where 
+        maxNameLength=64
+        nameField = check validateName textField
+        validateName name = if T.length name <= maxNameLength then Right name else Left $ MsgTooLongByCharCount (T.length name - maxNameLength)
 
 {-aboutSettingForm::User->Form AboutSetting
 aboutSettingForm user=renderBootstrap3 BootstrapBasicForm $ AboutSetting
@@ -105,7 +109,7 @@ defaultCitationSettingForm user=renderBootstrap3 BootstrapBasicForm $ DefaultCit
 
 getSettingsR :: Handler Html
 getSettingsR = do 
-    urlRender<-getUrlRender
+    --urlRender<-getUrlRender
     (userId, user)<-requireAuthPair
     (emails, googles, orcids) <- runDB $ do
         --roleEntities<-selectList [RoleUserId==.userId,RoleType==.Administrator] []  
@@ -202,9 +206,9 @@ getSettingsR = do
                     <label>_{MsgAvatar}
                     <p>
                         $maybe avatar <- userAvatar user
-                            <img.avatar src=#{avatar} alt=#{userName user}>
+                            <img.avatar.img-rounded src=#{avatar} alt=#{userName user}>
                         $nothing
-                            <img.avatar src=@{StaticR $ StaticRoute ["icons","default-avatar.svg"] []} alt=#{userName user}>
+                            <img.avatar.img-rounded src=@{StaticR $ StaticRoute ["icons","default-avatar.svg"] []} alt=#{userName user}>
                     <button .btn .btn-default #avatar-button>_{MsgChangeAvatar}
                     <div .modal.fade #avatar-modal>
                         <div .modal-dialog>
@@ -216,7 +220,8 @@ getSettingsR = do
                                     <form #file-form method=post enctype=#{uploadFileEnctype} action=@{FilesR}>
                                         ^{uploadFileWidget}
                                         <div .text-muted>Recommended avatar size: 128x128 pixels.
-                                        <button .btn .btn-default type=submit>_{MsgUpload}        
+                                        <div .text-right>
+                                            <button .btn .btn-default type=submit>_{MsgUpload}        
                                     <form .hidden #avatar-form method=post enctype=#{avatarEnctype}>
                                         ^{avatarWidget}
                                         <button .btn .btn-default type=submit name=setting value=avatar>_{MsgSave}
@@ -339,9 +344,16 @@ postSettingsR = do
             case result of
                 FormSuccess res -> do 
                     _<-runDB $ update userId [UserName =. _name res]
-                    setMessageI $ MsgChangeSaved
-                    redirect $ SettingsR
-                _ -> notFound
+                    setMessageI $ MsgChangeSaved                 
+                FormFailure errors -> do
+                    msgRender <- getMessageRender
+                    setMessage [shamlet|
+                        $forall error <- errors
+                            #{ msgRender error}
+                        |]
+                _ -> setMessageI MsgFormMissing
+            redirect $ SettingsR
+
         {-Just "about"-> do
             ((result,_), _) <- runFormPost $ aboutSettingForm user
             case result of

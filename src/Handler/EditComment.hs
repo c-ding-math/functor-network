@@ -73,13 +73,11 @@ newCommentForm mCommentData =  renderBootstrap3 BootstrapBasicForm $ CommentInpu
 postEditCommentR :: EntryId -> Handler ()
 postEditCommentR entryId = do
     Entity userId _ <- requireAuth
-    (rootEntryId, rootEntryAuthorId, entry, entryAuthorName) <- runDB $ do
+    (rootEntryId, rootEntryAuthorId) <- runDB $ do
         rootEntryId <- getRootEntryId entryId
-        entry <- get404 entryId
-        entryAuthor <- get404 $ entryUserId entry
         rootEntryAuthorId <- entryUserId <$> get404 rootEntryId  
    
-        return (rootEntryId, rootEntryAuthorId, entry, userName entryAuthor)  
+        return (rootEntryId, rootEntryAuthorId)  
 
     urlRenderParams <- getUrlRenderParams
     
@@ -117,7 +115,7 @@ postEditCommentR entryId = do
                 
             commentId <- runDB $ do
                 commentId<-insert commentData
-                insert_ $ EntryTree commentId entryId
+                insert_ $ EntryTree commentId entryId currentTime
                 insertDefaultEntrySubscription commentId
                 return commentId
 

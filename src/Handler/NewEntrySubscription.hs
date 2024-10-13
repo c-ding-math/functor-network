@@ -149,7 +149,9 @@ $(document).ready(function(){
         e.preventDefault();
 		var subscriptionForm = $(".subscription-form");
         subscriptionForm.attr("action", $(this).data("action"));
-        if ($(this).closest("#comments").length > 0){
+        if ($(this).closest(".category").length > 0){
+            subscriptionForm.find(".subscription-form-text").text(#{messageRender MsgSubscribeToCategory});
+        } else if ($(this).closest("#comments").length > 0){
             subscriptionForm.find(".subscription-form-text").text(#{messageRender MsgSubscribeToComment});
         } else {
             subscriptionForm.find(".subscription-form-text").text(#{messageRender MsgSubscribeToPost});

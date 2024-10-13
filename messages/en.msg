@@ -145,6 +145,7 @@ UnsubscribeAll: Unsubscribe all
 SubscribeToUser: Please enter your email address below. You will receive an email notification when the author publishes a new post.
 SubscribeToPost: Please enter your email address below. You will receive an email notification when the post receives a new comment.
 SubscribeToComment: Please enter your email address below. You will receive an email notification when the comment receives a reply.
+SubscribeToCategory: Please enter your email address below. You will receive an email notification when a post is added to the category.
 UserSubscriptionsDescription: You are subscribed to the following members. You will receive an email notification when they publish a new post.
 PostSubscriptionsDescription: You are subscribed to the following posts. You will receive an email notification when they receive a new comment.
 CommentSubscriptionsDescription: You are subscribed to the following comments. You will receive an email notification when they receive a reply.
@@ -185,7 +186,7 @@ TooLongByCharCount charCount@Int: Too long by #{show charCount} characters.
 CategorySubscriptionsDescription: You are subscribed to the following categories. You will receive an email notification when a post is added to the category.
 PostFilter: Post filter
 AllPosts: All posts
-MyOwnPostsOnly: My own posts only
+MyOwnPosts: My own posts
 OthersPosts: Others' posts
 
 RecentActivities: Recent activities

@@ -112,7 +112,7 @@ isActiveDirectory dir = doesDirectoryExist dir >>= \exisitence ->
 
 editorWidget :: Format -> Widget
 editorWidget inputFormat = do
-
+    maybeUserId <- maybeAuthId
     addScript $ StaticR editor_src_min_ace_js
     addScript $ StaticR editor_src_min_ext_language_tools_js
     --urlRender <- getUrlRender

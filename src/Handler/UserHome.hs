@@ -48,9 +48,9 @@ getUserHomeR authorId = do
                 <div .card>
                     <div .basics>
                         $maybe avatar <- userAvatar author
-                            <img.avatar src=#{avatar} alt=#{userName author}>
+                            <img.avatar.img-rounded src=#{avatar} alt=#{userName author}>
                         $nothing
-                            <img.avatar src=@{StaticR $ StaticRoute ["icons","default-avatar.svg"] []} alt=#{userName author}>
+                            <img.avatar.img-rounded src=@{StaticR $ StaticRoute ["icons","default-avatar.svg"] []} alt=#{userName author}>
                         <h4 .name>#{userName author}
                         $if isAuthor
                             <div>
@@ -118,7 +118,7 @@ getUserHomeR authorId = do
     font-size: 1.5em;
     font-weight: bold;
     font-family: Georgia, "Times New Roman", Times, serif;
-    margin-left: 0.25em;
+    margin-left: 0.1em;
 }
 .activities ul>li {
     padding: 0.5em 1.5em 0.5em 0;

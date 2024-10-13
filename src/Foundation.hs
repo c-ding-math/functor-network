@@ -503,7 +503,6 @@ instance YesodAuth App where
                                     ,userDefaultPreamble=Just (Textarea "\\usepackage{amsmath, amssymb, amsfonts}\n\\newcommand{\\NN}{\\mathbb{N}}")
                                     ,userDefaultCitation=Nothing
                                     }
-                                urlRender<-getUrlRender
                                 update uid [UserName=.(msgRender MsgUser <> " " <> (toPathPiece uid))]
                                 {-case plugin of
                                     p| p `elem` ["google","orcid"] -> do
@@ -633,7 +632,6 @@ instance YesodAuthEmail App where
                                 ,userDefaultPreamble=Just (Textarea "\\usepackage{amsmath, amssymb, amsfonts}\n\\newcommand{\\NN}{\\mathbb{N}}")
                                 ,userDefaultCitation=Nothing
                                 }
-                        urlRender<-getUrlRender
                         update newUserId [UserName=.(msgRender MsgUser <> " " <> toPathPiece newUserId)]
                         
                         return newUserId

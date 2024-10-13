@@ -21,8 +21,7 @@ getCategoriesR authorId = do
             entryTrees <- selectList [EntryTreeParent ==. entityKey category] []
             let entryIds = map (entryTreeNode . entityVal) entryTrees
             case mCurrentUserId of
-                Just _ -> selectList [EntryId <-. entryIds] [Desc EntryInserted]
-                    
+                Just userId -> selectList ([EntryId <-. entryIds, EntryStatus ==. Publish] ||. [EntryId <-. entryIds, EntryUserId ==. userId]) [Desc EntryInserted]
                 Nothing -> selectList [EntryId <-. entryIds, EntryStatus ==. Publish] [Desc EntryInserted]
         return $ zip categoryList entryListList
     (newCategoryWidget, enctype) <- generateFormPost $ categoryForm Nothing
@@ -52,13 +51,13 @@ getCategoriesR authorId = do
             $else
                 <ul .category-list>
                     $if isAuthor
-                        <li style="list-style:none;margin-bottom:1em;">
+                        <li style="list-style:none;margin-bottom:1.5em;">
                             <form .form-inline>
                                 <div .form-group>
                                     <label.text-lowercase for=filter>_{MsgPostFilter}
-                                    <select #filter .form-control>
+                                    <select #filter .text-lowercase.form-control.input-sm>
                                         <option value="all">_{MsgAllPosts}
-                                        <option value="own">_{MsgMyOwnPostsOnly}
+                                        <option value="own">_{MsgMyOwnPosts}
                                         <option value="others">_{MsgOthersPosts}
                         <li style="display:none;" .new-item>
                             <div .category>
