@@ -33,7 +33,13 @@ getUserHomeR authorId = do
             let comments = length [x | x <- entries, entryType (entityVal x) == Comment]
             categorizedPosts <- do 
                 let categories = [x | x <- entries, entryType (entityVal x) == Category]
-                trees <- forM categories $ \category -> selectList [EntryTreeParent ==. entityKey category] []
+                trees <- forM categories $ \category -> do
+                    tree <- selectList [EntryTreeParent ==. entityKey category] []
+                    filterM (\(Entity _ x) -> do
+                        entry <- get404 $ entryTreeNode x
+                        return $ entryStatus entry == Publish && entryType entry == UserPost
+                        ) tree
+
                 return $ length $ concat $ trees
             return (publishedPosts, categorizedPosts, comments)
         mAbout <- selectFirst [EntryUserId ==. authorId, EntryType ==. UserPage] [Desc EntryInserted]

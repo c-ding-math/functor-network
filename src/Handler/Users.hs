@@ -14,8 +14,9 @@ getUsersR = do
         allUsers<- selectList [] [Asc UserInserted]
         userListWithEntries <- mapM (\(Entity uid user) -> do
             entries <- selectList [EntryUserId==.uid,EntryStatus==.Publish,EntryType==.UserPost] [Desc EntryInserted]
-            return (Entity uid user, length entries)) allUsers
-        return (length allUsers, take topAmount $ reverse $ sortOn snd userListWithEntries)
+            let featuredEntries = filter (\(Entity _ e) -> entryFeatured e) entries
+            return (Entity uid user, length entries, length featuredEntries)) allUsers
+        return (length allUsers, take topAmount $ sortBy (comparing (\(_,m,n)->(Down m,Down n))) userListWithEntries)
         
     defaultLayout $ do
         setTitleI MsgUsers
@@ -28,10 +29,10 @@ $else
     <div .entries>
         <p>#{total} people have already registered on the platform.  Here is the list of the top #{topAmount} users ordered by the amount of published posts:
         <ul .users.list-inline>
-            $forall (Entity uid u, n)<-userListOrderedByEntries
+            $forall (Entity uid u, m, _)<-userListOrderedByEntries
                 <li style="width:12em; margin-right:0.5em;">
                     <a href=@{UserHomeR uid}>
                         <h4>#{userName u}
-                    <span .text-muted>#{n} published posts
+                    <span .text-muted>#{m} published posts
                     <p .text-muted>registered #{utcToDate (userInserted u)}
         |]
