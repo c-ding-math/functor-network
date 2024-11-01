@@ -58,9 +58,9 @@ deleteUserRecursive::UserId->ReaderT SqlBackend (HandlerFor App) ()
 deleteUserRecursive userId =do
         entries <- selectList [EntryUserId ==. userId] []
         forM_ entries $ \entry -> do
-            deleteEntryRecursive $ entityKey entry
-        deleteWhere [UserSubscriptionUserId ==. userId]
-        deleteWhere [FileUserId ==. userId]
-        deleteWhere [LoginUserId ==.Just userId]
-        deleteWhere [EmailUserId ==. Just userId]
+            if entryType (entityVal entry) == Category
+                then do
+                    delete $ entityKey entry
+                else do
+                    deleteEntryRecursive $ entityKey entry
         delete userId

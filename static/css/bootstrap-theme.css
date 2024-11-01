@@ -290,7 +290,7 @@ div.csl-indent {
     body, .or span, .modal-content{
         background-color: #f5f5f5;
     }
-    .entry-content {
+    .entry-content, .editor-preview{
         background-color: white;
         border: 1px solid #ccc;
     }

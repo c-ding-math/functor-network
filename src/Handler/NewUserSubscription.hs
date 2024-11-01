@@ -16,6 +16,7 @@ postNewUserSubscriptionR authorId = do
     ((result, _), _) <- runFormPost $ userSubscriptionForm Nothing
     _<-case result of
         FormSuccess address -> do
+            forwardedFor <- lookupHeader "X-Forwarded-For"
             currentTime <- liftIO getCurrentTime
             verificationKey <- liftIO $ Nonce.nonce128urlT $ unsafePerformIO (Nonce.new)
             mCurrentUserId <- maybeAuthId
@@ -29,7 +30,8 @@ postNewUserSubscriptionR authorId = do
                 userSubscriptionUserId = authorId,
                 userSubscriptionKey = Just verificationKey,
                 userSubscriptionInserted = currentTime,
-                userSubscriptionVerified = verified
+                userSubscriptionVerified = verified,
+                userSubscriptionClient = show <$> forwardedFor
             }
             case eUserSubscription of
                 Left (Entity subscriptionId subscription) -> if userSubscriptionVerified subscription
@@ -58,7 +60,7 @@ postNewUserSubscriptionR authorId = do
                         sendAppEmail address $ userSubscriptionConfirmation url author
         FormFailure _ -> setMessageI MsgFormFailure
         _ -> setMessageI MsgFormMissing
-    redirect $ UserHomeR authorId
+    redirect $ UserEntriesR authorId
 
 
 userSubscriptionForm ::Maybe Text -> Form Text 

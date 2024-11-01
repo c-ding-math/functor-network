@@ -31,18 +31,15 @@ import qualified Data.Text.Encoding.Error
 import           Text.Shakespeare.Text         (stext)
 import qualified Data.Text               
 import qualified Data.Text.Lazy 
---import qualified Data.Text.Lazy.Encoding
 import           Text.Blaze.Html.Renderer.Utf8 (renderHtml)
 import qualified Yesod.Auth.Message as Msg
 import qualified Yesod.Auth.Extra  
 import           Yesod.Form.Bootstrap3
 
---import           Database.Persist 
 import           Data.Either.Extra()
 --import qualified Yesod.Auth.OAuth2 (getUserResponseJSON)
 import qualified Yesod.Auth.OAuth2.Google
 import qualified Yesod.Auth.OAuth2.ORCID
---import Yesod.Auth.OpenId    (authOpenId, IdentifierType (Claimed))
 import Yesod.Default.Util   (addStaticContentExternal)
 import Yesod.Core.Types     (Logger)
 import qualified Yesod.Core.Unsafe as Unsafe
@@ -320,7 +317,8 @@ instance Yesod App where
     isAuthorized NewUserEntryR _ = isAuthenticated
     isAuthorized NewCategoryR _ = isAuthenticated
     isAuthorized (TreeR _) _ = isAuthenticated
-
+    isAuthorized (VoteR _) _ = isAuthenticated
+    
     -- owner routes
     isAuthorized (EditUserEntryR entryId) _ = isAdmin entryId
     isAuthorized (EditCategoryR entryId) _ = isAdmin entryId
@@ -538,6 +536,7 @@ instance YesodAuthEmail App where
     addUnverified email verkey = liftHandler $ runDB $ do
         maybeUserId<-maybeAuthId
         currentTime<-liftIO getCurrentTime
+        forwardedFor <- lookupHeader "X-Forwarded-For"
         insert $ Email 
             {
                 emailUserId=maybeUserId
@@ -545,6 +544,7 @@ instance YesodAuthEmail App where
                 , emailVerkey= (Just verkey) 
                 , emailVerified=False
                 , emailInserted=currentTime
+                , emailClient = show <$> forwardedFor
             }
 
     sendVerifyEmail email _ verurl = do

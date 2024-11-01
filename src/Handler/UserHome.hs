@@ -64,19 +64,19 @@ getUserHomeR authorId = do
 
                     <div .statistics>
                       $with (publishedPosts, categorizedPosts, comments) <- statics
-                        <ul.list-inline>
+                        <ul.list-inline.text-lowercase>
                             <li>
-                                <a.text-muted href=@{UserEntriesR authorId}>
+                                <a href=@{UserEntriesR authorId}>
                                     _{MsgPublishedPosts}
-                                <span>#{publishedPosts}
+                                <span.badge>#{publishedPosts}
                             <li>
-                                <a.text-muted href=@{CategoriesR authorId}>
+                                <a href=@{CategoriesR authorId}>
                                     _{MsgCategorizedPosts}
-                                <span>#{categorizedPosts}
+                                <span.badge>#{categorizedPosts}
                             <li>
-                                <a.text-muted href=@{CommentsR authorId}>
+                                <a href=@{CommentsR authorId}>
                                     _{MsgPostedComments}
-                                <span>#{comments}
+                                <span.badge>#{comments}
                 <article #about .entry style="margin-bottom:0">
                     <div .entry-content style="margin-bottom:0">
                         <div .entry-content-wrapper>
@@ -119,12 +119,6 @@ getUserHomeR authorId = do
 }
 .statistics ul>li {
     padding: 0 0.5em;
-}
-.statistics ul>li>span{
-    font-size: 1.5em;
-    font-weight: bold;
-    font-family: Georgia, "Times New Roman", Times, serif;
-    margin-left: 0.1em;
 }
 .activities ul>li {
     padding: 0.5em 1.5em 0.5em 0;

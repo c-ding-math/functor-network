@@ -8,6 +8,7 @@ import Import
 import Handler.Parser(editorWidget)
 import Parse.Parser(scaleHeader)
 import Handler.Tree(treeWidget)
+import Handler.Vote(voteWidget)
 import Handler.EditComment(getChildIds,newCommentForm,CommentInput(..))
 import Handler.NewEntrySubscription(subscribeToEntryWidget)
 import Data.Text(strip)
@@ -17,7 +18,7 @@ getUserEntryR :: UserId ->  EntryId -> Handler Html
 getUserEntryR authorId entryId = do    
     maybeUserId<-maybeAuthId
     maybeUser<-maybeAuth
-    (entry,entryAuthor,entryCategoryEntities, commentListData)<-runDB $ do
+    (entry,entryAuthor,entryCategoryEntities, entryVoteList, commentListData)<-runDB $ do
         entry<-get404 entryId
         
         if (entryUserId entry==authorId) && (entryStatus entry==Publish || isAdministrator maybeUserId entry) && (entryType entry==UserPost)
@@ -26,12 +27,14 @@ getUserEntryR authorId entryId = do
             entryCategoryIds<- map (entryTreeParent . entityVal) <$> selectList [EntryTreeNode ==. entryId] []
             entryCategoryEntities<- selectList [EntryId <-. entryCategoryIds] [Desc EntryInserted]
             entryAuthor<-get404 $ entryUserId entry
+            entryVoteList<-selectList [VoteEntryId==.entryId] [Desc VoteInserted]
             commentIds <- getChildIds entryId
             commentEntities <- selectList [EntryId <-. commentIds] [Asc EntryInserted]
             commentAuthors <- mapM (\(Entity _ comment) -> do
                 commentAuthor<-get404 $ entryUserId comment
                 return (entryUserId comment, userName commentAuthor)
                 ) commentEntities
+            commentVoteLists <- mapM (\(Entity commentId _) -> selectList [VoteEntryId==.commentId] [Desc VoteInserted]) commentEntities
             parentCommentMetas <- mapM (\commentEntity -> do
                 mEntryTree <- selectFirst [EntryTreeNode==.entityKey commentEntity] []
                 case mEntryTree of
@@ -45,7 +48,7 @@ getUserEntryR authorId entryId = do
                                 return $ Just (parentCommentId, userName parentCommentAuthor)
                     _ -> return Nothing
                 ) commentEntities
-            return $ (entry,entryAuthor,entryCategoryEntities,zip3 commentEntities commentAuthors parentCommentMetas)       
+            return $ (entry,entryAuthor,entryCategoryEntities,entryVoteList,zip4 commentEntities commentAuthors parentCommentMetas commentVoteLists)       
           else notFound
 
     formatParam <- lookupGetParam "format"
@@ -113,7 +116,18 @@ getUserEntryR authorId entryId = do
         <li .reply>
             <a.text-muted href=#comment data-action=@{EditCommentR entryId}>_{MsgComment}
         <li .subscribe>
-            <a.text-muted href=# data-action=@{NewEntrySubscriptionR entryId}>_{MsgFollow}     
+            <a.text-muted href=# data-action=@{NewEntrySubscriptionR entryId}>_{MsgFollow}
+        <li .vote>
+            $maybe userId<-maybeUserId
+                <a.text-muted href=# data-action=@{VoteR entryId}>
+                    $if (elem userId (map (voteUserId . entityVal) entryVoteList))
+                        _{MsgLiked}
+                    $else
+                        _{MsgLike}
+            $nothing
+                <a.text-muted href=@{AuthR LoginR}>_{MsgLike}
+            <span .text-muted>
+                <span.badge style="color:inherit;background-color:inherit;border:1px solid;" :null entryVoteList:.hidden>#{show $ length entryVoteList}
         <li .categorize>
             <a.text-muted href=# data-action=@{TreeR entryId}>_{MsgCategorize}
         $if isAdministrator maybeUserId entry
@@ -124,7 +138,7 @@ getUserEntryR authorId entryId = do
         <p style="display:none">_{MsgNoComment}
     $else
         <h3>_{MsgComments}
-        $forall (Entity commentId comment,(commentAuthorId, commentAuthorName),mParentCommentMeta)<-commentListData
+        $forall (Entity commentId comment,(commentAuthorId, commentAuthorName),mParentCommentMeta,commentVoteList)<-commentListData
             <article .comment id=entry-#{toPathPiece commentId}> 
                 <div .entry-meta>
                   <ul .list-inline>
@@ -147,6 +161,17 @@ getUserEntryR authorId entryId = do
                             <a.text-muted href=#comment data-action=@{EditCommentR commentId}>reply
                         <li .subscribe>
                             <a.text-muted href=# data-action=@{NewEntrySubscriptionR commentId}>_{MsgFollow}
+                        <li .vote>
+                            $maybe userId<-maybeUserId
+                                <a.text-muted href=# data-action=@{VoteR commentId}>
+                                    $if (elem userId (map (voteUserId . entityVal) commentVoteList))
+                                        _{MsgVoted}
+                                    $else
+                                        _{MsgVote}
+                            $nothing
+                                <a.text-muted href=@{AuthR LoginR}>_{MsgVote}
+                            <span .text-muted>
+                                <span.badge style="color:inherit;background-color:inherit;border:1px solid;" :null commentVoteList:.hidden>#{show $ length commentVoteList}
                         $if isAdministrator maybeUserId entry || isAdministrator maybeUserId comment
                             <li .delete>
                                 <a.text-muted href=@{EditCommentR commentId}>_{MsgDelete}
@@ -166,6 +191,8 @@ getUserEntryR authorId entryId = do
         |]
         editorWidget format
         treeWidget entryId
+        when (isJust maybeUserId)
+            voteWidget 
         menuWidget
 
         

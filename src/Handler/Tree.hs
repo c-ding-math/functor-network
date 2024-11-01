@@ -166,12 +166,15 @@ Manage your subscriptions at #{unsubscribeUrl}.
 getRootEntryId :: EntryId -> ReaderT SqlBackend (HandlerFor App) EntryId
 getRootEntryId entryId = do
     entry <- get404 entryId
-    mEntryTree<-selectFirst [EntryTreeNode==.entryId] [Asc EntryTreeInserted]
-    case mEntryTree of
-        Nothing -> return entryId
-        Just tree -> do
-            let parentId = entryTreeParent $ entityVal tree
-            parent <- get404 parentId
-            if entryType parent == entryType entry
-                then getRootEntryId parentId
-                else return parentId
+    if entryType entry `elem` [UserPost, UserPage, Post, Page, Category]
+        then return entryId
+        else do
+            mEntryTree<-selectFirst [EntryTreeNode==.entryId] [Asc EntryTreeInserted]
+            case mEntryTree of
+                Nothing -> return entryId
+                Just tree -> do
+                    let parentId = entryTreeParent $ entityVal tree
+                    parent <- get404 parentId
+                    if entryType parent == entryType entry
+                        then getRootEntryId parentId
+                        else return parentId

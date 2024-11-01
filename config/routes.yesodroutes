@@ -55,3 +55,4 @@
 --!/user/#UserId/#Text UserPageR GET !user
 
 
+/vote/#EntryId VoteR POST

@@ -1,9 +1,0 @@
-$(document).ready(function(){
-    $("img").click(function(){
-        $("<div/>").appendTo("body").addClass("image-overlay");
-        $("<img/>").appendTo(".image-overlay").attr("src", $(this).attr("src"));
-    });
-    $("body").on("click", ".image-overlay", function(){
-        $(this).remove();
-    });
-});

@@ -146,8 +146,6 @@ postEditCommentR entryId = do
 deleteEntryRecursive :: EntryId -> ReaderT SqlBackend (HandlerFor App) ()
 deleteEntryRecursive entryId = do
     children<-getChildIds entryId 
-    deleteWhere [EntrySubscriptionEntryId <-. children++[entryId]]
-    deleteWhere [EntryTreeNode <-. children++[entryId]]
     deleteWhere [EntryId <-. children++[entryId]]
     return ()
     
