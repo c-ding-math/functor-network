@@ -694,12 +694,12 @@ instance YesodAuthEmail App where
         case muid of 
             Just _ ->
                 authLayout $ do
-                    setTitle "Add a new email"
+                    setTitleI MsgNewEmail
                     [whamlet|
                         <p>_{Msg.EnterEmail}
                         <form #registerForm .form-inline method="post" action="@{toParentRoute registerR}" enctype=#{enctype}>
                                 ^{widget}
-                                <button .btn .btn-default>Add a new email
+                                <button .btn.btn-primary>_{MsgNewEmail}
                     |]
             Nothing -> 
                 authLayout $ do
@@ -714,7 +714,7 @@ instance YesodAuthEmail App where
                         <label>
                             <input type=checkbox name=agree-required>
                             I agree to the <a href="@{PageR "Terms of Use"}">Terms of Use</a> and <a href="@{PageR "Privacy Policy"}">Privacy Policy</a>                               
-                        <button .btn .btn-primary disabled form=registerForm type=submit>_{Msg.Register}
+                        <button .btn.btn-primary disabled form=registerForm type=submit>_{Msg.Register}
                                 
                     |]
                     loginStyle
