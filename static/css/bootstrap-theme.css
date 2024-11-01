@@ -10,13 +10,6 @@
     padding-top: 0;
 }
 
-.alert{
-    border-left:none;
-    border-right:none;
-    border-radius: 0;
-    padding-top:9px;
-    padding-bottom:9px;
-}
 .alert.alert-info {
     background-color: white;
 }
