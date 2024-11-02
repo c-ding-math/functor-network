@@ -715,7 +715,7 @@ instance YesodAuthEmail App where
                                 
                         <label>
                             <input type=checkbox name=agree-required>
-                            I agree to the <a href="@{PageR "Terms of Use"}">Terms of Use</a> and <a href="@{PageR "Privacy Policy"}">Privacy Policy</a>                               
+                            I agree to the <a href="@{PageR "Terms of Use"}">Terms</a> and <a href="@{PageR "Privacy Policy"}">Privacy Policy</a>                               
                         <button .btn.btn-primary disabled form=registerForm type=submit>_{Msg.Register}
                                 
                     |]
@@ -737,7 +737,7 @@ instance YesodAuthEmail App where
             loginStyle=toWidget [lucius|
                 .login-form-container{
                     margin: auto;    
-                    width: 27em;    
+                    width: 25em;    
                     padding: 0 2em;
                 }
                 .login-form-container input{
