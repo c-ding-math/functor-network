@@ -211,7 +211,7 @@ instance Yesod App where
                                 , menuItemAccessCallback =  mcurrentRoute == Just (SettingsR)
                                 }
                             , FooterRight $ MenuItem
-                                { menuItemLabel = "Version 2024-08-08"
+                                { menuItemLabel = "Version 2024-11-01"
                                 , menuItemRoute = PageR "Changelog"
                                 , menuItemAccessCallback =  mcurrentRoute == Just (SettingsR)
                                 }
@@ -459,9 +459,7 @@ instance YesodAuth App where
         case plugin of 
             
             x| x=="email" || x=="email-verify" -> do
-                mEmail<- case Text.Email.Validate.canonicalizeEmail (TE.encodeUtf8 ident) of -- canonicalize email address.
-                    Just address -> getBy $ UniqueEmail $ Data.Text.toLower $ TE.decodeUtf8With Data.Text.Encoding.Error.lenientDecode address --additional canonicalization of an email address (see Yesod.Auth.Email).
-                    _ -> return Nothing
+                mEmail<- getBy $ UniqueEmail ident
                 case mEmail of
                     Just (Entity _ email) | emailVerified email -> do
                         let muid=emailUserId email
@@ -537,6 +535,10 @@ instance YesodAuthEmail App where
         maybeUserId<-maybeAuthId
         currentTime<-liftIO getCurrentTime
         forwardedFor <- lookupHeader "X-Forwarded-For"
+        request <- waiRequest
+        let client = Just $ case forwardedFor of
+                Just ip -> show ip ++ show request
+                _ -> show request
         insert $ Email 
             {
                 emailUserId=maybeUserId
@@ -544,7 +546,7 @@ instance YesodAuthEmail App where
                 , emailVerkey= (Just verkey) 
                 , emailVerified=False
                 , emailInserted=currentTime
-                , emailClient = show <$> forwardedFor
+                , emailClient = client
             }
 
     sendVerifyEmail email _ verurl = do
@@ -800,6 +802,7 @@ instance YesodAuthEmail App where
                     fsAttrs = [("autofocus", ""), ("class","form-control")]
                 }
 
+    normalizeEmailAddress _ = id -- if it = Data.Text.toLower, then also add a javascript to the login form to lowercase the email address
     emailLoginHandler toParent = do
         (widget, enctype) <- generateFormPost loginForm
 

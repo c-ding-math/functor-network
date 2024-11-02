@@ -204,3 +204,6 @@ Like: Like
 Liked: Liked
 Vote: Vote
 Voted: Voted
+
+Maintenance: Maintenance
+SiteMaintenance: Site maintenance

@@ -1,8 +1,4 @@
 
-.alert-info {
-    position: relative;
-    z-index: 1;
-}
 .jumbotron {
     margin-top: -111px;
     padding-top: 111px;
@@ -17,7 +13,9 @@
 .bs-docs-section{
     padding-top: 2em;
     padding-bottom: 2em;
-}
-body {
     line-height: 2em;
+}
+.alert-info {
+    position: relative;
+    z-index: 1;
 }
