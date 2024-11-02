@@ -26,8 +26,6 @@ import Yesod.Auth.Dummy
 import           Yesod.Auth.Email
 import           Network.Mail.Mime
 import qualified Network.Mail.SMTP
-import qualified Text.Email.Validate 
-import qualified Data.Text.Encoding.Error 
 import           Text.Shakespeare.Text         (stext)
 import qualified Data.Text               
 import qualified Data.Text.Lazy 
