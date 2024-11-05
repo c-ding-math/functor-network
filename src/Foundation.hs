@@ -525,9 +525,7 @@ instance YesodAuth App where
 instance YesodAuthEmail App where
     type AuthEmailId App = EmailId
 
-    afterPasswordRoute _ = HomeR
-
-    --normalizeEmailAddress _ = id
+    afterPasswordRoute _ = SettingsR
     
     addUnverified email verkey = liftHandler $ runDB $ do
         maybeUserId<-maybeAuthId
