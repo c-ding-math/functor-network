@@ -192,6 +192,12 @@ function render() {
         },
         success: function(data) {
             previewArea.html(data);
+            previewArea.find(".alert-danger.parser-message").each(function(){
+                $(this).append("<div class='text-muted'>Unable to figure out the error? " + 
+                    "<a href='@{FeedbackR}' target='_blank'>Report it</a>. " +
+                    " We can help you!</div>");
+                    
+            });
         },
         complete: function() {
             previewArea.css("opacity", "1");

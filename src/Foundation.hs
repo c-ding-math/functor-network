@@ -26,23 +26,18 @@ import Yesod.Auth.Dummy
 import           Yesod.Auth.Email
 import           Network.Mail.Mime
 import qualified Network.Mail.SMTP
-import qualified Text.Email.Validate 
-import qualified Data.Text.Encoding.Error 
 import           Text.Shakespeare.Text         (stext)
 import qualified Data.Text               
 import qualified Data.Text.Lazy 
---import qualified Data.Text.Lazy.Encoding
 import           Text.Blaze.Html.Renderer.Utf8 (renderHtml)
 import qualified Yesod.Auth.Message as Msg
 import qualified Yesod.Auth.Extra  
 import           Yesod.Form.Bootstrap3
 
---import           Database.Persist 
 import           Data.Either.Extra()
 --import qualified Yesod.Auth.OAuth2 (getUserResponseJSON)
 import qualified Yesod.Auth.OAuth2.Google
 import qualified Yesod.Auth.OAuth2.ORCID
---import Yesod.Auth.OpenId    (authOpenId, IdentifierType (Claimed))
 import Yesod.Default.Util   (addStaticContentExternal)
 import Yesod.Core.Types     (Logger)
 import qualified Yesod.Core.Unsafe as Unsafe
@@ -214,7 +209,7 @@ instance Yesod App where
                                 , menuItemAccessCallback =  mcurrentRoute == Just (SettingsR)
                                 }
                             , FooterRight $ MenuItem
-                                { menuItemLabel = "Version 2024-08-08"
+                                { menuItemLabel = "Version 2024-11-01"
                                 , menuItemRoute = PageR "Changelog"
                                 , menuItemAccessCallback =  mcurrentRoute == Just (SettingsR)
                                 }
@@ -320,7 +315,8 @@ instance Yesod App where
     isAuthorized NewUserEntryR _ = isAuthenticated
     isAuthorized NewCategoryR _ = isAuthenticated
     isAuthorized (TreeR _) _ = isAuthenticated
-
+    isAuthorized (VoteR _) _ = isAuthenticated
+    
     -- owner routes
     isAuthorized (EditUserEntryR entryId) _ = isAdmin entryId
     isAuthorized (EditCategoryR entryId) _ = isAdmin entryId
@@ -461,9 +457,7 @@ instance YesodAuth App where
         case plugin of 
             
             x| x=="email" || x=="email-verify" -> do
-                mEmail<- case Text.Email.Validate.canonicalizeEmail (TE.encodeUtf8 ident) of -- canonicalize email address.
-                    Just address -> getBy $ UniqueEmail $ Data.Text.toLower $ TE.decodeUtf8With Data.Text.Encoding.Error.lenientDecode address --additional canonicalization of an email address (see Yesod.Auth.Email).
-                    _ -> return Nothing
+                mEmail<- getBy $ UniqueEmail ident
                 case mEmail of
                     Just (Entity _ email) | emailVerified email -> do
                         let muid=emailUserId email
@@ -531,13 +525,16 @@ instance YesodAuth App where
 instance YesodAuthEmail App where
     type AuthEmailId App = EmailId
 
-    afterPasswordRoute _ = HomeR
-
-    --normalizeEmailAddress _ = id
+    afterPasswordRoute _ = SettingsR
     
     addUnverified email verkey = liftHandler $ runDB $ do
         maybeUserId<-maybeAuthId
         currentTime<-liftIO getCurrentTime
+        forwardedFor <- lookupHeader "X-Forwarded-For"
+        request <- waiRequest
+        let client = Just $ case forwardedFor of
+                Just ip -> show ip ++ show request
+                _ -> show request
         insert $ Email 
             {
                 emailUserId=maybeUserId
@@ -545,6 +542,7 @@ instance YesodAuthEmail App where
                 , emailVerkey= (Just verkey) 
                 , emailVerified=False
                 , emailInserted=currentTime
+                , emailClient = client
             }
 
     sendVerifyEmail email _ verurl = do
@@ -694,12 +692,12 @@ instance YesodAuthEmail App where
         case muid of 
             Just _ ->
                 authLayout $ do
-                    setTitle "Add a new email"
+                    setTitleI MsgNewEmail
                     [whamlet|
                         <p>_{Msg.EnterEmail}
                         <form #registerForm .form-inline method="post" action="@{toParentRoute registerR}" enctype=#{enctype}>
                                 ^{widget}
-                                <button .btn .btn-default>Add a new email
+                                <button .btn.btn-primary>_{MsgNewEmail}
                     |]
             Nothing -> 
                 authLayout $ do
@@ -713,8 +711,8 @@ instance YesodAuthEmail App where
                                 
                         <label>
                             <input type=checkbox name=agree-required>
-                            I agree to the <a href="@{PageR "Terms of Use"}">Terms of Use</a> and <a href="@{PageR "Privacy Policy"}">Privacy Policy</a>                               
-                        <button .btn .btn-primary disabled form=registerForm type=submit>_{Msg.Register}
+                            I agree to the <a href="@{PageR "Terms of Use"}">Terms</a> and <a href="@{PageR "Privacy Policy"}">Privacy Policy</a>                               
+                        <button .btn.btn-primary disabled form=registerForm type=submit>_{Msg.Register}
                                 
                     |]
                     loginStyle
@@ -735,7 +733,7 @@ instance YesodAuthEmail App where
             loginStyle=toWidget [lucius|
                 .login-form-container{
                     margin: auto;    
-                    width: 27em;    
+                    width: 25em;    
                     padding: 0 2em;
                 }
                 .login-form-container input{
@@ -800,6 +798,7 @@ instance YesodAuthEmail App where
                     fsAttrs = [("autofocus", ""), ("class","form-control")]
                 }
 
+    normalizeEmailAddress _ = id -- if it = Data.Text.toLower, then also add a javascript to the login form to lowercase the email address
     emailLoginHandler toParent = do
         (widget, enctype) <- generateFormPost loginForm
 

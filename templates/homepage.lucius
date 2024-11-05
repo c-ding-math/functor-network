@@ -1,21 +1,21 @@
 
-.alert-info {
-    position: relative;
-    z-index: 1;
-}
 .jumbotron {
     margin-top: -111px;
     padding-top: 111px;
+    background-color: #222;
+    color: #fff;
 }
 .jumbotron h2 {
     margin-top: 0;
     margin-bottom: 32px;
+    font-family: Georgia, "Times New Roman", Times, serif;
 }
 .bs-docs-section{
     padding-top: 2em;
     padding-bottom: 2em;
-}
-body {
     line-height: 2em;
-    background-color:white;
+}
+.alert-info {
+    position: relative;
+    z-index: 1;
 }

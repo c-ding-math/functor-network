@@ -8,18 +8,18 @@ import Import
 import Yesod.Form.Bootstrap3
 
 maintenanceForm :: Form Maintenance
-maintenanceForm = renderBootstrap3 BootstrapBasicForm $ Maintenance
+maintenanceForm = renderBootstrap3 BootstrapInlineForm $ Maintenance
     <$> lift requireAuthId
     <*> lift (liftIO getCurrentTime)
-    <*> areq intField "Duration (hours)" (Just 12)
+    <*> areq intField (bfs MsgMaintenance) (Just 1)
 
 getMaintenanceR :: Handler Html
 getMaintenanceR = do
     (widget, enctype) <- generateFormPost maintenanceForm
     defaultLayout $ do
-        setTitle "Maintenance"
+        setTitleI MsgMaintenance
         [whamlet|
-            <h2>Site Maintenance
+            <h2>_{MsgSiteMaintenance}
             <form method=post enctype=#{enctype}>
                 ^{widget}
                 <button .btn .btn-primary type=submit>Submit

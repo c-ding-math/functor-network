@@ -199,3 +199,11 @@ SelfIntroduction: Self introduction
 Settings: Settings
 ChangeAvatar: Change avatar
 Upload: Upload
+
+Like: Like
+Liked: Liked
+Vote: Vote
+Voted: Voted
+
+Maintenance: Maintenance
+SiteMaintenance: Site maintenance

@@ -76,8 +76,5 @@ postEditCategoryR entryId = do
 
 deleteEditCategoryR :: EntryId -> Handler Value
 deleteEditCategoryR entryId = do
-    runDB $ do
-        deleteWhere [EntrySubscriptionEntryId ==. entryId]
-        deleteWhere [EntryTreeParent ==. entryId]
-        delete entryId
+    runDB $ delete entryId
     return $ object ["deleted" .= True]

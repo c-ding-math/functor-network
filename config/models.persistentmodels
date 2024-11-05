@@ -1,5 +1,83 @@
 -- By default this file is used by `persistFileWith` in Model.hs (which is imported by Foundation.hs)
 -- Syntax for this file here: https://github.com/yesodweb/persistent/blob/master/docs/Persistent-entity-syntax.md
+Vote
+    userId UserId OnDeleteCascade
+    entryId EntryId OnDeleteCascade
+    inserted UTCTime default=CURRENT_TIME
+    UniqueVote userId entryId
+    deriving Show
+
+EntryTree
+    node EntryId OnDeleteCascade
+    parent EntryId  OnDeleteCascade
+    inserted UTCTime default=CURRENT_TIME
+    UniqueEntryTree node parent
+    
+UserSubscription
+    email Text
+    userId UserId OnDeleteCascade
+    inserted UTCTime
+    key Text Maybe
+    verified Bool
+    client String Maybe
+    UniqueUserSubscription email userId
+    deriving Show
+
+EntrySubscription
+    email Text
+    entryId EntryId OnDeleteCascade
+    inserted UTCTime
+    key Text Maybe
+    verified Bool
+    client String Maybe
+    UniqueEntrySubscription email entryId
+    deriving Show
+
+Entry
+    userId UserId OnDeleteCascade
+    inserted UTCTime default=CURRENT_TIME
+    updated UTCTime default=CURRENT_TIME
+    type EntryType
+    status EntryStatus
+    title Text
+    format Format
+    preamble Textarea Maybe
+    body Textarea Maybe
+    citation Textarea Maybe
+    titleHtml Text
+    bodyHtml Text
+    featured Bool default=False
+
+File 
+    userId UserId OnDeleteCascade
+    format Format
+    inserted UTCTime
+    description Text
+
+Maintenance
+    userId UserId OnDeleteCascade
+    from UTCTime
+    duration Int
+    deriving Show
+
+Email json
+    userId UserId Maybe OnDeleteCascade
+    address Text
+    verkey Text Maybe
+    verified Bool
+    inserted UTCTime default=CURRENT_TIME
+    client String Maybe
+    UniqueEmail address
+    deriving Show Read Eq
+
+Login --via third parties
+    userId UserId Maybe OnDeleteCascade
+    ident Text
+    plugin Text
+    token Text Maybe
+    verified Bool
+    inserted UTCTime default=CURRENT_TIME
+    UniqueLogin plugin ident
 
 User json
     --ident Text 
@@ -15,73 +93,3 @@ User json
     defaultCitation Textarea Maybe   
     --UniqueUser ident
     deriving Typeable Show
-
-Email json
-    userId UserId Maybe
-    address Text
-    verkey Text Maybe
-    verified Bool
-    inserted UTCTime default=CURRENT_TIME
-    UniqueEmail address
-    deriving Show Read Eq
-
-Login --via third parties
-    userId UserId Maybe
-    ident Text
-    plugin Text
-    token Text Maybe
-    verified Bool
-    inserted UTCTime default=CURRENT_TIME
-    UniqueLogin plugin ident
-
-Entry
-    userId UserId
-    inserted UTCTime default=CURRENT_TIME
-    updated UTCTime default=CURRENT_TIME
-    type EntryType
-    status EntryStatus
-    title Text
-    format Format
-    preamble Textarea Maybe
-    body Textarea Maybe
-    citation Textarea Maybe
-    titleHtml Text
-    bodyHtml Text
-    featured Bool default=False
-
-EntryTree
-    node EntryId
-    parent EntryId
-    inserted UTCTime default=CURRENT_TIME
-    UniqueEntryTree node parent
-    
-File 
-    userId UserId
-    format Format
-    inserted UTCTime
-    description Text
-
-
-UserSubscription
-    email Text
-    userId UserId
-    inserted UTCTime
-    key Text Maybe
-    verified Bool
-    UniqueUserSubscription email userId
-    deriving Show
-
-EntrySubscription
-    email Text
-    entryId EntryId
-    inserted UTCTime
-    key Text Maybe
-    verified Bool
-    UniqueEntrySubscription email entryId
-    deriving Show
-
-Maintenance
-    userId UserId
-    from UTCTime
-    duration Int
-    deriving Show

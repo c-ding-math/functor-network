@@ -12,7 +12,7 @@ getLoginSettingR _ = do
         then [whamlet|
             <form method=post>
                 <p>_{MsgTheLastLoginMethod}
-                <button  .btn .btn-default type=submit name=action value=cancel>_{MsgOkay}
+                <button  .btn .btn-primary type=submit name=action value=cancel>_{MsgOkay}
         |]
         else[whamlet|
             <form method=post>
