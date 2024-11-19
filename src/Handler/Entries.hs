@@ -6,21 +6,61 @@
 module Handler.Entries where
 
 import Import
---import Handler.Entries (entryListWidget)
 import Parse.Parser (scaleHeader)
+import Yesod.Form.Bootstrap3
+import Data.Text (toLower)
 
+searchForm :: Form Text
+searchForm = renderBootstrap3 BootstrapBasicForm $ areq searchFieldWithAddon searchFieldSettings Nothing where
+    
+    aSearchFiled = searchField False
+    searchFieldWithAddon = aSearchFiled {
+        fieldView = \idAttr nameAttr otherAttrs eResult isReq ->
+            [whamlet|
+                <div .input-group>
+                    <input .form-control type=search id=#{idAttr} name=#{nameAttr} *{otherAttrs} :isReq:required :not isReq:autofocus>
+                    <span .input-group-btn>
+                        <button .btn .btn-default type=submit>
+                            _{MsgSearch}
+            |]
+    }
+    searchFieldSettings = FieldSettings {
+        fsLabel = "", 
+        fsTooltip = Nothing,
+        fsId = Nothing,
+        fsName = Just "keyword",
+        fsAttrs = [("class","form-control"),("placeholder","keyword"),("style","min-width:6em;")]
+    }
 
 getEntriesR :: Handler Html
 getEntriesR = do
-    entryList<-runDB $ selectList [EntryType==.UserPost,EntryStatus==.Publish, EntryFeatured==.True] [Desc EntryInserted, LimitTo 1000]
+    entryList'<-runDB $ selectList [EntryType==.UserPost,EntryStatus==.Publish, EntryFeatured==.True] [Desc EntryInserted, LimitTo 1000]
     --let entryList = [x | x<-entries, not (any (`isInfixOf` (entryBodyHtml (entityVal x))) ["lost proof","parser-message","filter-information"])]   
+    ((searchFormResult, searchFormWidget), searchFormEnctype) <- runFormGet searchForm
+    (entryList, mSeachText)<- case searchFormResult of
+        FormSuccess searchText -> do
+            --setMessage $ toHtml $ "Search results for: " <> searchText
+            let 
+                searchTexts = Data.Text.toLower <$> words searchText
+                searchArea :: Entity Entry -> Text
+                searchArea x = Data.Text.toLower $ case entryBody (entityVal x) of
+                    Nothing -> entryTitle (entityVal x)
+                    Just body -> entryTitle (entityVal x) <> unTextarea body
+                
+            return ([x | x<-entryList', all (\keyword -> keyword `isInfixOf` (searchArea x)) searchTexts], Just searchText)
+        _ -> return (entryList', Nothing)
+
     defaultLayout $ do
         setTitleI MsgPosts
         [whamlet|
-            <div .page-header>       
-                <h1>_{MsgLatestPosts}
-                <div .page-header-menu>
-                    
+            <div .page-header style="min-width:520px;">  
+                <form .search-form .pull-right method=get enctype=#{searchFormEnctype} style="max-width:15em;">
+                    ^{searchFormWidget}     
+                <h1 style="white-space: nowrap">_{MsgLatestPosts}
+
+                
+            $maybe searchText <- mSeachText
+                <p>_{MsgPostsContaining searchText}:        
             $if null entryList
                 <p>_{MsgNoPost} #
 

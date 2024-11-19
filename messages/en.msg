@@ -68,6 +68,7 @@ Title: Title
 Body: Body
 PublishPost: Publish post
 SaveDraft: Save draft
+Draft: Draft
 ChangeSaved: Changes Saved
 
 File: File
@@ -207,3 +208,4 @@ Voted: Voted
 
 Maintenance: Maintenance
 SiteMaintenance: Site maintenance
+Redirecting: Redirecting...

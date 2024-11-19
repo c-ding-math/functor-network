@@ -131,10 +131,12 @@ getFeedbackR = do
         <article .entry>
             <h1>_{MsgFeedback}
             <div .entry-content>
+              <div .entry-content-wrapper>
                 $maybe (Entity _ entry)<-mFeedbackDescription
-                    <div .entry-content-wrapper>#{preEscapedToMarkup(entryBodyHtml entry)}
+                    #{preEscapedToMarkup(entryBodyHtml entry)}
                 $nothing
-                            _{MsgComingSoon}
+                    <div style="width:519.3906239999999px;">
+                        <p>_{MsgComingSoon}
 
             <div .menu.hidden>
                 <ul.list-inline.text-lowercase>
@@ -220,12 +222,14 @@ postFeedbackR = do
                     ((result, _), _) <- runFormPost $ feedbackForm Nothing
                     case result of
                         FormSuccess feedback -> do
+                            request <- waiRequest
                             
                             let feedbackEmailAddress ="feedback@functor.network"
                                 emailSubject = subject feedback
-                                emailText = [stext|#{unTextarea(content feedback)}|]
+                                emailText = [stext|#{unTextarea(content feedback)} #{show request}|]
                                 emailHtml = [shamlet|
                                     #{unTextarea(content feedback)}
+                                    <p>#{show request}
                                     |]
                             sendAppEmail feedbackEmailAddress $ AppEmail emailSubject emailText emailHtml
                             defaultLayout $ do

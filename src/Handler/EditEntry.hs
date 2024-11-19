@@ -9,6 +9,7 @@ import Import
 import Handler.EditComment(deleteEntryRecursive)
 import Handler.Parser(editorWidget)
 import Handler.EditUserEntry(EntryInput(..),entryInputForm,entry2Html)
+import Database.Persist.Sql
 
 getEditEntryR :: EntryId -> Handler Html
 getEditEntryR entryId = do
@@ -33,10 +34,12 @@ getEditEntryR entryId = do
         [whamlet|
 <a href=@{UserEntryR (entryUserId entry) entryId}>View
 <form  method=post enctype=#{inputEnctype}>
-    ^{inputWidget}
+    
     <div .text-left>
         <button .btn .btn-default .save type=submit name=action value=save>_{MsgSave}
         <button .btn .btn-default .delete type=submit name=action value=delete>_{MsgDelete}
+        <a .btn .btn-default href=@{EditEntryR $ toSqlKey $ fromSqlKey entryId + 1}>Next
+    ^{inputWidget}
         |]
             
         toWidget        

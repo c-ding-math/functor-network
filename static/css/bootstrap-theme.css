@@ -1,10 +1,12 @@
-.float-left{
-    float:left;
+.container{
+    min-width:520px;
 }
-.float-right{
-    float:right;
+.navbar-inverse{
+    background-color: black;
 }
-
+figure{
+    text-align: center;
+}
 .modal-footer{
     border-top: none;
     padding-top: 0;
@@ -195,21 +197,26 @@ ul.category-list{
 }
 
 /* math */
-.navbar, .footer{
+/*.navbar, .footer{
     min-width: 567px;
+}*/
+body {
+    min-width:fit-content;
 }
 .wrapper {
     width: 100%;
-    min-width: 525px;
+    min-width: min-content;
     max-width:832px;
     margin:auto;
 }
 .entry-content .entry-content-wrapper, .editor-preview .entry-content-wrapper{
-    width:521px;
     margin:auto;
+    width:min-content;
     color:black;
 }
-
+.entry-content-wrapper .center{
+    text-align: center;
+}
 .parser-message{
     padding: 0.5em 1em;
 }
@@ -221,21 +228,31 @@ ul.category-list{
 
 .math{display: inline-block;}
 .display.math{
-    display: block; 
+    display: flex; 
+    justify-content: center;
     text-align: center; 
     margin: 0.5rem auto;
+    overflow: hidden;
 }
 
 div.mark{
     padding: 1em 2em 0.5em;
 }
-.theorem-like, .proof-like{
-    position: relative;
-}
-.theorem-like::before, .proof-like::before {
-    content: attr(data-label)'.\00a0';
+
+.theorem-like-label{
     font-weight: bold;
-    float: left;
+}
+.theorem-like-title{
+    margin-right: 1em;
+}
+.theorem-like-title:not(:empty) {
+    margin-left: 2px; 
+}
+.theorem-like-title:not(:empty)::before {
+    content:"(";
+}
+.theorem-like-title:not(:empty)::after {
+    content:")";
 }
 .proof-like>*:last-child::after{ 
     content: "\25FB";
@@ -278,6 +295,7 @@ div.csl-indent {
 }
 .or span{
     padding:0 1em; 
+    background-color: white;
 }
 @media screen and (min-width: 574px){
     body, .or span, .modal-content{
@@ -287,17 +305,15 @@ div.csl-indent {
         background-color: white;
         border: 1px solid #ccc;
     }
-    .entry-content-wrapper{
-        padding:1em 0 0.5em;
-    }
-}
-@media screen and (max-width: 574px){
-    .or span{
-        background-color: white;
+    .entry-content {
+        padding: 1em 0.5em 0.5em;
     }
 }
 
 /* editor */
+.editor-toolbar{
+    min-width: max-content;
+}
 select[name="format"]{
     max-width: 13em;
     display: inline-block;
