@@ -243,7 +243,10 @@ div.mark{
     font-weight: bold;
 }
 .theorem-like-title{
-    margin-right: 1em;
+    margin-right: 0.5em;
+}
+.theorem-like-title:empty::after{
+    content:".";
 }
 .theorem-like-title:not(:empty) {
     margin-left: 2px; 
@@ -252,7 +255,7 @@ div.mark{
     content:"(";
 }
 .theorem-like-title:not(:empty)::after {
-    content:")";
+    content:").";
 }
 .proof-like>*:last-child::after{ 
     content: "\25FB";
