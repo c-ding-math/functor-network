@@ -219,7 +219,6 @@ getSettingsR = do
                                 <div .modal-body>
                                     <form #file-form method=post enctype=#{uploadFileEnctype} action=@{FilesR}>
                                         ^{uploadFileWidget}
-                                        <div .text-muted>Recommended avatar size: 128x128 pixels.
                                         <div .text-right>
                                             <button .btn .btn-default type=submit>_{MsgUpload}        
                                     <form .hidden #avatar-form method=post enctype=#{avatarEnctype}>

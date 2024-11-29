@@ -26,6 +26,6 @@ getCommentsR piece = do
             $if null entryList
                 <div>_{MsgNoComment}
             $else
-                <p>You have comments on the following posts:
+                <p>_{MsgHaveCommentsOn}
                 ^{entryListWidget "" entryList}
         |]

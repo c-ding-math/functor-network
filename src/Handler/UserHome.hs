@@ -20,17 +20,26 @@ getUserHomeR authorId = do
     (author, statics, activities, mAbout)  <- runDB $ do
         author <- get404 authorId
         entries <- selectList [EntryUserId ==. authorId, EntryStatus ==. Publish, EntryType <-. [UserPost, Category, Comment]] [Desc EntryInserted]
-        activities <- forM entries $ \(Entity entryId entry) -> case entryType entry of
-            UserPost -> return $ Activity (entryInserted entry) "Published post" (entryTitleHtml entry) (urlRender (UserEntryR (entryUserId entry) entryId))
-            Category -> return $ Activity (entryInserted entry) "Created category" (entryTitleHtml entry) (urlRender (CategoriesR (entryUserId entry)) <> ("#entry-" <> toPathPiece entryId))
+        activities' <- mapM (\(Entity entryId entry) -> case entryType entry of
+            UserPost -> return $ Just $ Activity (entryInserted entry) "Published post" (entryTitleHtml entry) (urlRender (UserEntryR (entryUserId entry) entryId))
+            Category -> return $ Just $ Activity (entryInserted entry) "Created category" (entryTitleHtml entry) (urlRender (CategoriesR (entryUserId entry)) <> ("#entry-" <> toPathPiece entryId))
             Comment -> do
                 rootEntryId <- getRootEntryId entryId
                 rootEntry <- get404 rootEntryId
-                return $ Activity (entryInserted entry) "Commented on" (entryTitleHtml rootEntry) (urlRender (UserEntryR (entryUserId rootEntry) rootEntryId) <> ("#entry-" <> toPathPiece entryId))
-            _-> return $ Activity (entryInserted entry) "" "" ""
+                if entryStatus rootEntry == Publish && entryType rootEntry == UserPost
+                    then return $ Just $ Activity (entryInserted entry) "Commented on" (entryTitleHtml rootEntry) (urlRender (UserEntryR (entryUserId rootEntry) rootEntryId) <> ("#entry-" <> toPathPiece entryId))
+                    else return $ Nothing
+            _-> return $ Nothing) entries
         statics <- do
             let publishedPosts = length [x | x <- entries, entryType (entityVal x) == UserPost]
-            let comments = length [x | x <- entries, entryType (entityVal x) == Comment]
+            comments <- do
+                let comments'= [x | x <- entries, entryType (entityVal x) == Comment]
+                publicComments <- filterM  (\(Entity key _) -> do
+                    rootEntryId <- getRootEntryId key
+                    rootEntry <- get404 rootEntryId
+                    return $ entryStatus rootEntry == Publish && entryType rootEntry == UserPost
+                    ) comments'
+                return $ length publicComments
             categorizedPosts <- do 
                 let categories = [x | x <- entries, entryType (entityVal x) == Category]
                 trees <- forM categories $ \category -> do
@@ -43,7 +52,7 @@ getUserHomeR authorId = do
                 return $ length $ concat $ trees
             return (publishedPosts, categorizedPosts, comments)
         mAbout <- selectFirst [EntryUserId ==. authorId, EntryType ==. UserPage] [Desc EntryInserted]
-        return (author, statics, take 100 activities, mAbout)
+        return (author, statics, take 100 (catMaybes activities'), mAbout)
                 
 
     defaultLayout $ do
@@ -65,15 +74,15 @@ getUserHomeR authorId = do
                     <div .statistics>
                       $with (publishedPosts, categorizedPosts, comments) <- statics
                         <ul.list-inline.text-lowercase>
-                            <li>
+                            <li title=_{MsgPublishPosts $ pluralize publishedPosts "post"}>
                                 <a href=@{UserEntriesR authorId}>
                                     _{MsgPublishedPosts}
                                 <span.badge>#{publishedPosts}
-                            <li>
+                            <li title=_{MsgCategorizePosts $ pluralize categorizedPosts "post"}>
                                 <a href=@{CategoriesR authorId}>
                                     _{MsgCategorizedPosts}
                                 <span.badge>#{categorizedPosts}
-                            <li>
+                            <li title=_{MsgPostComments $ pluralize comments "comment"}>
                                 <a href=@{CommentsR authorId}>
                                     _{MsgPostedComments}
                                 <span.badge>#{comments}
@@ -156,3 +165,6 @@ getUserHomeR authorId = do
     padding: 1em 1em 0.5em;
 }
         |]
+
+pluralize :: Int -> Text -> Text
+pluralize n text = if n <= 1 then (pack (show n)) <>" "<> text else (pack (show n)) <>" "<> text <>"s"
