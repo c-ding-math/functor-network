@@ -68,6 +68,7 @@ Title: Title
 Body: Body
 PublishPost: Publish post
 SaveDraft: Save draft
+Draft: Draft
 ChangeSaved: Changes Saved
 
 File: File
@@ -194,6 +195,10 @@ NoActivity: No activity yet.
 PublishedPosts: Published posts
 CategorizedPosts: Categorized posts
 PostedComments: Posted comments
+PublishPosts count@Text: The author has published #{count}.
+CategorizePosts count@Text: The author has categorized #{count}.
+PostComments count@Text: The author has posted #{count} on published posts.
+HaveCommentsOn: The author have comments on the following posts:
 NoAbout: I think, therefore I am
 SelfIntroduction: Self introduction
 Settings: Settings
@@ -207,3 +212,4 @@ Voted: Voted
 
 Maintenance: Maintenance
 SiteMaintenance: Site maintenance
+Redirecting: Redirecting...

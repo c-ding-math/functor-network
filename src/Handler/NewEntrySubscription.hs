@@ -18,7 +18,8 @@ postNewEntrySubscriptionR entryId= do
     ((result, _), _) <- runFormPost $ subscribeEntryForm Nothing
     _<-case result of
         FormSuccess address -> do
-            forwardedFor <- lookupHeader "X-Forwarded-For"
+            --forwardedFor <- lookupHeader "X-Forwarded-For"
+            request <- waiRequest
             urlRenderParams <- getUrlRenderParams
             currentTime <- liftIO getCurrentTime
             verificationKey <- liftIO $ Nonce.nonce128urlT $ unsafePerformIO (Nonce.new)
@@ -34,7 +35,7 @@ postNewEntrySubscriptionR entryId= do
                 entrySubscriptionKey = Just verificationKey,
                 entrySubscriptionInserted = currentTime,
                 entrySubscriptionVerified = verified,
-                entrySubscriptionClient = show <$> forwardedFor
+                entrySubscriptionClient = Just $ show request
             }
             
             case eEntrySubscription of
@@ -102,7 +103,8 @@ insertDefaultEntrySubscription entryId = do
     case userEmail user of
         Just email -> do
             --urlRenderParams <- getUrlRenderParams
-            forwardedFor <- lookupHeader "X-Forwarded-For"
+            --forwardedFor <- lookupHeader "X-Forwarded-For"
+            request <- waiRequest
             currentTime <- liftIO getCurrentTime
             verificationKey <- liftIO $ Nonce.nonce128urlT $ unsafePerformIO (Nonce.new)
     
@@ -112,7 +114,7 @@ insertDefaultEntrySubscription entryId = do
                 entrySubscriptionKey = Just verificationKey,
                 entrySubscriptionInserted = currentTime,
                 entrySubscriptionVerified = True,
-                entrySubscriptionClient = show <$> forwardedFor
+                entrySubscriptionClient = Just $ show request
             }
             
         Nothing -> return ()

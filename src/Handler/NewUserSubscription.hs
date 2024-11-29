@@ -16,7 +16,8 @@ postNewUserSubscriptionR authorId = do
     ((result, _), _) <- runFormPost $ userSubscriptionForm Nothing
     _<-case result of
         FormSuccess address -> do
-            forwardedFor <- lookupHeader "X-Forwarded-For"
+            --forwardedFor <- lookupHeader "X-Forwarded-For"
+            request <- waiRequest
             currentTime <- liftIO getCurrentTime
             verificationKey <- liftIO $ Nonce.nonce128urlT $ unsafePerformIO (Nonce.new)
             mCurrentUserId <- maybeAuthId
@@ -31,7 +32,7 @@ postNewUserSubscriptionR authorId = do
                 userSubscriptionKey = Just verificationKey,
                 userSubscriptionInserted = currentTime,
                 userSubscriptionVerified = verified,
-                userSubscriptionClient = show <$> forwardedFor
+                userSubscriptionClient = Just $ show request
             }
             case eUserSubscription of
                 Left (Entity subscriptionId subscription) -> if userSubscriptionVerified subscription

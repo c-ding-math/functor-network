@@ -11,7 +11,7 @@ import Handler.Tree(treeWidget)
 import Handler.Vote(voteWidget)
 import Handler.EditComment(getChildIds,newCommentForm,CommentInput(..))
 import Handler.NewEntrySubscription(subscribeToEntryWidget)
-import Data.Text(strip)
+--import Data.Text(strip)
 
 
 getUserEntryR :: UserId ->  EntryId -> Handler Html
@@ -107,10 +107,11 @@ getUserEntryR authorId entryId = do
                             <a href=@{CategoriesR (entryUserId category)}#{"#entry-" <> toPathPiece categoryId}>#{preEscapedToMarkup $ entryTitleHtml category}
   <div .entry-content>
       <div .entry-content-wrapper>
-        $if strip (entryBodyHtml entry) /= "" 
+        $if (entryBody entry) /= Nothing
             #{preEscapedToMarkup(entryBodyHtml entry)}
         $else
-            _{MsgComingSoon}
+            <div style="width:519.3906239999999px;">
+                <p>_{MsgComingSoon}
   <div .menu>
     <ul.list-inline.text-lowercase>
         <li .reply>

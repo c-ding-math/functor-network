@@ -28,6 +28,8 @@
 /category/#EntryId/edit EditCategoryR POST DELETE !user !admin
 /category NewCategoryR POST !user !login
 /tree/node/#EntryId TreeR POST !login
+/vote/#EntryId VoteR POST
+/redirect RedirectR GET
 
 /files FilesR GET POST !user !login
 /file/#FileId FileR DELETE !admin
@@ -54,5 +56,3 @@
 !/#Text PageR GET
 --!/user/#UserId/#Text UserPageR GET !user
 
-
-/vote/#EntryId VoteR POST

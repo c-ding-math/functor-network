@@ -209,7 +209,7 @@ instance Yesod App where
                                 , menuItemAccessCallback =  mcurrentRoute == Just (SettingsR)
                                 }
                             , FooterRight $ MenuItem
-                                { menuItemLabel = "Version 2024-11-01"
+                                { menuItemLabel = "Version 2024-11-20"
                                 , menuItemRoute = PageR "Changelog"
                                 , menuItemAccessCallback =  mcurrentRoute == Just (SettingsR)
                                 }
@@ -302,6 +302,7 @@ instance Yesod App where
     isAuthorized (NewEntrySubscriptionR _) _ = return Authorized
     isAuthorized EntriesR _ = return Authorized
     isAuthorized FeedbackR _ = return Authorized
+    isAuthorized RedirectR _ = return Authorized
 
     -- Routes requiring authentication.
     --isAuthorized (EditUserPageR _) _ = isAuthenticated
@@ -424,7 +425,7 @@ instance YesodAuth App where
 
     -- Where to send a user after successful login
     loginDest :: App -> Route App
-    loginDest _ = SettingsR
+    loginDest _ = RedirectR
     -- Where to send a user after logout
     logoutDest :: App -> Route App
     logoutDest _ = HomeR
@@ -440,7 +441,8 @@ instance YesodAuth App where
                 urlRenderParam <- getUrlRenderParams
                 addMessage "success" $ [hamlet|
                     You are now logged in. #
-                    <a .alert-link.pull-right href=@{UserHomeR uid}>Home
+                    <a .alert-link.pull-right href=@{UserEntriesR uid}>My Blog
+                    <script>if (window.location.href == "@{UserEntriesR uid}"){document.querySelector(".alert-link").remove();}
                 |] urlRenderParam 
             _ -> addMessage "success" "You are now logged in."
 
@@ -525,16 +527,14 @@ instance YesodAuth App where
 instance YesodAuthEmail App where
     type AuthEmailId App = EmailId
 
-    afterPasswordRoute _ = SettingsR
+    afterPasswordRoute _ = RedirectR
     
     addUnverified email verkey = liftHandler $ runDB $ do
         maybeUserId<-maybeAuthId
         currentTime<-liftIO getCurrentTime
-        forwardedFor <- lookupHeader "X-Forwarded-For"
+        --forwardedFor <- lookupHeader "X-Forwarded-For"
         request <- waiRequest
-        let client = Just $ case forwardedFor of
-                Just ip -> show ip ++ show request
-                _ -> show request
+        let client = Just $ show request
         insert $ Email 
             {
                 emailUserId=maybeUserId
@@ -783,7 +783,7 @@ instance YesodAuthEmail App where
                 <form .form-inline method=post action=@{toParent forgotPasswordR} enctype=#{enctype}>
                     <div id="forgotPasswordForm">
                         ^{widget}
-                        <button .btn .btn-default>_{Msg.SendPasswordResetEmail}
+                        <button .btn .btn-primary>_{Msg.SendPasswordResetEmail}
             |]
         where
             forgotPasswordForm = renderBootstrap3 BootstrapInlineForm $ Yesod.Auth.Extra.ForgotPasswordForm

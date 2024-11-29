@@ -2,7 +2,7 @@
 .jumbotron {
     margin-top: -111px;
     padding-top: 111px;
-    background-color: #222;
+    background-color: black;
     color: #fff;
 }
 .jumbotron h2 {

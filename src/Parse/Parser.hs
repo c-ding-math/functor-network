@@ -41,42 +41,42 @@ mdToHtml docData=do
     
     Prelude.writeFile ("yaml.yaml") $ removeDocumentClass $ textareaToYaml $ editorPreamble docData
     Prelude.writeFile ("bib.bib")  $ textareaToString $ editorCitation docData
-    (exitCode, htmlString, errorString)<-readProcessWithExitCode "pandoc" ["--sandbox", "-F", "pandoc-security", "--metadata-file", "yaml.yaml", "-F","pandoc-theorem", "-F", "math-filter", "-C", "--bibliography=" ++ "bib.bib"] $ textareaToString $ editorContent docData
+    (exitCode, htmlString, errorString)<-readProcessWithExitCode "pandoc" ["--sandbox","-F", "pandoc-table", "-F", "pandoc-security", "--metadata-file", "yaml.yaml", "-F","pandoc-theorem", "-F", "math-filter", "-C", "--bibliography=" ++ "bib.bib"] $ textareaToString $ editorContent docData
     case exitCode of
         ExitSuccess -> do
             return $ pack $ htmlString
         _ -> do
-            return $ pack errorString
+            return $ "<div style='width:520px'>"<>pack errorString<>"</div>"
         
 mdToHtmlSimple::Text->IO Text
 mdToHtmlSimple title=do
     (exitCode, htmlString, errorString)<-readProcessWithExitCode "pandoc" ["--sandbox", "-F", "pandoc-security", "-F", "math-filter"] $ unpack $ title
     case exitCode of
         ExitSuccess -> do
-            return $ pack $ removePTag htmlString
+            return $ pack $ removeOuterTag htmlString
         _ -> do
-            return $ pack errorString
+            return $ "<div style='width:520px'>"<>pack errorString<>"</div>"
 
 texToHtml::EditorData->IO Text
 texToHtml docData=do
     
     Prelude.writeFile ("yaml.yaml") $ removeDocumentClass $ textareaToYaml $ editorPreamble docData
     Prelude.writeFile ("bib.bib")  $ textareaToString $ editorCitation docData
-    (exitCode, htmlString, errorString)<-readProcessWithExitCode "pandoc" ["--sandbox", "-F", "pandoc-security", "--metadata-file", "yaml.yaml", "-F", "math-filter", "-C", "--bibliography=" ++ "bib.bib", "-f", "latex+raw_tex"] $ textareaToString $ editorContent docData
+    (exitCode, htmlString, errorString)<-readProcessWithExitCode "pandoc" ["--sandbox", "-F", "pandoc-table", "-F", "pandoc-security", "--metadata-file", "yaml.yaml", "-F", "math-filter", "-C", "--bibliography=" ++ "bib.bib", "-f", "latex+raw_tex"] $ textareaToString $ editorContent docData
     case exitCode of
         ExitSuccess -> do
             return $ pack $ htmlString
         _ -> do
-            return $ pack errorString
+            return $ "<div style='width:520px'>"<>pack errorString<>"</div>"
             
 texToHtmlSimple::Text->IO Text
 texToHtmlSimple title=do
     (exitCode, htmlString, errorString)<-readProcessWithExitCode "pandoc" ["--sandbox", "-F", "pandoc-security", "-F", "math-filter", "-f", "latex+raw_tex"] $ unpack $ title
     case exitCode of
         ExitSuccess -> do
-            return $ pack $ removePTag htmlString
+            return $ pack $ removeOuterTag htmlString
         _ -> do
-            return $ pack errorString
+            return $ "<div style='width:520px'>"<>pack errorString<>"</div>"
 
 -- should be replaced. This is a temporary solution
 scaleHeader::Int->Text->Text
@@ -129,8 +129,8 @@ removeDocumentClass tex= do
     Prelude.foldl (\str regex-> subRegex (mkRegexWithOpts regex False True) str ("")) tex regexes
     --subRegex (mkRegexWithOpts "\\\\documentclass[^\\{]*\\{[^\\}]*\\}" False True) tex ("")
 
-removePTag::String->String
-removePTag html = case scrapeStringLike html (innerHTML $ "p") of
+removeOuterTag::String->String
+removeOuterTag html = case scrapeStringLike html (innerHTML $ "p") of
     Just x -> x
     Nothing -> html
 

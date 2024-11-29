@@ -29,7 +29,7 @@ searchForm = renderBootstrap3 BootstrapBasicForm $ areq searchFieldWithAddon sea
         fsTooltip = Nothing,
         fsId = Nothing,
         fsName = Just "keyword",
-        fsAttrs = [("class","form-control"),("placeholder","keyword")]
+        fsAttrs = [("class","form-control"),("placeholder","keyword"),("style","min-width:6em;")]
     }
 
 getUserEntriesR :: UserId -> Handler Html
