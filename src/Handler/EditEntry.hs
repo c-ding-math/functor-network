@@ -38,17 +38,20 @@ getEditEntryR entryId = do
     defaultLayout $ do
         setTitleI MsgEdit
         [whamlet|
-<a href=@{UserEntryR (entryUserId entry) entryId}>View
+
 <form  method=post enctype=#{inputEnctype}>
     
     <div .text-left>
-        <button .btn .btn-default .save type=submit name=action value=save>_{MsgSave}
-        <button .btn .btn-default .delete type=submit name=action value=delete>_{MsgDelete}
+        <a .btn .btn-default .pull-right href=@{UserEntryR (entryUserId entry) entryId}>View
         $maybe nextEntryId <- mNextEntryId
-            <a .btn .btn-default .next href=@{EditEntryR nextEntryId}>Next
+            <a .btn .btn-default .pull-right .next href=@{EditEntryR nextEntryId}>Next
+        <button .btn .btn-default .save type=submit name=action value=save>_{MsgSave}
            
-        <button .btn .btn-default .auto-save type=submit name=action value=autosave>auto save
+
     ^{inputWidget}
+    <div .text-left>
+        <button .btn .btn-default .delete type=submit name=action value=delete>_{MsgDelete}
+        <button .btn .btn-default .auto-save .hidden type=submit name=action value=autosave>auto save
         |]
         if autoProcess == Just "true" 
           then

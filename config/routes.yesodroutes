@@ -29,7 +29,7 @@
 /category NewCategoryR POST !user !login
 /tree/node/#EntryId TreeR POST !login
 /vote/#EntryId VoteR POST
-/redirect RedirectR GET
+--/redirect RedirectR GET
 
 /files FilesR GET POST !user !login
 /file/#FileId FileR DELETE !admin

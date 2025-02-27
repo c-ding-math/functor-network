@@ -302,7 +302,7 @@ instance Yesod App where
     isAuthorized (NewEntrySubscriptionR _) _ = return Authorized
     isAuthorized EntriesR _ = return Authorized
     isAuthorized FeedbackR _ = return Authorized
-    isAuthorized RedirectR _ = return Authorized
+    --isAuthorized RedirectR _ = return Authorized
 
     -- Routes requiring authentication.
     --isAuthorized (EditUserPageR _) _ = isAuthenticated
@@ -425,7 +425,7 @@ instance YesodAuth App where
 
     -- Where to send a user after successful login
     loginDest :: App -> Route App
-    loginDest _ = RedirectR
+    loginDest _ = HomeR
     -- Where to send a user after logout
     logoutDest :: App -> Route App
     logoutDest _ = HomeR
@@ -527,7 +527,7 @@ instance YesodAuth App where
 instance YesodAuthEmail App where
     type AuthEmailId App = EmailId
 
-    afterPasswordRoute _ = RedirectR
+    afterPasswordRoute _ = SettingsR
     
     addUnverified email verkey = liftHandler $ runDB $ do
         maybeUserId<-maybeAuthId
