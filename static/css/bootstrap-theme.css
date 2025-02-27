@@ -219,8 +219,12 @@ body {
 }
 .parser-message{
     padding: 0.5em 1em;
+    display: none;
 }
-.editor-preview .parser-message{
+.editor-information .parser-message{
+    display: block;
+}
+.editor-information{
     position: -webkit-sticky; /* Safari */
     position: sticky;
     top: 0;
@@ -228,13 +232,25 @@ body {
 
 .math{display: inline-block;}
 .display.math{
+    display: block;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+ul .display.math span, ol .display.math span, blockquote .display.math span{
+    float: right;
+}
+.display.math svg{
+    overflow: unset;
+}
+/*
+.display.math{
     display: flex; 
     justify-content: center;
     text-align: center; 
     margin: 0.5rem auto;
     overflow: hidden;
 }
-
+*/
 div.mark{
     padding: 1em 2em 0.5em;
 }
@@ -360,11 +376,9 @@ select[name="format"]{
     border: 1px solid #ccc;
 }
 
-.ace_mobile-menu>span>span{
-    padding:0.25em;
-    border-right:1px solid #ccc;
+.ace_mobile-menu{
+    display:none;
 }
-
 
 html:has(.editor-full-screen){
     overflow: hidden;

@@ -114,10 +114,11 @@ commands.forEach(function(command) {
 editor.commands.removeCommand("showSettingsMenu"); 
 
 var editorContainer = $(editor.container);
+var informationArea = $("<div/>",{class: "editor-information"});
 var previewArea = $("<div/>",{class: "entry-content-wrapper"});
 var entryBody = $("textarea[name='content']");
 editor.session.setValue(entryBody.val());
-editorWrapper.append(editorContainer).append($("<div/>",{class: "editor-preview"}).append(previewArea)).insertAfter(entryBody).css({width: "100%", border:entryBody.css("border"), "border-radius":entryBody.css("border-radius")});
+editorWrapper.append(editorContainer).append($("<div/>",{class: "editor-preview"}).append(informationArea).append(previewArea)).insertAfter(entryBody).css({width: "100%", border:entryBody.css("border"), "border-radius":entryBody.css("border-radius")});
 $(".editor-toolbar>ul>li>a").addClass("text-muted");
 
 var entryFormat = $("select[name='format']");
@@ -189,15 +190,18 @@ function render() {
         contentType:"application/json; charset=utf-8",
         //data: options.previewParserVar+'='+encodeURIComponent(parsedData),
         beforeSend: function() {
-            previewArea.css("opacity", "0.75");
+            previewArea.css("opacity", "0.5");
+            informationArea.empty();
         },
         success: function(data) {
             previewArea.html(data);
             previewArea.find(".alert-danger.parser-message").each(function(){
-                $(this).append("<div class='text-muted'>Unable to figure out the error? " + 
+                $(this).append("<span>Unable to correct the error? " + 
                     "<a href='@{FeedbackR}' target='_blank'>Report it</a>. " +
-                    " We can help you!</div>");
-                    
+                    " We can help you!</span>").appendTo(informationArea);   
+            });
+            previewArea.find(".alert-warning.parser-message").each(function(){
+                $(this).appendTo(informationArea);   
             });
         },
         complete: function() {

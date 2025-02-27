@@ -84,9 +84,6 @@ getUserEntriesR authorId = do
             $else
                 ^{entryListWidget "no-author" entryList}
         |]
-        toWidget [hamlet|
-            <div style="display:none;"><a href=@{CommentsR authorId}>Comments</a></div>
-        |]
         toWidget [lucius| 
             .page-header {
                 display: flex;

@@ -890,6 +890,9 @@ instance YesodAuthEmail App where
     confirmationEmailSentResponse :: Text -> AuthHandler site TypedContent
     confirmationEmailSentResponse identifier = do
         mr <- getMessageRender
+        --urlRender <- getUrlRender
+        --let feedbackUrl = urlRender FeedbackR
+        let feedbackUrl = "https://functor.network/feedback"::Text--to be replaced
         selectRep $ do
             provideJsonMessage (mr msg)
             provideRep $ authLayout $ do
@@ -901,7 +904,7 @@ instance YesodAuthEmail App where
                     <li> Wait a minute.
                     <li> Make sure you typed your email address correctly.
                     <li> Add our notification email <code>noreply@functor.network</code> to your whitelist with your provider and try again.
-                    <li> Send an email to <a href="mailto:feedback@functor.network">feedback@functor.network</a> and we will help you out.
+                    <li> Feedback <a href="#{feedbackUrl}">here</a>. We will help you out.
               |]
       where
         msg = Msg.ConfirmationEmailSent identifier
