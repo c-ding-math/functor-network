@@ -222,14 +222,13 @@ postFeedbackR = do
                     ((result, _), _) <- runFormPost $ feedbackForm Nothing
                     case result of
                         FormSuccess feedback -> do
-                            request <- waiRequest
+                            --request <- waiRequest
                             
                             let feedbackEmailAddress ="feedback@functor.network"
                                 emailSubject = subject feedback
-                                emailText = [stext|#{unTextarea(content feedback)} #{show request}|]
+                                emailText = [stext|#{unTextarea(content feedback)}|]
                                 emailHtml = [shamlet|
                                     #{unTextarea(content feedback)}
-                                    <p>#{show request}
                                     |]
                             sendAppEmail feedbackEmailAddress $ AppEmail emailSubject emailText emailHtml
                             defaultLayout $ do

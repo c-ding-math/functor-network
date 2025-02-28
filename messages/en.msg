@@ -1,3 +1,4 @@
+Error: Error
 PermissionDenied: Permission denied
 
 SitePath: Site path
@@ -66,6 +67,7 @@ Private: Private
 Reset: Reset
 Title: Title
 Body: Body
+Featured: Featured
 PublishPost: Publish post
 SaveDraft: Save draft
 Draft: Draft
@@ -210,6 +212,7 @@ Liked: Liked
 Vote: Vote
 Voted: Voted
 
+Maintain: Maintain
 Maintenance: Maintenance
 SiteMaintenance: Site maintenance
 Redirecting: Redirecting...

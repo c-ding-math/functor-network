@@ -49,6 +49,7 @@
 /feedback/#EntryId/edit EditFeedbackR POST DELETE !login
 /user/#UserId/comments CommentsR GET !user
 
+/maintain/entry/#EntryId MaintainEntryR GET POST
 /edit/entry/#EntryId EditEntryR GET POST
 /edit/page/#Text EditPageR GET POST
 --/page/#Text/edit EditUserPageR GET POST !user

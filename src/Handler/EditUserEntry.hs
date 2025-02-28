@@ -49,7 +49,7 @@ entry2Html formData=do
 
 entryInputForm:: Maybe EntryInput -> Html -> MForm Handler (FormResult EntryInput, Widget)
 entryInputForm mEntryInput=renderBootstrap3 BootstrapBasicForm $ EntryInput
-    <$> areq textField titleSetting (inputTitle <$> mEntryInput)
+    <$> areq textField titleSettings (inputTitle <$> mEntryInput)
     <*> areq (selectFieldList inputFormats) formatSettings (inputFormat <$> mEntryInput)
     <*> aopt textareaField preambleSettings (inputPreamble <$> mEntryInput)
     <*> aopt textareaField editorSettings (inputBody <$> mEntryInput)
@@ -79,7 +79,7 @@ entryInputForm mEntryInput=renderBootstrap3 BootstrapBasicForm $ EntryInput
             , fsId = Nothing
             , fsName = Just "citation"
             , fsAttrs =[("class", "hidden")]}
-        titleSetting=FieldSettings 
+        titleSettings=FieldSettings 
             { fsLabel = SomeMessage MsgTitle
             , fsTooltip = Nothing
             , fsId = Nothing
