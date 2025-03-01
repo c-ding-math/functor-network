@@ -21,9 +21,9 @@ data FeedbackInput = FeedbackInput
 
 feedbackForm :: Maybe FeedbackInput ->  Form FeedbackInput
 feedbackForm feedback = renderBootstrap3 BootstrapBasicForm $ FeedbackInput
-    <$> areq textField subjectSetting (subject <$> feedback)
+    <$> areq textField subjectSettings (subject <$> feedback)
     <*> areq textareaField editorSettings (content <$> feedback) where  
-        subjectSetting = FieldSettings
+        subjectSettings = FieldSettings
             { fsLabel = "Subject"
             , fsTooltip = Nothing
             , fsId = Nothing
