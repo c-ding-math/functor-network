@@ -443,19 +443,18 @@ instance YesodAuth App where
                 addMessage "success" $ [hamlet|
                     You are now logged in. #
                     <a .alert-link.pull-right href=@{UserEntriesR uid}>My Blog
-                    <script>if (window.location.href == "@{UserEntriesR uid}"){document.querySelector(".alert-link").remove();}
                 |] urlRenderParam 
             _ -> addMessage "success" "You are now logged in."
 
     authenticate :: (MonadHandler m, HandlerSite m ~ App)
                  => Creds App -> m (AuthenticationResult App)
-    authenticate creds = liftHandler $ runDB $ do
-        mCurrentUserId<-maybeAuthId
+    authenticate creds = liftHandler $ do 
+      mCurrentUserId<-maybeAuthId
+      currentTime<-liftIO getCurrentTime
+      msgRender<-getMessageRender
+      runDB $ do
         let plugin= credsPlugin creds
             ident = credsIdent creds
-            
-        currentTime<-liftIO getCurrentTime
-        msgRender<-getMessageRender
         
         case plugin of 
             
@@ -534,8 +533,8 @@ instance YesodAuthEmail App where
         maybeUserId<-maybeAuthId
         currentTime<-liftIO getCurrentTime
         --forwardedFor <- lookupHeader "X-Forwarded-For"
-        request <- waiRequest
-        let client = Just $ show request
+        --request <- waiRequest
+        --let client = Just $ show request
         insert $ Email 
             {
                 emailUserId=maybeUserId
@@ -543,7 +542,7 @@ instance YesodAuthEmail App where
                 , emailVerkey= (Just verkey) 
                 , emailVerified=False
                 , emailInserted=currentTime
-                , emailClient = client
+                , emailClient = Nothing
             }
 
     sendVerifyEmail email _ verurl = do
@@ -610,10 +609,11 @@ instance YesodAuthEmail App where
 
     getVerifyKey = liftHandler . runDB . fmap (join . fmap emailVerkey) . get
     setVerifyKey lid key = liftHandler $ runDB $ update lid [EmailVerkey =. Just key]
-    verifyAccount lid = liftHandler $ runDB $ do
+    verifyAccount lid = liftHandler $ do
+      currentTime<-liftIO getCurrentTime
+      msgRender<-getMessageRender
+      runDB $ do
         maybeEmail <- get lid
-        currentTime<-liftIO getCurrentTime
-        msgRender<-getMessageRender
         
         case maybeEmail of 
             Just email -> do
