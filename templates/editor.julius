@@ -284,24 +284,6 @@ function equationReference(){
     return false;
 }
 
-function preamble() {
-    var entryPreamble = $('textarea[name="preamble"]');
-    var modalPreamble = $('<textarea/>',{class:"form-control",html:entryPreamble.val()});
-    var modal = newModal({
-        header: '<b>Latex preamble</b>',
-        body: $('<div/>').append('<p>Include latex packages and define new commands below.</p>').append(modalPreamble),
-        footer: [
-            $('<button/>',{class:"btn btn-primary",type:"button",html:"Save"}).click(function() {
-                entryPreamble.val(modalPreamble.val());
-                modal.modal("hide");
-                editor.focus();
-            }),
-        ],
-    });
-    modal.appendTo("body").modal({show: true});
-    return false;
-}
-
 function mathBlock() {
     var blockOpen = "", blockClose = "";
     var selectedRange = editor.getSelectionRange()

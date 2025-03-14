@@ -6,9 +6,9 @@ module Handler.MaintainEntry where
 
 import Import
 import Yesod.Form.Bootstrap3
-import Handler.EditComment(deleteEntryRecursive)
+--import Handler.EditComment(deleteEntryRecursive)
 import Handler.Parser(editorWidget)
-import Handler.EditUserEntry(EntryInput(..),entryInputForm,entry2Html)
+import Handler.EditUserEntry(EntryInput(..),entry2Html)
 
 
 maintainEntryForm :: Entry -> Form Entry
@@ -84,6 +84,7 @@ getMaintainEntryR entryId = do
                 <li>entryUpdated: #{show $ entryUpdated entry}
                 <li>entryType: #{show $ entryType entry}
                 <li>entryStatus: #{show $ entryStatus entry}
+                <li>entryFormat: #{show $ entryFormat entry}
 
             <form method=post enctype=#{formEnctype}>
                 <div .text-left>
@@ -98,7 +99,7 @@ getMaintainEntryR entryId = do
 postMaintainEntryR :: EntryId -> Handler Html
 postMaintainEntryR entryId = do
     entry <- runDB $ get404 entryId    
-    ((result, formWidget), formEnctype) <- runFormPost $ maintainEntryForm entry
+    ((result, _), _) <- runFormPost $ maintainEntryForm entry
     case result of
         FormSuccess entry' -> do
             let editorData = EntryInput

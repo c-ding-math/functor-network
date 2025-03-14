@@ -118,7 +118,7 @@ getUserEntryR authorId entryId = do
             <a.text-muted href=#comment data-action=@{EditCommentR entryId}>_{MsgComment}
         <li .subscribe>
             <a.text-muted href=# data-action=@{NewEntrySubscriptionR entryId}>_{MsgFollow}
-        <li .vote>
+        <li .vote.hidden>
             $maybe userId<-maybeUserId
                 <a.text-muted href=# data-action=@{VoteR entryId}>
                     $if (elem userId (map (voteUserId . entityVal) entryVoteList))

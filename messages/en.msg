@@ -74,6 +74,7 @@ Draft: Draft
 ChangeSaved: Changes Saved
 
 File: File
+RecommendedFileSize: Recommended size: < 2MB
 FileTooLarge maxSize@Int: The file is too large. The maximum file size is #{show maxSize} MB.
 FileTypeNotAllowed: File type not allowed.
 NoFileSelected: No file selected.

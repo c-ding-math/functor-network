@@ -21,7 +21,7 @@ import System.Exit
 --import Text.HTML.TagSoup 
 import Text.HTML.Scalpel (scrapeStringLike, attrs, innerHTML)
 import Text.Regex.Posix
-import Text.Regex (mkRegexWithOpts, subRegex)
+import Text.Regex (mkRegexWithOpts, subRegex, matchRegex)
 import Yesod.Form.Fields 
 import Data.Text
 import GHC.Generics
@@ -58,7 +58,8 @@ mdToHtmlSimple title=do
             return $ "<div style='width:520px'>"<>pack errorString<>"</div>"
 
 texToHtml::EditorData->IO Text
-texToHtml docData=do
+texToHtml docData'=do
+    let docData = preProcessEditorData docData'
     
     Prelude.writeFile ("yaml.yaml") $ removeDocumentClass $ textareaToYaml $ editorPreamble docData
     Prelude.writeFile ("bib.bib")  $ textareaToString $ editorCitation docData
@@ -68,7 +69,19 @@ texToHtml docData=do
             return $ pack $ htmlString
         _ -> do
             return $ "<div style='width:520px'>"<>pack errorString<>"</div>"
-            
+  where
+    preProcessEditorData::EditorData->EditorData
+    preProcessEditorData doc=do
+        let preambleRegex = "\\\\documentclass[^\\{]*\\{[^\\}]*\\}(.*)\\\\begin[[:blank:]]*\\{document\\}"
+        let bodyRegex = "\\\\begin[[:blank:]]*\\{document\\}(.*)\\\\end[[:blank:]]*\\{document\\}"
+        let docWithNewPreamble = case matchRegex (mkRegexWithOpts preambleRegex False True) (textareaToString $ editorContent doc) of
+                Just [x] -> doc{editorPreamble=Just $ Textarea $ pack x}
+                _ -> doc
+        let docWithNewContent = case matchRegex (mkRegexWithOpts bodyRegex False True) (textareaToString $ editorContent docWithNewPreamble) of
+                Just [x] -> docWithNewPreamble{editorContent=Just $ Textarea $ pack x}
+                _ -> docWithNewPreamble
+        docWithNewContent
+ 
 texToHtmlSimple::Text->IO Text
 texToHtmlSimple title=do
     (exitCode, htmlString, errorString)<-readProcessWithExitCode "pandoc" ["--sandbox", "-F", "pandoc-security", "-F", "math-filter", "-f", "latex+raw_tex"] $ unpack $ title

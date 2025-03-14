@@ -209,7 +209,7 @@ getSettingsR = do
                             <img.avatar.img-rounded src=#{avatar} alt=#{userName user}>
                         $nothing
                             <img.avatar.img-rounded src=@{StaticR $ StaticRoute ["icons","default-avatar.svg"] []} alt=#{userName user}>
-                    <button .btn .btn-default #avatar-button>_{MsgChangeAvatar}
+                    <button type=button .btn .btn-default #avatar-button>_{MsgChangeAvatar}
                     <div .modal.fade #avatar-modal>
                         <div .modal-dialog>
                             <div .modal-content>
@@ -219,6 +219,7 @@ getSettingsR = do
                                 <div .modal-body>
                                     <form #file-form method=post enctype=#{uploadFileEnctype} action=@{FilesR}>
                                         ^{uploadFileWidget}
+                                        <small .text-muted>_{MsgRecommendedFileSize}
                                         <div .text-right>
                                             <button .btn .btn-default type=submit>_{MsgUpload}        
                                     <form .hidden #avatar-form method=post enctype=#{avatarEnctype}>
