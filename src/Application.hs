@@ -79,6 +79,8 @@ import Handler.Tree
 import Handler.EditUserAbout
 import Handler.Vote
 import Handler.MaintainEntry
+import Handler.Tool
+import Handler.Slug
 --import Handler.Redirect
 
 -- This line actually creates our YesodDispatch instance. It is the second half

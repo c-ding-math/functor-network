@@ -9,6 +9,7 @@ module Parse.Parser (
     texToHtml,
     texToHtmlSimple,
     scaleHeader,
+    texToSvg,
     EditorData(..),
 ) where
 
@@ -91,6 +92,15 @@ texToHtmlSimple title=do
         _ -> do
             return $ "<div style='width:520px'>"<>pack errorString<>"</div>"
 
+texToSvg:: EditorData -> IO Text
+texToSvg docData = do
+    (exitCode, htmlString, errorString)<-readProcessWithExitCode "tex-to-svg" [textareaToString $ editorPreamble docData, textareaToString $ editorContent docData] ""
+    case exitCode of
+        ExitSuccess -> do
+            return $ pack $ htmlString
+        _ -> do
+            return $ pack errorString
+
 -- should be replaced. This is a temporary solution
 scaleHeader::Int->Text->Text
 scaleHeader n title|n<=6= do
@@ -150,5 +160,7 @@ removeOuterTag html = case scrapeStringLike html (innerHTML $ "p") of
 stringToDouble:: String -> Double
 stringToDouble s = do
     let doubleString = (s=~("[0-9]*\\.[0-9]*"::String) :: String)
-        doubleString' =  if doubleString!!0 == '.' then "0" ++ doubleString else doubleString
+        doubleString' =  case doubleString of
+            '.' : _ -> "0" ++ doubleString
+            _ -> doubleString
     read doubleString' :: Double

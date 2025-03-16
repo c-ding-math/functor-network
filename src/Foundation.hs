@@ -302,6 +302,7 @@ instance Yesod App where
     isAuthorized (NewEntrySubscriptionR _) _ = return Authorized
     isAuthorized EntriesR _ = return Authorized
     isAuthorized FeedbackR _ = return Authorized
+    isAuthorized (ToolR _) _ = return Authorized
     --isAuthorized RedirectR _ = return Authorized
 
     -- Routes requiring authentication.
@@ -332,6 +333,7 @@ instance Yesod App where
     isAuthorized PagesR _ = isAppAdministrator
     isAuthorized MaintenanceR _ = isAppAdministrator
     isAuthorized (MaintainEntryR _ ) _ = isAppAdministrator
+    isAuthorized SlugR _ = isAppAdministrator
     
     -- This function creates static content files in the static folder
     -- and names them based on a hash of their content. This allows

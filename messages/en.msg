@@ -73,6 +73,8 @@ SaveDraft: Save draft
 Draft: Draft
 ChangeSaved: Changes Saved
 
+Preview: Preview
+Download: Download
 File: File
 RecommendedFileSize: Recommended size: < 2MB
 FileTooLarge maxSize@Int: The file is too large. The maximum file size is #{show maxSize} MB.

@@ -54,6 +54,9 @@
 /edit/page/#Text EditPageR GET POST
 --/page/#Text/edit EditUserPageR GET POST !user
 /pages PagesR GET
+/tool/#Text ToolR GET POST
+/slug SlugR GET POST
+
 !/#Text PageR GET
 --!/user/#UserId/#Text UserPageR GET !user
 

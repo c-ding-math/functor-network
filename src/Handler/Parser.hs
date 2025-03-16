@@ -8,7 +8,8 @@ module Handler.Parser (
     userTemporaryDirectory,
     parse,
     postParserR,
-    editorWidget
+    editorWidget,
+    countActiveSubdirectories
 )where
 
 import Import
