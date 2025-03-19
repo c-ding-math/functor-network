@@ -271,8 +271,7 @@ getSettingsR = do
                 <div>
                     <label>_{MsgPassword}
                     <div>
-                        <a .btn .btn-default href=@{AuthR forgotPasswordR}>_{MsgForgotPassword}
-                        <a .btn .btn-default href=@{AuthR setpassR}>_{MsgSetPassword}
+                        <a .btn .btn-default href=@{AuthR setpassR}>_{MsgResetPassword}
                     <p>
 
         |]

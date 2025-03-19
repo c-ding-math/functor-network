@@ -44,8 +44,6 @@ postToolR "tex-to-svg" = do
             busyMessage= "Busy..."
         return $ RepPlain $ toContent $ busyMessage
     else do
-        isPreview<-lookupPostParam "action"
-        
         let parser = texToSvg
         docData<- requireCheckJsonBody ::Handler EditorData
         preview<-liftIO $ parse userDir parser docData  

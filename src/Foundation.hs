@@ -547,67 +547,49 @@ instance YesodAuthEmail App where
                 , emailClient = Nothing
             }
 
-    sendVerifyEmail email _ verurl = do
-        hasSetPass<-liftHandler $ runDB $ do
-            mEmail <- getBy $ UniqueEmail email
-            case mEmail of   
-                Just (Entity _ e) -> do                
-                    let muid=emailUserId e
-                    case muid of 
-                        Nothing->return False
-                        Just uid -> do
-                            mUser<-get uid
-                            return $ case mUser of
-                                Just u | isJust (userPassword u)->True
-                                _->False
-                Nothing -> return False
-        let url =case hasSetPass of
-                True -> verurl<>"/has-set-pass"
-                _->verurl
-
-        liftHandler $ sendAppEmail email $ AppEmail subject (text url) (html url)
-
+    sendVerifyEmail email verkey _ = liftHandler $ sendAppEmail email $ AppEmail subject text html
       where
-        subject="Verify your email address"
-        text url=   [stext|
-                        Please confirm your email address by clicking on the link below.
-
-                        #{url}
-
-                        Thank you,
-                        
-                        #{appName}
-                    |]
-        html url=   [shamlet|
-                        <p>Please confirm your email address by clicking on the link below.
-                        <p>
-                            <a href=#{url}>#{url}
-                        <p>Thank you,
-                        <p>#{appName}
-                    |]
-        --appName="Functor Network"::Text
-
-    sendForgotPasswordEmail email _ verurl =  do
-        liftHandler $ sendAppEmail email $ AppEmail subject text html
-      where
+        --workaround: It is the registration workflow if the key begins with "r"
+        key = "r" <> verkey
         subject="Verify your email address"
         text =  [stext|
-                    Please confirm your email address by clicking on the link below.
+                    Please confirm your email address with the verification key below.
 
-                    #{verurl}
+                    #{key}
 
                     Thank you,
                     
                     #{appName}
                 |]
         html =  [shamlet|
-                    <p>Please confirm your email address by clicking on the link below.
-                    <p>
-                        <a href=#{verurl}>#{verurl}
+                    <p>Please confirm your email address with the verification key below.
+                    <div style="font-size:1.5em; font-weight:bold;">
+                        #{key}
                     <p>Thank you,
                     <p>#{appName}
                 |]
-        --appName="Functor Network"::Text
+
+    sendForgotPasswordEmail email verkey _ = liftHandler $ sendAppEmail email $ AppEmail subject text html
+      where
+        --workaround: It is the forgot password workflow if the key begins with "f"
+        key = "f" <> verkey
+        subject="Verify your email address"
+        text =  [stext|
+                    Please confirm your email address with the verification key below.
+
+                    #{key}
+
+                    Thank you,
+                    
+                    #{appName}
+                |]
+        html =  [shamlet|
+                    <p>Please confirm your email address with the verification key below.
+                    <div style="font-size:1.5em; font-weight:bold;">
+                        #{key}
+                    <p>Thank you,
+                    <p>#{appName}
+                |]
 
     getVerifyKey = liftHandler . runDB . fmap (join . fmap emailVerkey) . get
     setVerifyKey lid key = liftHandler $ runDB $ update lid [EmailVerkey =. Just key]
@@ -890,27 +872,63 @@ instance YesodAuthEmail App where
                 |]
 
     -- | Response after sending a confirmation email.
-    confirmationEmailSentResponse :: Text -> AuthHandler site TypedContent
     confirmationEmailSentResponse identifier = do
+        toParent <- getRouteToParent
+        let toBeReplaced = "TOBEREPLACED"::Text
+        verificationRoute <- liftHandler $ runDB $ do
+            mEmail <- getBy $ UniqueEmail identifier
+            case mEmail of   
+                Just (Entity eid e) -> do                
+                    hasSetPass <- case emailUserId e of 
+                        Nothing->return False
+                        Just uid -> do
+                            mUser<-get uid
+                            return $ case mUser of
+                                Just u -> isJust (userPassword u)
+                                _->False
+                    return $ toParent $ verifyR (toPathPiece eid) toBeReplaced hasSetPass
+                Nothing -> notFound
+        
         mr <- getMessageRender
-        --urlRender <- getUrlRender
-        --let feedbackUrl = urlRender FeedbackR
-        let feedbackUrl = "https://functor.network/feedback"::Text--to be replaced
         selectRep $ do
-            provideJsonMessage (mr msg)
+            provideJsonMessage (mr (Msg.ConfirmationEmailSent identifier))
             provideRep $ authLayout $ do
               setTitleI Msg.ConfirmationEmailSentTitle
               [whamlet|
-                <p>A verification email has been sent to #{identifier}. Please click the link in the email to verify your account.
+                <p>_{Msg.ConfirmationEmailSent identifier} _{MsgEnterVerificationKey}
+                <div class="form-inline">
+                    <div .form-group.required>
+                        <label class="sr-only">_{MsgVerificationKey}
+                        <input .form-control type=text name=key placeholder=_{MsgVerificationKey}>
+                    <button #confirm-button .btn .btn-primary type=button>_{MsgConfirm}
+                <hr>
                 <p>Receive no email? There are some steps you can take:
                 <ul>
                     <li> Wait a minute.
                     <li> Make sure you typed your email address correctly.
                     <li> Add our notification email <code>noreply@functor.network</code> to your whitelist with your provider and try again.
-                    <li> Feedback <a href="#{feedbackUrl}">here</a>. We will help you out.
+                    <li> <a href=@{FeedbackR}>Feedback here</a>. We will help you out.
               |]
-      where
-        msg = Msg.ConfirmationEmailSent identifier
+              toWidget [julius|
+                $("input[name=key]").focus();
+                $("#confirm-button").on("click", function(){
+                    let key = $("input[name=key]").val();
+                    let isForgotPasswordWorkflow;
+                    if (key.charAt(0) == "f"){
+                        isForgotPasswordWorkflow = true;
+                    } else {
+                        isForgotPasswordWorkflow = false;
+                    }
+                    let toBeReplaced = #{toBeReplaced};
+                        verificationRoute = "@{verificationRoute}";
+                        windowLocation = verificationRoute.replace(toBeReplaced, key.substr(1));
+                    if (isForgotPasswordWorkflow){
+                        window.location = windowLocation.replace("/has-set-pass","");
+                    } else {
+                        window.location.href = windowLocation;
+                    }
+                });
+              |]
 
     needOldPassword _ =return False
 

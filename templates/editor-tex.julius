@@ -310,9 +310,6 @@ function preamble() {
                 warning.remove();
             }
     }
-    if (format=="tex"){
-        checkPreamble();
-    }
 
     return false;
 }
