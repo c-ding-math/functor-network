@@ -5,7 +5,7 @@ module Handler.EditUserAbout where
 
 import Import
 import Yesod.Form.Bootstrap3
-import Handler.Parser(editorWidget)
+import Handler.Parse(editorWidget)
 import Handler.EditUserEntry(EntryInput(..),entry2Html)
 
 entryInputForm:: Maybe EntryInput -> Html -> MForm Handler (FormResult EntryInput, Widget)

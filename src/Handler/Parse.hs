@@ -1,13 +1,12 @@
 {-# LANGUAGE QuasiQuotes           #-}
 {-# LANGUAGE OverloadedStrings     #-}
---{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Handler.Parser (
+module Handler.Parse (
     userTemporaryDirectory,
     parse,
-    postParserR,
+    postParseR,
     editorWidget,
     countActiveSubdirectories
 )where
@@ -19,19 +18,11 @@ import System.Environment (getExecutablePath)
 import System.FilePath
 import System.Random
 import Parse.Parser(mdToHtml,texToHtml,EditorData(..))
---import qualified Data.CaseInsensitive as CI
---import qualified Data.Text.Encoding as TE
---import Text.Julius (rawJS)
---import Yesod.Core.Handler (defaultCsrfCookieName, defaultCsrfHeaderName)
---import Handler.Files (uploadForm)
---import qualified Prelude
---import Data.Time.Clock
-
 type InputFormat=Text
 type OutputFormat=Text
 
-postParserR :: InputFormat->OutputFormat-> Handler RepPlain
-postParserR inputFormat outputFormat = do
+postParseR :: InputFormat->OutputFormat-> Handler RepPlain
+postParseR inputFormat outputFormat = do
     userDir<-userTemporaryDirectory
     subdirectoriesNumber<-liftIO $ countActiveSubdirectories $ takeDirectory userDir
     if subdirectoriesNumber > 0 then do
@@ -123,8 +114,8 @@ editorWidget inputFormat = do
                         Nothing -> "NO_TOKEN"                                                                                                               
                         Just t  -> t   
     let parserRoute =case inputFormat of
-            Format "tex"->ParserR "tex" "html"
-            _->ParserR "md" "html"
+            Format "tex"->ParseR "tex" "html"
+            _->ParseR "md" "html"
     $(widgetFile "editor")
     case inputFormat of
         Format "tex" -> do

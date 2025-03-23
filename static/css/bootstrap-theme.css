@@ -230,11 +230,17 @@ body {
     top: 0;
 }
 
-.math{display: inline-block;}
+.math{
+    display: inline-block;
+    max-width: 100%;
+    vertical-align: bottom;
+    overflow-x:auto;
+}
 .display.math{
     display: block;
     margin-top: 0.5rem;
     margin-bottom: 0.5rem;
+    overflow:unset;
 }
 ul .display.math span, ol .display.math span, blockquote .display.math span{
     float: right;

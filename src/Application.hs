@@ -53,7 +53,7 @@ import Handler.Files
 --import Handler.File
 --import Handler.Entries
 import Handler.UserEntry
-import Handler.Parser
+import Handler.Parse
 --import Handler.NewEntry
 import Handler.EditComment
 --import Handler.EditUserPage

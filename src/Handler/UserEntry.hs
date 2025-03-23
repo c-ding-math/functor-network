@@ -5,7 +5,7 @@ module Handler.UserEntry where
 
 import Import
 --import Yesod.Form.Bootstrap3
-import Handler.Parser(editorWidget)
+import Handler.Parse(editorWidget)
 import Parse.Parser(scaleHeader)
 import Handler.Tree(treeWidget)
 import Handler.Vote(voteWidget)

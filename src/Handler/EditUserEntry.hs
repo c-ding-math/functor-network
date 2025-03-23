@@ -17,7 +17,7 @@ module Handler.EditUserEntry (
 import Import
 import Yesod.Form.Bootstrap3
 import Handler.EditComment(deleteEntryRecursive)
-import Handler.Parser(parse,editorWidget,userTemporaryDirectory)
+import Handler.Parse(parse,editorWidget,userTemporaryDirectory)
 import Handler.NewEntrySubscription(insertDefaultEntrySubscription)
 import Handler.NewUserSubscription(userSubscriptionNotification)
 import Parse.Parser(mdToHtml,mdToHtmlSimple,texToHtml,texToHtmlSimple,EditorData(..))

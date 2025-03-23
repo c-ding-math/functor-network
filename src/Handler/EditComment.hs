@@ -5,7 +5,7 @@ module Handler.EditComment where
 
 import Import
 import Yesod.Form.Bootstrap3
-import Handler.Parser(parse,userTemporaryDirectory)
+import Handler.Parse(parse,userTemporaryDirectory)
 import Handler.NewEntrySubscription(entrySubscriptionNotification,insertDefaultEntrySubscription)
 import Parse.Parser(mdToHtml,texToHtml,EditorData(..))
 import Handler.Tree(getRootEntryId)

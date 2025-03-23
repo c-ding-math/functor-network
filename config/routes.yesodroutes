@@ -12,7 +12,7 @@
 / HomeR GET POST
 /entries EntriesR GET
 /feedback FeedbackR GET POST
-/parser/input/#Text/output/#Text ParserR POST
+/parser/from/#Text/to/#Text ParseR POST
 /help/#Text EditHelpR GET
 /users UsersR GET
 /user/#UserId UserHomeR GET !user

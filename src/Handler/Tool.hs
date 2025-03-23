@@ -4,7 +4,7 @@
 module Handler.Tool where
 
 import Import
-import Handler.Parser (userTemporaryDirectory,countActiveSubdirectories,parse)
+import Handler.Parse (userTemporaryDirectory,countActiveSubdirectories,parse)
 import Parse.Parser (texToSvg,EditorData(..))
 import System.FilePath
 import Yesod.Form.Bootstrap3

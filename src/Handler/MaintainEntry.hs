@@ -7,7 +7,7 @@ module Handler.MaintainEntry where
 import Import
 import Yesod.Form.Bootstrap3
 --import Handler.EditComment(deleteEntryRecursive)
-import Handler.Parser(editorWidget)
+import Handler.Parse(editorWidget)
 import Handler.EditUserEntry(EntryInput(..),entry2Html)
 
 

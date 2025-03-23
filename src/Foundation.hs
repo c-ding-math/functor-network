@@ -295,7 +295,7 @@ instance Yesod App where
     isAuthorized (CommentsR _) _ = return Authorized
     isAuthorized (PageR _) _ = return Authorized
     isAuthorized (EditHelpR _) _ = return Authorized
-    isAuthorized (ParserR _ _) _ = return Authorized
+    isAuthorized (ParseR _ _) _ = return Authorized
     isAuthorized (EditUserSubscriptionR _) _ = return Authorized
     isAuthorized (NewUserSubscriptionR _) _ = return Authorized
     isAuthorized (EditEntrySubscriptionR _) _ = return Authorized
@@ -311,7 +311,6 @@ instance Yesod App where
     isAuthorized EditUserAboutR _ = isAuthenticated
     isAuthorized AccountR _ = isAuthenticated
     isAuthorized FilesR _ = isAuthenticated
-    --isAuthorized (ParserR _ _) _ = isAuthenticated
     isAuthorized (EditCommentR _) _ = isAuthenticated
     isAuthorized (EditFeedbackR _) _ = isAuthenticated
     isAuthorized NewUserEntryR _ = isAuthenticated

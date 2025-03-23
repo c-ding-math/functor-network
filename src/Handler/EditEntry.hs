@@ -7,7 +7,7 @@ module Handler.EditEntry where
 
 import Import
 import Handler.EditComment(deleteEntryRecursive)
-import Handler.Parser(editorWidget)
+import Handler.Parse(editorWidget)
 import Handler.EditUserEntry(EntryInput(..),entryInputForm,entry2Html)
 --import Database.Persist.Sql
 
