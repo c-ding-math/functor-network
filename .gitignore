@@ -21,3 +21,4 @@ cabal.sandbox.config
 *~
 \#*
 functor-network.cabal
+cache/

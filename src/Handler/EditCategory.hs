@@ -35,7 +35,7 @@ postNewCategoryR = do
         FormSuccess categoryInput -> do
             let title = categoryTitle categoryInput
             userDir<-userTemporaryDirectory
-            titleHtml <-liftIO $ parse userDir texToHtmlSimple title
+            titleHtml <-liftIO $ parse Nothing userDir texToHtmlSimple title
             currentTime <- liftIO getCurrentTime
 
             categoryId <- runDB $ insert $ Entry
@@ -66,7 +66,7 @@ postEditCategoryR entryId = do
         FormSuccess categoryInput -> do
             let title = categoryTitle categoryInput
             userDir<-userTemporaryDirectory
-            titleHtml <-liftIO $ parse userDir texToHtmlSimple title
+            titleHtml <-liftIO $ parse Nothing userDir texToHtmlSimple title
             currentTime <- liftIO getCurrentTime
             runDB $ update entryId [EntryTitle=.title, EntryTitleHtml=.titleHtml, EntryUpdated=.currentTime]
             

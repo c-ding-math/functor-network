@@ -43,8 +43,8 @@ entry2Html formData=do
     let (parser,parserSimple)=  case inputFormat formData of
             Format "tex" -> (texToHtml,texToHtmlSimple)
             _ -> (mdToHtml,mdToHtmlSimple)               
-    titleHtml <-liftIO $ parse userDir parserSimple (inputTitle formData)
-    bodyHtml <- liftIO $ parse userDir parser editorData
+    titleHtml <-liftIO $ parse Nothing userDir parserSimple (inputTitle formData)
+    bodyHtml <- liftIO $ parse Nothing userDir parser editorData
     return (titleHtml,bodyHtml)
 
 entryInputForm:: Maybe EntryInput -> Html -> MForm Handler (FormResult EntryInput, Widget)

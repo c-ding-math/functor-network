@@ -106,7 +106,7 @@ postEditPageR title = do
                     Format "tex"->texToHtml
                     _->mdToHtml
             userDir<-userTemporaryDirectory
-            bodyHtml<- liftIO $  parse userDir parser editorData
+            bodyHtml<- liftIO $ parse Nothing userDir parser editorData
             urlRenderParams<- getUrlRenderParams
             case entryAction of
                 Just "delete"->case mEntry of 

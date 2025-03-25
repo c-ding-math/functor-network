@@ -275,7 +275,7 @@ postEditFeedbackR entryId = do
             userDir<-userTemporaryDirectory
             let title = "Feedback"
                 
-            bodyHtml <- liftIO $ parse userDir parser editorData
+            bodyHtml <- liftIO $ parse Nothing userDir parser editorData
             let commentData=Entry 
                         {entryUserId=userId
                         ,entryType=Feedback

@@ -4,9 +4,8 @@
 module Handler.Tool where
 
 import Import
-import Handler.Parse (userTemporaryDirectory,countActiveSubdirectories,parse)
-import Parse.Parser (texToSvg,EditorData(..))
-import System.FilePath
+import Parse.Parser (EditorData(..))
+import Handler.Parse (postParseR)
 import Yesod.Form.Bootstrap3
 --import Text.Shakespeare.Text (stext)
 
@@ -36,21 +35,7 @@ latexForm mEntryInput= renderBootstrap3 BootstrapBasicForm $ EditorData
             , fsAttrs =[("class", "hidden")]}
 
 postToolR :: Text -> Handler RepPlain
-postToolR "tex-to-svg" = do 
-    userDir<-userTemporaryDirectory
-    subdirectoriesNumber<-liftIO $ countActiveSubdirectories $ takeDirectory userDir
-    if subdirectoriesNumber > 0 then do
-        let busyMessage::Text
-            busyMessage= "Busy..."
-        return $ RepPlain $ toContent $ busyMessage
-    else do
-        let parser = texToSvg
-        docData<- requireCheckJsonBody ::Handler EditorData
-        preview<-liftIO $ parse userDir parser docData  
-        return $ RepPlain $ toContent $ case preview of
-            "\n"->""
-            x->x
-
+postToolR "tex-to-svg" = postParseR "tex" "svg"
 postToolR _ = notFound
 
 getToolR :: Text -> Handler Html

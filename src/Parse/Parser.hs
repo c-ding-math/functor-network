@@ -4,6 +4,8 @@
 --{-# LANGUAGE NoImplicitPrelude #-}
 
 module Parse.Parser (
+    mdToPdf,
+    texToPdf,
     mdToHtml,
     mdToHtmlSimple,
     texToHtml,
@@ -36,6 +38,28 @@ data EditorData=EditorData{
 
 instance ToJSON EditorData where
 instance FromJSON EditorData where
+
+mdToPdf::EditorData->IO Text
+mdToPdf docData=do
+    Prelude.writeFile ("yaml.yaml") $ removeDocumentClass $ textareaToYaml' $ editorPreamble docData
+    Prelude.writeFile ("bib.bib")  $ textareaToString $ editorCitation docData
+    (exitCode, pdfString, errorString)<-readProcessWithExitCode "pandoc" ["--sandbox", "-F", "pandoc-security", "--metadata-file", "yaml.yaml", "-F", "pandoc-theorem", "-C", "--bibliography=" ++ "bib.bib", "-o", "output.pdf"] $ textareaToString $ editorContent docData
+    case exitCode of
+        ExitSuccess -> do
+            return $ "output.pdf"
+        _ -> do
+            return $ "<div style='width:520px'>"<>pack errorString<>"</div>"
+
+texToPdf::EditorData->IO Text
+texToPdf docData=do
+    Prelude.writeFile ("yaml.yaml") $ removeDocumentClass $ textareaToYaml' $ editorPreamble docData
+    Prelude.writeFile ("bib.bib")  $ textareaToString $ editorCitation docData
+    (exitCode, pdfString, errorString)<-readProcessWithExitCode "pandoc" ["--sandbox", "-F", "pandoc-security", "--metadata-file", "yaml.yaml", "-F", "pandoc-theorem", "-C", "--bibliography=" ++ "bib.bib", "-o", "output.pdf"] $ textareaToString $ editorContent docData
+    case exitCode of
+        ExitSuccess -> do
+            return $ "output.pdf"
+        _ -> do
+            return $ "<div style='width:520px'>"<>pack errorString<>"</div>"
 
 mdToHtml::EditorData->IO Text
 mdToHtml docData=do
@@ -142,6 +166,11 @@ textareaToYaml:: Maybe Textarea -> String
 textareaToYaml (Just textarea)= unpack $ pack "preamble: |\n" <> (yamlBlock (unTextarea textarea)) where
     yamlBlock text=Data.Text.unlines $ (\x-> pack " " <> x) <$> [pack "```{=latex}"] ++ Data.Text.lines text ++ [pack "```"]
 textareaToYaml _ =""
+
+textareaToYaml':: Maybe Textarea -> String
+textareaToYaml' (Just textarea)= unpack $ pack "header-includes: |\n" <> (yamlBlock (unTextarea textarea)) where
+    yamlBlock text=Data.Text.unlines $ (\x-> pack " " <> x) <$> [pack "```{=latex}"] ++ Data.Text.lines text ++ [pack "```"]
+textareaToYaml' _ =""
 
 removeDocumentClass::String->String
 removeDocumentClass tex= do

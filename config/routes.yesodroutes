@@ -56,7 +56,9 @@
 /pages PagesR GET
 /tool/#Text ToolR GET POST
 /slug SlugR GET POST
+/download/#EntryId DownloadR GET !login
 
 !/#Text PageR GET
 --!/user/#UserId/#Text UserPageR GET !user
+
 

@@ -3,21 +3,21 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Handler.Parse (
-    userTemporaryDirectory,
-    parse,
-    postParseR,
-    editorWidget,
-    countActiveSubdirectories
-)where
+module Handler.Parse where
 
 import Import
---import Control.Concurrent
+import Control.Concurrent
 import System.Directory
-import System.Environment (getExecutablePath)
+--import System.Environment (getExecutablePath)
 import System.FilePath
 import System.Random
-import Parse.Parser(mdToHtml,texToHtml,EditorData(..))
+import Parse.Parser(texToPdf, texToHtml, texToHtmlSimple, mdToPdf, mdToHtml, mdToHtmlSimple, texToSvg, EditorData(..))
+import Data.Text.IO
+import qualified Data.Text as T
+import Codec.Archive.Zip
+import qualified Prelude
+--import Control.Exception
+
 type InputFormat=Text
 type OutputFormat=Text
 
@@ -31,13 +31,21 @@ postParseR inputFormat outputFormat = do
         return $ RepPlain $ toContent $ busyMessage
     else do  
         let parser = case (inputFormat,outputFormat) of
+                ("tex","svg") -> texToSvg
                 ("tex","html") -> texToHtml
                 _ -> mdToHtml
         docData<- requireCheckJsonBody ::Handler EditorData
-        preview<-liftIO $ parse userDir parser docData  
+        preview<-liftIO $ parse Nothing userDir parser docData  
         return $ RepPlain $ toContent $ case preview of
             "\n"->""
             x->x
+
+getDownloadR :: EntryId -> Handler TypedContent
+getDownloadR entryId = do
+    entry<-runDB $ get404 entryId
+    entryCacheDir <- cacheDirectory >>= return . (</> (unpack $ toPathPiece entryId))
+    liftIO $ cacheEntry entryCacheDir (Entity entryId entry)
+    sendFile "application/zip" $ entryCacheDir </> "download.zip"
 
 -- | Get user temporary directory
 userTemporaryDirectory :: Handler FilePath
@@ -59,27 +67,77 @@ userTemporaryDirectory = do
                     return $ tempDir </> "anonymous" </> unpack (toPathPiece (token)) </> randomString
         Just userId-> return $ tempDir </> "user" </> unpack (toPathPiece userId) </> randomString
 
--- | parse
-parse:: FilePath -> (a->IO Text) -> a -> IO Text
-parse currentWorkingDir parser docData = do
-    appDirectory<-appWorkingDirectory
-    setCurrentDirectory appDirectory
-    createDirectoryIfMissing True currentWorkingDir
-    output<-withCurrentDirectory currentWorkingDir $ do
-        output <- parser docData
-        --Prelude.writeFile "output.html" $ unpack output
-        return output
-    --threadDelay 10000000
-    removeDirectoryRecursive currentWorkingDir
-    return $ output
+-- | cache entry
 
--- | get App root directory
+cacheEntry :: FilePath -> Entity Entry -> IO ()
+cacheEntry entryCacheDir (Entity entryId entry) = do
+            let tempDir = entryCacheDir </> "temp"
+            createDirectoryIfMissing True tempDir
+            let (pdfParser,titleParser, bodyParser) = case (entryFormat entry) of
+                    Format "tex" -> (texToPdf, texToHtmlSimple, texToHtml)
+                    _ -> (mdToPdf, mdToHtmlSimple, mdToHtml)
+            let docData = EditorData {
+                editorContent = entryBody entry,
+                editorPreamble = entryPreamble entry,
+                editorCitation = entryCitation entry
+            }
+            
+            parse (Just (entryCacheDir </> "title.html")) tempDir titleParser $ entryTitle entry
+            parse (Just (entryCacheDir </> "body.html")) tempDir bodyParser docData
+            parse (Just (entryCacheDir </> "post.pdf")) tempDir pdfParser docData  
+
+            let sourcePath = entryCacheDir </> "source"
+            createDirectoryIfMissing True sourcePath
+            let maybeTextareaToText x = case x of
+                    Just t -> unTextarea t
+                    Nothing -> " "-- empty file does not work well
+            let fileExtension = case (entryFormat entry) of
+                    Format "tex" -> "tex"
+                    _ -> "md"
+            Data.Text.IO.writeFile (sourcePath </> "content" <.> fileExtension) $ maybeTextareaToText $ entryBody entry
+            Data.Text.IO.writeFile (sourcePath </> "preamble.tex") $ maybeTextareaToText $ entryPreamble entry
+            Data.Text.IO.writeFile (sourcePath </> "citation.bib") $ maybeTextareaToText $ entryCitation entry
+            createArchive (entryCacheDir </> "download.zip") (packDirRecur Deflate mkEntrySelector entryCacheDir)
+            --removeDirectoryRecursive sourcePath
+            
+
+-- | parse
+parse:: Maybe FilePath -> FilePath -> ( a -> IO Text) -> a -> IO Text
+parse mFileName tmpDir parser docData = do
+    --appDirectory<-appWorkingDirectory
+    --setCurrentDirectory appDirectory
+    appDirectory <- getCurrentDirectory
+    createDirectoryIfMissing True tmpDir
+    output <- withCurrentDirectory tmpDir $ parser docData
+    case mFileName of
+        Nothing -> return ()
+        Just cache -> do
+            createDirectoryIfMissing True (takeDirectory cache)
+            if parser == texToPdf || parser == mdToPdf 
+                then handle handler $ copyFile (tmpDir </> (unpack output)) cache
+                else handle handler $ Data.Text.IO.writeFile cache $ output       
+    --threadDelay 10000000
+    removeDirectoryRecursive tmpDir
+    return $ output
+    where
+        handler::SomeException->IO ()
+        handler _ = return ()
+
+cacheDirectory :: Handler FilePath
+cacheDirectory = do
+    app <- getYesod
+    let cacheDir = appCacheDir $ appSettings app
+    liftIO $ createDirectoryIfMissing True cacheDir
+    return cacheDir
+
+{-- | get App root directory
 appWorkingDirectory :: IO FilePath
 appWorkingDirectory = do
     exePath <- getExecutablePath  
     return $ if takeFileName exePath == "ghc" 
         then (takeDirectory $ takeDirectory $ takeDirectory $ takeDirectory $ takeDirectory $ takeDirectory $ takeDirectory exePath) </>  "functor-network"-- development
         else takeDirectory $ takeDirectory $ takeDirectory exePath -- production
+--}
 
 countActiveSubdirectories :: FilePath -> IO Int
 countActiveSubdirectories dir = doesDirectoryExist dir >>= \exisitence ->

@@ -96,7 +96,7 @@ postEditCommentR entryId = do
             userDir<-userTemporaryDirectory
             let title = "Comment"
                 
-            bodyHtml <- liftIO $ parse userDir parser editorData
+            bodyHtml <- liftIO $ parse Nothing userDir parser editorData
             let commentData=Entry 
                         {entryUserId=userId
                         ,entryType=Comment
