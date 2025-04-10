@@ -11,7 +11,7 @@ import System.Directory
 --import System.Environment (getExecutablePath)
 import System.FilePath
 import System.Random
-import Parse.Parser(texToPdf, texToHtml, texToHtmlSimple, mdToPdf, mdToHtml, mdToHtmlSimple, texToSvg, EditorData(..))
+import Parse.Parser(preProcessEditorData, texToPdf, texToHtml, texToHtmlSimple, mdToPdf, mdToHtml, mdToHtmlSimple, texToSvg, EditorData(..))
 import Data.Text.IO
 import qualified Data.Text as T
 import Codec.Archive.Zip
@@ -40,12 +40,64 @@ postParseR inputFormat outputFormat = do
             "\n"->""
             x->x
 
-getDownloadR :: EntryId -> Handler TypedContent
+getDownloadR :: EntryId -> Handler RepPlain
 getDownloadR entryId = do
-    entry<-runDB $ get404 entryId
-    entryCacheDir <- cacheDirectory >>= return . (</> (unpack $ toPathPiece entryId))
-    liftIO $ cacheEntry entryCacheDir (Entity entryId entry)
-    sendFile "application/zip" $ entryCacheDir </> "download.zip"
+
+    userDir<-userTemporaryDirectory
+    subdirectoriesNumber<-liftIO $ countActiveSubdirectories $ takeDirectory userDir
+    if subdirectoriesNumber > 0 then do
+        let busyMessage::Text
+            busyMessage= "Busy..."
+        return $ RepPlain $ toContent $ busyMessage
+    else do
+        generateEntryPdf entryId
+        cacheDir <- cacheDirectory >>= return . (</> (unpack $ toPathPiece entryId))
+        --liftIO $ parse (Just (cacheDir </> "download.pdf")) userDir parser editorData
+        sendFile "application/pdf" $ cacheDir </> "download.pdf"
+        --liftIO $ removeDirectoryRecursive cacheDir
+        return $ RepPlain $ toContent $ ("Download complete"::Text)
+
+generateEntryPdf :: EntryId -> Handler ()
+generateEntryPdf entryId = do
+        urlRender <- getUrlRender
+        userId<-requireAuthId 
+        (author, entry)<- runDB $ do 
+            entry <- get404 entryId
+            author <- get404 $ entryUserId entry
+            return (author, entry)
+        let docData = EditorData {
+                editorContent = entryBody entry,
+                editorPreamble = entryPreamble entry,
+                editorCitation = entryCitation entry
+            }
+        let docData' = preProcessEditorData docData
+        let maybeTextareaToText x = case x of
+                    Just t -> unTextarea t
+                    Nothing -> "coming soon..."-- empty file does not work well
+        
+        let (parser, content') = case (entryFormat entry) of
+                Format "tex" -> (texToPdf, unlines ["\\noindent\\textbf{\\Huge " <> entryTitle entry <> "}\\\\" 
+                                ,"written by " <> (userName author) <> " on the " <> appName <> " platform\\\\"
+                                ,"original link: " <> (urlRender (UserEntryR (entryUserId entry) entryId)) <> "\\\\"
+                                ,"\\rule{\\linewidth}{1pt}"
+                                ,""
+                                , maybeTextareaToText $ editorContent docData'
+                                ])
+                    
+                _ -> (mdToPdf, unlines ["# "<> entryTitle entry
+                                , "written by " <> (userName author) <> " on the " <> appName <> " platform  "
+                                , "original link: " <> (urlRender (UserEntryR (entryUserId entry) entryId))
+                                , ""
+                                , "\\rule[5pt]{\\linewidth}{1pt}"
+                                , ""
+                                , ""
+                                , maybeTextareaToText $ editorContent docData'
+                                ])
+        let editorData = docData' {editorContent = Just $ Textarea content'}
+        cacheDir <- cacheDirectory >>= return . (</> (unpack $ toPathPiece entryId))
+        userDir<-userTemporaryDirectory
+        liftIO $ parse (Just (cacheDir </> "download.pdf")) userDir parser editorData
+        return ()
 
 -- | Get user temporary directory
 userTemporaryDirectory :: Handler FilePath
@@ -81,9 +133,6 @@ cacheEntry entryCacheDir (Entity entryId entry) = do
                 editorPreamble = entryPreamble entry,
                 editorCitation = entryCitation entry
             }
-            
-            parse (Just (entryCacheDir </> "title.html")) tempDir titleParser $ entryTitle entry
-            parse (Just (entryCacheDir </> "body.html")) tempDir bodyParser docData
             parse (Just (entryCacheDir </> "post.pdf")) tempDir pdfParser docData  
 
             let sourcePath = entryCacheDir </> "source"
@@ -98,22 +147,26 @@ cacheEntry entryCacheDir (Entity entryId entry) = do
             Data.Text.IO.writeFile (sourcePath </> "preamble.tex") $ maybeTextareaToText $ entryPreamble entry
             Data.Text.IO.writeFile (sourcePath </> "citation.bib") $ maybeTextareaToText $ entryCitation entry
             createArchive (entryCacheDir </> "download.zip") (packDirRecur Deflate mkEntrySelector entryCacheDir)
-            --removeDirectoryRecursive sourcePath
+            removeDirectoryRecursive sourcePath
+            parse (Just (entryCacheDir </> "title.html")) tempDir titleParser $ entryTitle entry
+            parse (Just (entryCacheDir </> "body.html")) tempDir bodyParser docData
+            return ()
+            
             
 
 -- | parse
 parse:: Maybe FilePath -> FilePath -> ( a -> IO Text) -> a -> IO Text
 parse mFileName tmpDir parser docData = do
-    --appDirectory<-appWorkingDirectory
+    --appDirectory <- appWorkingDirectory
     --setCurrentDirectory appDirectory
-    appDirectory <- getCurrentDirectory
+    --appDirectory <- getCurrentDirectory
     createDirectoryIfMissing True tmpDir
     output <- withCurrentDirectory tmpDir $ parser docData
     case mFileName of
         Nothing -> return ()
         Just cache -> do
             createDirectoryIfMissing True (takeDirectory cache)
-            if parser == texToPdf || parser == mdToPdf 
+            if takeExtension cache == ".pdf"
                 then handle handler $ copyFile (tmpDir </> (unpack output)) cache
                 else handle handler $ Data.Text.IO.writeFile cache $ output       
     --threadDelay 10000000

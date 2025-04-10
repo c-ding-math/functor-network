@@ -12,12 +12,11 @@ module Parse.Parser (
     texToHtmlSimple,
     scaleHeader,
     texToSvg,
+    preProcessEditorData,
     EditorData(..),
 ) where
 
---import Import
---import qualified Prelude 
---import Parse.Svg
+import Parse.KillOldProcesses(killOldProcesses)
 import System.Process
 import System.Exit
 --import System.Directory
@@ -27,6 +26,9 @@ import Text.Regex.Posix
 import Text.Regex (mkRegexWithOpts, subRegex, matchRegex)
 import Yesod.Form.Fields 
 import Data.Text
+import Data.Text.IO
+import Data.Maybe
+import System.Timeout
 import GHC.Generics
 import Data.Aeson
 
@@ -51,15 +53,33 @@ mdToPdf docData=do
             return $ "<div style='width:520px'>"<>pack errorString<>"</div>"
 
 texToPdf::EditorData->IO Text
-texToPdf docData=do
-    Prelude.writeFile ("yaml.yaml") $ removeDocumentClass $ textareaToYaml' $ editorPreamble docData
-    Prelude.writeFile ("bib.bib")  $ textareaToString $ editorCitation docData
-    (exitCode, pdfString, errorString)<-readProcessWithExitCode "pandoc" ["--sandbox", "-F", "pandoc-security", "--metadata-file", "yaml.yaml", "-F", "pandoc-theorem", "-C", "--bibliography=" ++ "bib.bib", "-o", "output.pdf"] $ textareaToString $ editorContent docData
-    case exitCode of
-        ExitSuccess -> do
-            return $ "output.pdf"
-        _ -> do
-            return $ "<div style='width:520px'>"<>pack errorString<>"</div>"
+texToPdf docData'=do
+    let docData = preProcessEditorData docData'
+    let document = Data.Text.unlines [
+            "\\documentclass{article}"
+            , case editorPreamble docData of
+                Just x -> unTextarea x
+                _ -> ""
+            , "\\begin{document}"
+            , case editorContent docData of
+                Just x -> unTextarea x
+                _ -> ""
+            , if (isJust $ editorCitation docData) then "\\bibliography{bib.bib}\\bibliographystyle{plain}" else ""
+            , "\\end{document}"
+            ]
+    Data.Text.IO.writeFile "tex.tex" document
+    Data.Text.IO.writeFile "bib.bib" $ case editorCitation docData of
+        Just x -> unTextarea x
+        _ -> ""
+
+    maybeResult <- timeout (processTimeLimit*1000000) $ readProcessWithExitCode "latexmk" ["tex.tex"] ""
+    case maybeResult of
+        Just (exitCode, _, errorString) -> return $ "tex.pdf"
+        Nothing -> do
+            killOldProcesses processTimeLimit "latex" -- timeout is not enough because latexmk may call latex more than once
+            return $ "<div style='width:520px'></div>"
+  where
+    processTimeLimit=15
 
 mdToHtml::EditorData->IO Text
 mdToHtml docData=do
@@ -94,18 +114,18 @@ texToHtml docData'=do
             return $ pack $ htmlString
         _ -> do
             return $ "<div style='width:520px'>"<>pack errorString<>"</div>"
-  where
-    preProcessEditorData::EditorData->EditorData
-    preProcessEditorData doc=do
-        let preambleRegex = "\\\\documentclass[^\\{]*\\{[^\\}]*\\}(.*)\\\\begin[[:blank:]]*\\{document\\}"
-        let bodyRegex = "\\\\begin[[:blank:]]*\\{document\\}(.*)\\\\end[[:blank:]]*\\{document\\}"
-        let docWithNewPreamble = case matchRegex (mkRegexWithOpts preambleRegex False True) (textareaToString $ editorContent doc) of
-                Just [x] -> doc{editorPreamble=Just $ Textarea $ pack x}
-                _ -> doc
-        let docWithNewContent = case matchRegex (mkRegexWithOpts bodyRegex False True) (textareaToString $ editorContent docWithNewPreamble) of
-                Just [x] -> docWithNewPreamble{editorContent=Just $ Textarea $ pack x}
-                _ -> docWithNewPreamble
-        docWithNewContent
+
+preProcessEditorData::EditorData->EditorData
+preProcessEditorData doc=do
+    let preambleRegex = "\\\\documentclass[^\\{]*\\{[^\\}]*\\}(.*)\\\\begin[[:blank:]]*\\{document\\}"
+    let bodyRegex = "\\\\begin[[:blank:]]*\\{document\\}(.*)\\\\end[[:blank:]]*\\{document\\}"
+    let docWithNewPreamble = case matchRegex (mkRegexWithOpts preambleRegex False True) (textareaToString $ editorContent doc) of
+            Just [x] -> doc{editorPreamble=Just $ Textarea $ pack x}
+            _ -> doc
+    let docWithNewContent = case matchRegex (mkRegexWithOpts bodyRegex False True) (textareaToString $ editorContent docWithNewPreamble) of
+            Just [x] -> docWithNewPreamble{editorContent=Just $ Textarea $ pack x}
+            _ -> docWithNewPreamble
+    docWithNewContent
  
 texToHtmlSimple::Text->IO Text
 texToHtmlSimple title=do

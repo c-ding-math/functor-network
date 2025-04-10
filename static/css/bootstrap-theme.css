@@ -260,7 +260,7 @@ ul .display.math span, ol .display.math span, blockquote .display.math span{
 div.mark{
     padding: 1em 2em 0.5em;
 }
-
+/*
 .theorem-like-label{
     font-weight: bold;
 }
@@ -279,6 +279,7 @@ div.mark{
 .theorem-like-title:not(:empty)::after {
     content:").";
 }
+*/
 .proof-like>*:last-child::after{ 
     content: "\25FB";
     float: right;
