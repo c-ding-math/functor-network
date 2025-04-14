@@ -2,7 +2,7 @@ module Parse.KillOldProcesses where
 
 import System.Process 
 import System.Posix.Signals (signalProcess, sigTERM)
---import System.Exit
+import System.Exit
 --import System.Posix.Types (ProcessID)
 --import Control.Concurrent (threadDelay)
 import Control.Monad (forM_, filterM)
@@ -18,13 +18,11 @@ killOldProcesses threshold executable = do
 -- Function to get process IDs by executable name
 getProcessIdsByExecutable :: String -> IO [String]
 getProcessIdsByExecutable executable = do
-    {-(existCode, output, error) <- readCreateProcessWithExitCode (shell $ "pgrep " ++ executable) ""
+    (existCode, output, error) <- readCreateProcessWithExitCode (shell $ "pgrep " ++ executable) ""
     if existCode == ExitSuccess 
         then return (lines output)
-        else return []-}
-    psOutput <- readCreateProcess (shell $ "pgrep " ++ executable) ""
-    return (lines psOutput)
-
+        else return []
+        
 -- Function to terminate processes by their IDs
 terminateProcessesByIds :: [String] -> IO ()
 terminateProcessesByIds processIds = do

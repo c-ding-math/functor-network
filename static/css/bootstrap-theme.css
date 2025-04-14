@@ -1,5 +1,6 @@
 .container{
     min-width:520px;
+    overflow: hidden;
 }
 .navbar-inverse{
     background-color: black;
@@ -235,6 +236,7 @@ body {
     max-width: 100%;
     vertical-align: bottom;
     overflow-x:auto;
+    overflow-y:hidden;
 }
 .display.math{
     display: block;

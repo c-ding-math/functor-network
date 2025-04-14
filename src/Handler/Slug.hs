@@ -6,7 +6,7 @@ module Handler.Slug where
 import Import
 import System.Directory
 import Yesod.Form.Bootstrap3
-import Codec.Archive.Zip
+--import Codec.Archive.Zip
 --import qualified Data.ByteString.Lazy as BL
 
 
@@ -43,7 +43,7 @@ postSlugR = do
         -- Write the archive to a file
         --liftIO $ BL.writeFile (dir Prelude.++"/archive.zip") (fromArchive archive)
 
-        createArchive (dir Prelude.++"/archive.zip") (packDirRecur Deflate mkEntrySelector dir)
+        --createArchive (dir Prelude.++"/archive.zip") (packDirRecur Deflate mkEntrySelector dir)
         
     sendFile "application/zip" (dir Prelude.++"/archive.zip")
 

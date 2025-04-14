@@ -5,7 +5,7 @@
 module Handler.Settings where
 
 import Import
-import Yesod.Auth.Email (registerR,forgotPasswordR,setpassR)
+import Yesod.Auth.Email (registerR,setpassR)
 import Yesod.Form.Bootstrap3
 import qualified Data.Text as T
 import Handler.Files (uploadForm)

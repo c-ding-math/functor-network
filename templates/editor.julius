@@ -196,7 +196,7 @@ function render() {
         success: function(data) {
             previewArea.html(data);
             previewArea.find(".alert-danger.parser-message").each(function(){
-                $(this).append("<span>Unable to correct the error? " + 
+                $(this).append(" <span>Unable to correct the error? " + 
                     "<a href='@{FeedbackR}' target='_blank'>Report it</a>. " +
                     " We can help you!</span>").appendTo(informationArea);   
             });

@@ -4,6 +4,7 @@
 --{-# LANGUAGE NoImplicitPrelude #-}
 
 module Parse.Parser (
+    downloadPdfFileName,
     mdToPdf,
     texToPdf,
     mdToHtml,
@@ -16,14 +17,17 @@ module Parse.Parser (
     EditorData(..),
 ) where
 
+--import Control.Concurrent.Async
+--import Control.Concurrent (threadDelay)
+import Control.Monad (when)
 import Parse.KillOldProcesses(killOldProcesses)
 import System.Process
 import System.Exit
---import System.Directory
---import Text.HTML.TagSoup 
-import Text.HTML.Scalpel (scrapeStringLike, attrs, innerHTML)
-import Text.Regex.Posix
-import Text.Regex (mkRegexWithOpts, subRegex, matchRegex)
+import System.FilePath.Posix
+import Text.HTML.TagSoup 
+import Text.HTML.Scalpel
+import Text.RE.Replace
+import Text.RE.TDFA
 import Yesod.Form.Fields 
 import Data.Text
 import Data.Text.IO
@@ -31,6 +35,8 @@ import Data.Maybe
 import System.Timeout
 import GHC.Generics
 import Data.Aeson
+import System.Directory
+import qualified Import 
 
 data EditorData=EditorData{
         editorPreamble::Maybe Textarea
@@ -41,175 +47,148 @@ data EditorData=EditorData{
 instance ToJSON EditorData where
 instance FromJSON EditorData where
 
-mdToPdf::EditorData->IO Text
-mdToPdf docData=do
-    Prelude.writeFile ("yaml.yaml") $ removeDocumentClass $ textareaToYaml' $ editorPreamble docData
-    Prelude.writeFile ("bib.bib")  $ textareaToString $ editorCitation docData
-    (exitCode, pdfString, errorString)<-readProcessWithExitCode "pandoc" ["--sandbox", "-F", "pandoc-security", "--metadata-file", "yaml.yaml", "-F", "pandoc-theorem", "-C", "--bibliography=" ++ "bib.bib", "-o", "output.pdf"] $ textareaToString $ editorContent docData
-    case exitCode of
-        ExitSuccess -> do
-            return $ "output.pdf"
-        _ -> do
-            return $ "<div style='width:520px'>"<>pack errorString<>"</div>"
+handleProcess :: Bool -> FilePath -> [String] -> String -> FilePath -> IO FilePath
+handleProcess isInlineParser cmd args input output = do
+    maybeResult <- timeout ((timeLimit+1)*1000000) $ readProcessWithExitCode cmd (args++[input]) ""
+    case maybeResult of
+        Just (exitCode, stdout, stderr) -> case exitCode of
+            ExitSuccess -> when isInlineParser $ do
+                mainText <- Data.Text.IO.readFile output
+                Data.Text.IO.writeFile output $ case scrapeStringLike mainText (innerHTML $ "p") of
+                        Just x -> x 
+                        Nothing -> mainText
+            _ -> do 
+                let errorString = "Error! " ++ stdout ++ stderr ++"."
+                renderError errorString
+        Nothing -> do
+            killOldProcesses timeLimit "latex"
+            let errorString = "Error! " ++ "It takes too long to render the document. Please check whether there is an infinite loop in your LaTeX code."
+            renderError errorString
+    return output
+    where 
+        timeLimit = 10
+        --renderError :: String -> IO ()
+        renderError errorString = do
+            mainText <- Import.catch (Data.Text.IO.readFile input) (\e -> return $ pack $ show (e :: Import.IOException))
+            let tag = if isInlineParser then "span" else "div"
+            
+            let outputText = renderTags [
+                    TagOpen "div" [("class", "alert-danger parser-message")],
+                    TagText $ pack errorString,
+                    TagClose "div",
+                    TagOpen tag [("style", "width:520px")],
+                    TagText $ mainText,
+                    TagClose tag
+                    ]
+            Import.catch (Data.Text.IO.writeFile output $ outputText) ((\_ -> return ()):: Import.IOException -> IO ())
 
-texToPdf::EditorData->IO Text
+downloadPdfFileName :: FilePath
+downloadPdfFileName = "download.pdf"
+
+mdToPdf :: EditorData -> IO FilePath
+mdToPdf docData = do
+    let input = "md.md"
+    Data.Text.IO.writeFile ("yaml.yaml") $ textareaToYaml $ editorPreamble docData
+    Data.Text.IO.writeFile ("bib.bib")  $ unMaybeTextarea $ editorCitation docData
+    Data.Text.IO.writeFile (input) $ unMaybeTextarea $ editorContent docData
+    let output = downloadPdfFileName
+    handleProcess False "pandoc" ["--sandbox", "-F", "pandoc-security", "--metadata-file", "yaml.yaml", "-F", "pandoc-theorem", "-C", "--bibliography=" ++ "bib.bib", "-o", output] input output
+  
+texToPdf :: EditorData -> IO FilePath
 texToPdf docData'=do
+    let output = "download.pdf"
+    let input = takeBaseName output ++ ".tex"
     let docData = preProcessEditorData docData'
     let document = Data.Text.unlines [
             "\\documentclass{article}"
-            , case editorPreamble docData of
-                Just x -> unTextarea x
-                _ -> ""
+            , unMaybeTextarea (editorPreamble docData)
             , "\\begin{document}"
             , case editorContent docData of
                 Just x -> unTextarea x
-                _ -> ""
+                _ -> "coming soon..."
             , if (isJust $ editorCitation docData) then "\\bibliography{bib.bib}\\bibliographystyle{plain}" else ""
             , "\\end{document}"
             ]
-    Data.Text.IO.writeFile "tex.tex" document
-    Data.Text.IO.writeFile "bib.bib" $ case editorCitation docData of
-        Just x -> unTextarea x
-        _ -> ""
+    Data.Text.IO.writeFile input document
+    Data.Text.IO.writeFile "bib.bib" $ unMaybeTextarea $ editorCitation docData
+    handleProcess False "latexmk" [] input output
 
-    maybeResult <- timeout (processTimeLimit*1000000) $ readProcessWithExitCode "latexmk" ["tex.tex"] ""
-    case maybeResult of
-        Just (exitCode, _, errorString) -> return $ "tex.pdf"
-        Nothing -> do
-            killOldProcesses processTimeLimit "latex" -- timeout is not enough because latexmk may call latex more than once
-            return $ "<div style='width:520px'></div>"
-  where
-    processTimeLimit=15
-
-mdToHtml::EditorData->IO Text
+mdToHtml :: EditorData -> IO FilePath
 mdToHtml docData=do
-    
-    Prelude.writeFile ("yaml.yaml") $ removeDocumentClass $ textareaToYaml $ editorPreamble docData
-    Prelude.writeFile ("bib.bib")  $ textareaToString $ editorCitation docData
-    (exitCode, htmlString, errorString)<-readProcessWithExitCode "pandoc" ["--sandbox","-F", "pandoc-table", "-F", "pandoc-security", "--metadata-file", "yaml.yaml", "-F","pandoc-theorem", "-F", "math-filter", "-C", "--bibliography=" ++ "bib.bib"] $ textareaToString $ editorContent docData
-    case exitCode of
-        ExitSuccess -> do
-            return $ pack $ htmlString
-        _ -> do
-            return $ "<div style='width:520px'>"<>pack errorString<>"</div>"
-        
-mdToHtmlSimple::Text->IO Text
-mdToHtmlSimple title=do
-    (exitCode, htmlString, errorString)<-readProcessWithExitCode "pandoc" ["--sandbox", "-F", "pandoc-security", "-F", "math-filter"] $ unpack $ title
-    case exitCode of
-        ExitSuccess -> do
-            return $ pack $ removeOuterTag htmlString
-        _ -> do
-            return $ "<div style='width:520px'>"<>pack errorString<>"</div>"
+    let input = "md.md"
+    Data.Text.IO.writeFile ("yaml.yaml") $ textareaToYaml $ editorPreamble docData
+    Data.Text.IO.writeFile ("bib.bib")  $ unMaybeTextarea $ editorCitation docData
+    Data.Text.IO.writeFile (input) $ unMaybeTextarea $ editorContent docData
+    let output = "output.html"
+    handleProcess False "pandoc" ["--sandbox","-F", "pandoc-table", "-F", "pandoc-security", "--metadata-file", "yaml.yaml", "-F","pandoc-theorem", "-F", "math-filter", "-C", "--bibliography=" ++ "bib.bib" , "-o", output] input output
 
-texToHtml::EditorData->IO Text
+mdToHtmlSimple :: Text -> IO FilePath
+mdToHtmlSimple title=do
+    let input = "md.md"
+    Data.Text.IO.writeFile (input) $ title
+    let output = "simple.html"
+    handleProcess True "pandoc" ["--sandbox", "-F", "pandoc-security", "-F", "math-filter", "-o", output] input output
+    --return $ "<div style='width:520px'>"<>pack errorString<>"</div>"
+
+texToHtml:: EditorData -> IO FilePath
 texToHtml docData'=do
+    let input = "tex.tex"
     let docData = preProcessEditorData docData'
-    
-    Prelude.writeFile ("yaml.yaml") $ removeDocumentClass $ textareaToYaml $ editorPreamble docData
-    Prelude.writeFile ("bib.bib")  $ textareaToString $ editorCitation docData
-    (exitCode, htmlString, errorString)<-readProcessWithExitCode "pandoc" ["--sandbox", "-F", "pandoc-table", "-F", "pandoc-security", "--metadata-file", "yaml.yaml", "-F", "math-filter", "-C", "--bibliography=" ++ "bib.bib", "-f", "latex+raw_tex"] $ textareaToString $ editorContent docData
-    case exitCode of
-        ExitSuccess -> do
-            return $ pack $ htmlString
-        _ -> do
-            return $ "<div style='width:520px'>"<>pack errorString<>"</div>"
+    Data.Text.IO.writeFile ("yaml.yaml") $ textareaToYaml $ editorPreamble docData
+    Data.Text.IO.writeFile ("bib.bib")  $ unMaybeTextarea $ editorCitation docData
+    Data.Text.IO.writeFile (input) $ unMaybeTextarea $ editorContent docData
+    let output = "output.html"
+    handleProcess False "pandoc" ["--sandbox", "-F", "pandoc-table", "-F", "pandoc-security", "--metadata-file", "yaml.yaml", "-F", "math-filter", "-C", "--bibliography=" ++ "bib.bib", "-f", "latex+raw_tex", "-o", output] input output
+
+texToHtmlSimple :: Text -> IO FilePath
+texToHtmlSimple title=do
+    let input = "tex.tex"
+    let output = "output.html"
+    Data.Text.IO.writeFile (input) $ title
+    handleProcess True "pandoc" ["--sandbox", "-F", "pandoc-security", "-F", "math-filter", "-f", "latex+raw_tex", "-o", output] input output
+
+texToSvg :: EditorData -> IO FilePath
+texToSvg docData = do
+    let input = "content.tex"
+    let output = "output.svg"
+    Data.Text.IO.writeFile ("preamble.txt") $ unMaybeTextarea $ editorPreamble docData
+    Data.Text.IO.writeFile (input) $ unMaybeTextarea $ editorContent docData
+    handleProcess False "tex-to-svg" ["preamble.txt", output] input output
+
+-- should be replaced. This is a temporary solution
+scaleHeader :: Int -> Text -> Text
+scaleHeader n title|n<=6 =
+    replaceAllCaptures SUB help $ title *=~ [re|([0-9]*\.[0-9]*)px|]
+    where
+        headerScale = [2.6,2.15,1.7,1.25,1.0,0.85] 
+        help _ loc cap = case locationCapture loc of
+            1-> Just $ pack $ show $ (headerScale!!(n-1)) * (read (unpack (capturedText cap)) :: Double)
+            _ -> Nothing
+scaleHeader _ title = title
 
 preProcessEditorData::EditorData->EditorData
 preProcessEditorData doc=do
-    let preambleRegex = "\\\\documentclass[^\\{]*\\{[^\\}]*\\}(.*)\\\\begin[[:blank:]]*\\{document\\}"
-    let bodyRegex = "\\\\begin[[:blank:]]*\\{document\\}(.*)\\\\end[[:blank:]]*\\{document\\}"
-    let docWithNewPreamble = case matchRegex (mkRegexWithOpts preambleRegex False True) (textareaToString $ editorContent doc) of
-            Just [x] -> doc{editorPreamble=Just $ Textarea $ pack x}
+    let content = unMaybeTextarea $ editorContent doc
+    let preambleRegex = [reBlockSensitive|\\documentclass[^\{]*\{[^\}]*\}(.*)\\begin[[:blank:]]*\{document\}|]
+        bodyRegex = [reBlockSensitive|\\begin[[:blank:]]*\{document\}(.*)\\end[[:blank:]]*\{document\}|]
+    let preambleMatch = content ?=~ preambleRegex
+        bodyMatch = content ?=~ bodyRegex
+    let docWithNewPreamble = case captureTextMaybe [cp|1|] preambleMatch of
+            Just x -> doc{editorPreamble=Just $ Textarea x}
             _ -> doc
-    let docWithNewContent = case matchRegex (mkRegexWithOpts bodyRegex False True) (textareaToString $ editorContent docWithNewPreamble) of
-            Just [x] -> docWithNewPreamble{editorContent=Just $ Textarea $ pack x}
+        docWithNewContent = case captureTextMaybe [cp|1|] bodyMatch of
+            Just x -> docWithNewPreamble{editorContent=Just $ Textarea x}
             _ -> docWithNewPreamble
     docWithNewContent
- 
-texToHtmlSimple::Text->IO Text
-texToHtmlSimple title=do
-    (exitCode, htmlString, errorString)<-readProcessWithExitCode "pandoc" ["--sandbox", "-F", "pandoc-security", "-F", "math-filter", "-f", "latex+raw_tex"] $ unpack $ title
-    case exitCode of
-        ExitSuccess -> do
-            return $ pack $ removeOuterTag htmlString
-        _ -> do
-            return $ "<div style='width:520px'>"<>pack errorString<>"</div>"
 
-texToSvg:: EditorData -> IO Text
-texToSvg docData = do
-    (exitCode, htmlString, errorString)<-readProcessWithExitCode "tex-to-svg" [textareaToString $ editorPreamble docData, textareaToString $ editorContent docData] ""
-    case exitCode of
-        ExitSuccess -> do
-            return $ pack $ htmlString
-        _ -> do
-            return $ pack errorString
-
--- should be replaced. This is a temporary solution
-scaleHeader::Int->Text->Text
-scaleHeader n title|n<=6= do
-    
-    let headerScale= [2.6,2.15,1.7,1.25,1.0,0.85] 
-    let temporaryReplacement="IDontBelieveThisStringWillEverOccurInUserInput"
-
-    let widthMatches=case scrapeStringLike (unpack title) (attrs "width" $ "svg") of
-            Just x -> x
-            Nothing -> []
-        widths=(Prelude.map stringToDouble widthMatches)
-        heightMatches=case scrapeStringLike (unpack title) (attrs "height" $ "svg") of
-            Just x -> x
-            Nothing -> []
-        heights=(Prelude.map stringToDouble heightMatches)
-        depthMatches=case scrapeStringLike (unpack title) (attrs "style" $ "svg") of
-            Just x -> x
-            Nothing -> []
-        depths=(Prelude.map stringToDouble depthMatches)
-    let modify:: [Double]->[Double]->[Double]->String->String
-        modify (w:ws) (h:hs) (d:ds) str= do
-            let str1=subRegex (mkRegexWithOpts ("(width=\')"++ show w ++"(px\')") False True) str ("\\1" ++ temporaryReplacement ++ (show (headerScale!!(n-1) * w)) ++ "\\2")
-                str1'=subRegex (mkRegexWithOpts ("(width=\")"++ show w ++"(px\")") False True) str1 ("\\1" ++ temporaryReplacement ++ (show (headerScale!!(n-1) * w)) ++ "\\2")
-                str2=subRegex (mkRegexWithOpts ("(height=\')"++ show h ++"(px\')") False True) str1' ("\\1" ++ temporaryReplacement ++ (show (headerScale!!(n-1) * h)) ++ "\\2")
-                str2'=subRegex (mkRegexWithOpts ("(height=\")"++ show h ++"(px\")") False True) str2 ("\\1" ++ temporaryReplacement ++ (show (headerScale!!(n-1) * h)) ++ "\\2")
-                str3=subRegex (mkRegexWithOpts ("(vertical-align:-)"++ show d ++"(px;)") False True) str2' ("\\1" ++ temporaryReplacement ++ (show (headerScale!!(n-1) * d)) ++ "\\2")
-                str3'=subRegex (mkRegexWithOpts ("(vertical-align:-)"++ show d ++"(px;)") False True) str3 ("\\1" ++ temporaryReplacement ++ (show (headerScale!!(n-1) * d)) ++ "\\2")
-            modify ws hs ds str3'
-        modify _ _ _ str=str
-    pack $ subRegex (mkRegexWithOpts (temporaryReplacement) False True) (modify widths heights depths $ unpack title) ("")
-        
-scaleHeader _ title = title
-
-textareaToString::Maybe Textarea->String
-textareaToString  (Just t)=  (unpack .  unTextarea) t
-textareaToString  _ = ""
-
-textareaToYaml:: Maybe Textarea -> String
-textareaToYaml (Just textarea)= unpack $ pack "preamble: |\n" <> (yamlBlock (unTextarea textarea)) where
-    yamlBlock text=Data.Text.unlines $ (\x-> pack " " <> x) <$> [pack "```{=latex}"] ++ Data.Text.lines text ++ [pack "```"]
+textareaToYaml:: Maybe Textarea -> Text
+textareaToYaml (Just textarea)= "header-includes: |\n" <> (yamlBlock (unTextarea textarea)) where
+    removeDocumentClass::Text->Text
+    removeDocumentClass tex= tex *=~/ [edBlockSensitive|\\documentclass[^\{]*\{[^\}]*\}///|]
+    yamlBlock tex= Data.Text.unlines $ (\x-> " " <> x) <$> ["```{=latex}"] ++ Data.Text.lines (removeDocumentClass tex) ++ ["```"]
 textareaToYaml _ =""
 
-textareaToYaml':: Maybe Textarea -> String
-textareaToYaml' (Just textarea)= unpack $ pack "header-includes: |\n" <> (yamlBlock (unTextarea textarea)) where
-    yamlBlock text=Data.Text.unlines $ (\x-> pack " " <> x) <$> [pack "```{=latex}"] ++ Data.Text.lines text ++ [pack "```"]
-textareaToYaml' _ =""
-
-removeDocumentClass::String->String
-removeDocumentClass tex= do
-    let regexes=[
-            "\\\\documentclass[^\\{]*\\{[^\\}]*\\}"
-            --, "\\\\usepackage[^\\{]*\\{[[:space:]]*hyperref[[:space:]]*\\}"
-            ]
-    Prelude.foldl (\str regex-> subRegex (mkRegexWithOpts regex False True) str ("")) tex regexes
-    --subRegex (mkRegexWithOpts "\\\\documentclass[^\\{]*\\{[^\\}]*\\}" False True) tex ("")
-
-removeOuterTag::String->String
-removeOuterTag html = case scrapeStringLike html (innerHTML $ "p") of
-    Just x -> x
-    Nothing -> html
-
-stringToDouble:: String -> Double
-stringToDouble s = do
-    let doubleString = (s=~("[0-9]*\\.[0-9]*"::String) :: String)
-        doubleString' =  case doubleString of
-            '.' : _ -> "0" ++ doubleString
-            _ -> doubleString
-    read doubleString' :: Double
+unMaybeTextarea :: Maybe Textarea -> Text
+unMaybeTextarea ta = case ta of
+    Just (Textarea t) -> t
+    Nothing -> ""
