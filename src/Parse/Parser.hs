@@ -55,7 +55,7 @@ parse mFileName tmpDir parser docData = do
     createDirectoryIfMissing True tmpDir
 
     (process, output) <- parser tmpDir docData
-    maybeResult <- timeout ((timeLimit+1)*1000000) $ Import.catch (readCreateProcessWithExitCode (process {cwd = Just tmpDir}) "") (\e -> return (ExitFailure 1, "", show (e :: Import.IOException))) -- readCreateProcessWithExitCode can still throw an exception when using the pdf parser: hGetContents: invalid argument (invalid byte sequence).
+    maybeResult <- timeout ((timeLimit+1)*1000000) $ Import.catch (readCreateProcessWithExitCode (process {cwd = Just tmpDir, create_group = True}) "") (\e -> return (ExitFailure 1, "", show (e :: Import.IOException))) -- readCreateProcessWithExitCode can still throw an exception when using the pdf parser: hGetContents: invalid argument (invalid byte sequence).
     renderedText <- case maybeResult of
         Just (exitCode, stdout, stderr) -> case exitCode of
             ExitSuccess -> 
@@ -74,7 +74,7 @@ parse mFileName tmpDir parser docData = do
                 let errorString = "Error! " ++ stdout ++ stderr ++"."
                 renderError errorString
         Nothing -> do
-            killOldProcesses timeLimit "latex"
+            --killOldProcesses timeLimit "latex"
             let errorString = "Error! " ++ "It takes too long to render the document. Please check whether there is an infinite loop in your LaTeX code."
             renderError errorString
     case mFileName of
