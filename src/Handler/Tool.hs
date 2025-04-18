@@ -55,6 +55,7 @@ getToolR "tex-to-svg" = do
                     <button #preview-button .btn.btn-primary type=button value=preview>_{MsgPreview}
                     <button #download-button .btn.btn-primary type=button value=download>_{MsgDownload}
             <div .editor-preview>
+                <div .editor-information #editor-information>
                 <div .entry-content-wrapper>
                     <div #preview>Click on the preview button to refresh the preview.
         |]
@@ -102,8 +103,7 @@ getToolR "tex-to-svg" = do
             });
 function preview(download) {
     var previewArea = $("#preview");
-    var informationArea = $("#information");
-    informationArea.insertAfter(previewArea);
+    var informationArea = $("#editor-information");
     let entryData = JSON.stringify ({
                 editorContent: $('textarea[name="content"]').val(),
                 editorPreamble: $('textarea[name="preamble"]').val(),
@@ -125,7 +125,7 @@ function preview(download) {
         success: function(data) {
             previewArea.html(data);
             previewArea.find(".alert-danger.parser-message").each(function(){
-                $(this).append("<span>Unable to correct the error? " + 
+                $(this).append(" <span>Unable to correct the error? " + 
                     "<a href='@{FeedbackR}' target='_blank'>Report it</a>. " +
                     " We can help you!</span>").appendTo(informationArea);   
             });

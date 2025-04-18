@@ -4,7 +4,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Handler.Download where
 
-import Import
+{-import Import
 
 downloadWidget :: EntryId -> Widget
 downloadWidget entryId = toWidget
@@ -25,4 +25,4 @@ function downloadFile() {
         .catch(error => console.error('Download error:', error));
 }
 $('download a').click(downloadFile);
-    |]
+    |]-}

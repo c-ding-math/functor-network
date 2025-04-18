@@ -317,7 +317,7 @@ instance Yesod App where
     isAuthorized NewCategoryR _ = isAuthenticated
     isAuthorized (TreeR _) _ = isAuthenticated
     isAuthorized (VoteR _) _ = isAuthenticated
-    isAuthorized (DownloadR _) _ = isAuthenticated
+    isAuthorized (DownloadR _ _) _ = isAuthenticated
     
     -- owner routes
     isAuthorized (EditUserEntryR entryId) _ = isAdmin entryId

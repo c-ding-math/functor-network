@@ -4,15 +4,18 @@ This is the source code for the [Functor Network](https://functor.network) - a b
 
 ## Features
 
-In one word, all features are meticulously crafted for mathematicians.
 
-- **Effortless Typesetting:** Typesetting math on the web can be exhausting and time-consuming. However, on our platform, you can focus on your content creation and leave the typesetting to us.
+In a word, every feature on our platform is thoughtfully designed for mathematicians.
 
-- **Actual TeX Engine:** We use a real TeX engine to render your math content. This means that you are able to include LaTeX packages, use math environments, or even copy and paste your existing LaTeX document into our platform.
+- **Effortless Typesetting.** Typesetting math on the web can be exhausting and time-consuming. On our platform, you focus on the content—we’ll take care of the typesetting.
 
-- **Markdown Support:** In addition to LaTeX, our platform also supports Markdown, which is a convenient format for web content. Moreover, features like cross-referencing, bibliography and theorem environments have been implemented.
+- **Powered by a Real TeX Engine.** We might be the only blogging platform that renders mathematical content using a full TeX Live system. Enjoy complete LaTeX compatibility—import packages, use math environments, or even paste existing LaTeX documents directly.  
 
-- **Minimalist spirit:** Only necessary functions and features are included in our platform. This allows you to express yourself as freely as possible.
+- **Flexible Writing Formats.** Write in *Pure LaTeX* or *Markdown with LaTeX*—your choice. Either way, you retain powerful features like cross-referencing, bibliographies, and theorem environments.  
+
+- **PDF Export.** Need an offline copy? Download any post as a beautifully typeset PDF with one click.  
+
+- **Minimalist & Focused.** No clutter. No distractions. Just a clean, efficient, and secure space for your mathematical thoughts.  
 
 
 ## Comparison

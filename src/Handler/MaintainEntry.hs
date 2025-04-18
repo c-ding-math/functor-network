@@ -5,9 +5,10 @@
 module Handler.MaintainEntry where
 
 import Import
+--import Control.Monad (when)
 import Yesod.Form.Bootstrap3
 --import Handler.EditComment(deleteEntryRecursive)
-import Handler.Parse(editorWidget)
+import Handler.Parse(editorWidget,cacheEntryPdf,purgeEntryPdf)
 import Handler.EditUserEntry(EntryInput(..),entry2Html)
 
 
@@ -120,6 +121,7 @@ postMaintainEntryR entryId = do
                 , EntryBodyHtml =. bodyHtml
                 , EntryFeatured =. entryFeatured entry'
                 ]
+            when (entryType entry == UserPost) $ cacheEntryPdf entryId
             redirect $ MaintainEntryR entryId
         _ -> defaultLayout $ do
             setTitleI MsgMaintain

@@ -262,6 +262,10 @@ ul .display.math span, ol .display.math span, blockquote .display.math span{
 div.mark{
     padding: 1em 2em 0.5em;
 }
+
+.theorem-like-lable{
+    margin-right:0.5em;
+}
 /*
 .theorem-like-label{
     font-weight: bold;

@@ -6,16 +6,16 @@
 module Handler.Parse where
 
 import Import
---import Control.Concurrent (threadDelay)
+
 import System.Directory
---import System.Environment (getExecutablePath)
 import System.FilePath
 import System.Random
-import Parse.Parser(downloadPdfFileName, preProcessEditorData, texToPdf, texToHtml, texToHtmlSimple, mdToPdf, mdToHtml, mdToHtmlSimple, texToSvg, EditorData(..))
-import Data.Text.IO
+import Parse.Parser(parse, downloadPdfFileName, preProcessEditorData, texToPdf, texToHtml, texToHtmlSimple, mdToPdf, mdToHtml, mdToHtmlSimple, texToSvg, EditorData(..))
+--import Data.Text.IO
 --import qualified Data.Text as T
 --import Codec.Archive.Zip
 --import qualified Prelude
+--import System.Environment (getExecutablePath)
 
 type InputFormat=Text
 type OutputFormat=Text
@@ -39,17 +39,35 @@ postParseR inputFormat outputFormat = do
             "\n"->""
             x->x
 
-getDownloadR :: EntryId -> Handler RepPlain
-getDownloadR entryId = do
-    cacheEntryPdf entryId
+getDownloadR :: UserId -> EntryId -> Handler Html
+getDownloadR _ entryId = do
+    --cacheEntryPdf entryId
     pdfPath <- entryPdfPath entryId
-    _<-sendFile "application/pdf" $ pdfPath
-    return $ RepPlain $ toContent $ ("Download complete"::Text)
+    entry <- runDB $ get404 entryId
+    userId <- requireAuthId
+    if (entryStatus entry == Publish) || (entryUserId entry == userId) 
+        then do
+            sendFile "application/pdf" $ pdfPath
+        else do
+            notFound
+    --return $ RepPlain $ toContent $ ("Download complete"::Text)
 
 entryPdfPath :: EntryId -> Handler FilePath
 entryPdfPath entryId = do
     entryCacheDir <- entryCacheDirectory entryId
     return $ entryCacheDir </> downloadPdfFileName
+
+doesEntryPdfExist :: EntryId -> Handler Bool
+doesEntryPdfExist entryId = do
+    pdfPath <- entryPdfPath entryId
+    liftIO $ doesFileExist pdfPath
+
+purgeEntryPdf :: EntryId -> Handler ()
+purgeEntryPdf entryId = do
+    pdfPath <- entryPdfPath entryId
+    liftIO $ do
+        removeFile pdfPath `Import.catch` ((\_ -> return ())::IOException -> IO ())
+        return ()
 
 cacheEntryPdf :: EntryId -> Handler ()
 cacheEntryPdf entryId = do
@@ -88,30 +106,13 @@ cacheEntryPdf entryId = do
                                 , maybeTextareaToText $ editorContent docData'
                                 ])
         let editorData = docData' {editorContent = Just $ Textarea content'}
-        userDir<-userTemporaryDirectory
+        tempDir<-userTemporaryDirectory --don't use this dirctory when using forkIO
+        --tempDir <- liftIO $ getTemporaryDirectory >>= return . (</> "functor-network" </> "entry" </> (unpack $ toPathPiece entryId))
         pdfPath <- entryPdfPath entryId
-        _<-liftIO $ parse (Just pdfPath) userDir parser editorData
-        return ()
-
--- | Get user temporary directory
-userTemporaryDirectory :: Handler FilePath
-userTemporaryDirectory = do
-    randomString<-liftIO $ fmap (take 10 . randomRs ('a','z')) newStdGen
-    {-appDirectory<-liftIO appWorkingDirectory
-    tempDir <- if takeFileName appDirectory == "functor-network" 
-        then liftIO $ getTemporaryDirectory >>= \dir -> return $ dir </> "functor-network"-- development
-        else return $ appDirectory </> "working"-- production-}
-    tempDir <- liftIO $ getTemporaryDirectory >>= \dir -> return $ dir </> "functor-network"
-    
-    maybeUserId<-maybeAuthId
-    case maybeUserId of
-        Nothing-> do
-            maybeToken <-  fmap reqToken getRequest
-            case maybeToken of
-                Nothing-> notFound
-                Just token-> do
-                    return $ tempDir </> "anonymous" </> unpack (toPathPiece (token)) </> randomString
-        Just userId-> return $ tempDir </> "user" </> unpack (toPathPiece userId) </> randomString
+        liftIO $ do
+            removeFile pdfPath `Import.catch` ((\_ -> return ())::IOException -> IO ())
+            parse (Just pdfPath) tempDir parser editorData >> return ()
+            return ()
 
 -- | cache entry
 cacheEntry :: Entity Entry -> Handler ()
@@ -139,31 +140,12 @@ cacheEntry (Entity entryId entry) = do
     createArchive (entryCacheDir </> "download.zip") (packDirRecur Deflate mkEntrySelector entryCacheDir)
     removeDirectoryRecursive sourcePath-}
     liftIO $ do
+        removeFile (entryCacheDir </> "title.html") `Import.catch` ((\_ -> return ())::IOException -> IO ())
+        removeFile (entryCacheDir </> "body.html") `Import.catch` ((\_ -> return ())::IOException -> IO ())
         _<-parse (Just (entryCacheDir </> "title.html")) tempDir titleParser $ entryTitle entry
         _<-parse (Just (entryCacheDir </> "body.html")) tempDir bodyParser docData
         return ()
-
--- | parse
-parse :: Maybe FilePath -> FilePath -> ( a -> IO FilePath) -> a -> IO Text
-parse mFileName tmpDir parser docData = do
-    --appDirectory <- appWorkingDirectory
-    --setCurrentDirectory appDirectory
-    --appDirectory <- getCurrentDirectory
-    createDirectoryIfMissing True tmpDir
-    (renderedText, pathPiece)<-withCurrentDirectory tmpDir $ do
-        pathPiece <- parser docData                
-        renderedText <- catch (Data.Text.IO.readFile pathPiece) (\e -> return $ pack $ show (e :: IOException)) -- if is pdf then it will fail: 
-        return (renderedText, pathPiece)
-    case mFileName of
-        Nothing -> return ()
-        Just cache -> do
-            createDirectoryIfMissing True (takeDirectory cache)
-            catch (copyFile (tmpDir</>pathPiece) cache) ((const (return ())) :: IOException -> IO ())
-            return ()
-    --threadDelay $ 10000000
-    removeDirectoryRecursive tmpDir
-    return $ renderedText
-
+            
 cacheDirectory :: Handler FilePath
 cacheDirectory = do
     app <- getYesod
@@ -181,6 +163,22 @@ appWorkingDirectory = do
         then (takeDirectory $ takeDirectory $ takeDirectory $ takeDirectory $ takeDirectory $ takeDirectory $ takeDirectory exePath) </>  "functor-network"-- development
         else takeDirectory $ takeDirectory $ takeDirectory exePath -- production
 --}
+
+-- | Get user temporary directory
+userTemporaryDirectory :: Handler FilePath
+userTemporaryDirectory = do
+    randomString<-liftIO $ fmap (take 10 . randomRs ('a','z')) newStdGen
+    tempDir <- liftIO $ getTemporaryDirectory >>= \dir -> return $ dir </> "functor-network"
+    
+    maybeUserId<-maybeAuthId
+    case maybeUserId of
+        Nothing-> do
+            maybeToken <-  fmap reqToken getRequest
+            case maybeToken of
+                Nothing-> notFound
+                Just token-> do
+                    return $ tempDir </> "anonymous" </> unpack (toPathPiece (token)) </> randomString
+        Just userId-> return $ tempDir </> "user" </> unpack (toPathPiece userId) </> randomString
 
 countActiveSubdirectories :: FilePath -> IO Int
 countActiveSubdirectories dir = doesDirectoryExist dir >>= \exisitence ->

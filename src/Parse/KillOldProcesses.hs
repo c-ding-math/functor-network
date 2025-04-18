@@ -18,7 +18,7 @@ killOldProcesses threshold executable = do
 -- Function to get process IDs by executable name
 getProcessIdsByExecutable :: String -> IO [String]
 getProcessIdsByExecutable executable = do
-    (existCode, output, error) <- readCreateProcessWithExitCode (shell $ "pgrep " ++ executable) ""
+    (existCode, output, _) <- readCreateProcessWithExitCode (shell $ "pgrep " ++ executable) ""
     if existCode == ExitSuccess 
         then return (lines output)
         else return []

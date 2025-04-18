@@ -60,7 +60,7 @@ dependencies:
 #- zip
 - unix==2.7.*
 - split==0.2.*
-#- async==2.2.*
+- async==2.2.*
 - tagsoup==0.14.*
 
 

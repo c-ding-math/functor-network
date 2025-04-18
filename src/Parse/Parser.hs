@@ -15,17 +15,17 @@ module Parse.Parser (
     texToSvg,
     preProcessEditorData,
     EditorData(..),
+    parse
 ) where
 
---import Control.Concurrent.Async
---import Control.Concurrent (threadDelay)
-import Control.Monad (when)
-import Parse.KillOldProcesses(killOldProcesses)
+
 import System.Process
 import System.Exit
-import System.FilePath.Posix
 import Text.HTML.TagSoup 
+import Parse.KillOldProcesses(killOldProcesses)
+--import Control.Concurrent 
 import Text.HTML.Scalpel
+import System.FilePath.Posix
 import Text.RE.Replace
 import Text.RE.TDFA
 import Yesod.Form.Fields 
@@ -47,16 +47,29 @@ data EditorData=EditorData{
 instance ToJSON EditorData where
 instance FromJSON EditorData where
 
-handleProcess :: Bool -> FilePath -> [String] -> String -> FilePath -> IO FilePath
-handleProcess isInlineParser cmd args input output = do
-    maybeResult <- timeout ((timeLimit+1)*1000000) $ readProcessWithExitCode cmd (args++[input]) ""
-    case maybeResult of
+
+-- | parse
+parse :: Maybe FilePath -> FilePath -> (FilePath -> a -> IO (CreateProcess, FilePath)) -> a -> IO Text
+parse mFileName tmpDir parser docData = do
+
+    createDirectoryIfMissing True tmpDir
+
+    (process, output) <- parser tmpDir docData
+    maybeResult <- timeout ((timeLimit+1)*1000000) $ Import.catch (readCreateProcessWithExitCode (process {cwd = Just tmpDir}) "") (\e -> return (ExitFailure 1, "", show (e :: Import.IOException))) -- readCreateProcessWithExitCode can still throw an exception when using the pdf parser: hGetContents: invalid argument (invalid byte sequence).
+    renderedText <- case maybeResult of
         Just (exitCode, stdout, stderr) -> case exitCode of
-            ExitSuccess -> when isInlineParser $ do
-                mainText <- Data.Text.IO.readFile output
-                Data.Text.IO.writeFile output $ case scrapeStringLike mainText (innerHTML $ "p") of
-                        Just x -> x 
-                        Nothing -> mainText
+            ExitSuccess -> 
+                if takeExtension output == ".pdf"
+                    then return $ pack output
+                    else do 
+                        outputText <- Import.catch (Data.Text.IO.readFile $ tmpDir</>output) (\e -> return $ pack $ show (e :: Import.IOException))
+                        let isInlineParser = takeBaseName output == "simple"
+                        return $ if isInlineParser
+                            then case scrapeStringLike outputText (innerHTML $ "p") of
+                                Just x -> x 
+                                Nothing -> outputText
+                            else outputText
+                        
             _ -> do 
                 let errorString = "Error! " ++ stdout ++ stderr ++"."
                 renderError errorString
@@ -64,96 +77,104 @@ handleProcess isInlineParser cmd args input output = do
             killOldProcesses timeLimit "latex"
             let errorString = "Error! " ++ "It takes too long to render the document. Please check whether there is an infinite loop in your LaTeX code."
             renderError errorString
-    return output
-    where 
+    case mFileName of
+        Nothing -> return ()
+        Just cache -> do
+            createDirectoryIfMissing True (takeDirectory cache)
+            Import.catch (copyFile (tmpDir</>output) cache) ((const (return ())) :: Import.IOException -> IO ())
+            return ()
+    removeDirectoryRecursive tmpDir
+    return $ renderedText
+  where 
         timeLimit = 10
-        --renderError :: String -> IO ()
-        renderError errorString = do
-            mainText <- Import.catch (Data.Text.IO.readFile input) (\e -> return $ pack $ show (e :: Import.IOException))
-            let tag = if isInlineParser then "span" else "div"
-            
-            let outputText = renderTags [
+        renderError errorString = return $ 
+            renderTags [
                     TagOpen "div" [("class", "alert-danger parser-message")],
                     TagText $ pack errorString,
-                    TagClose "div",
-                    TagOpen tag [("style", "width:520px")],
-                    TagText $ mainText,
-                    TagClose tag
+                    TagClose "div"
                     ]
-            Import.catch (Data.Text.IO.writeFile output $ outputText) ((\_ -> return ()):: Import.IOException -> IO ())
 
 downloadPdfFileName :: FilePath
 downloadPdfFileName = "download.pdf"
 
-mdToPdf :: EditorData -> IO FilePath
-mdToPdf docData = do
+mdToPdf :: FilePath -> EditorData -> IO (CreateProcess, FilePath)
+mdToPdf direcotry docData = do
     let input = "md.md"
-    Data.Text.IO.writeFile ("yaml.yaml") $ textareaToYaml $ editorPreamble docData
-    Data.Text.IO.writeFile ("bib.bib")  $ unMaybeTextarea $ editorCitation docData
-    Data.Text.IO.writeFile (input) $ unMaybeTextarea $ editorContent docData
+    Data.Text.IO.writeFile (direcotry</>"yaml.yaml") $ textareaToYaml $ editorPreamble docData
+    Data.Text.IO.writeFile (direcotry</>"bib.bib")  $ unMaybeTextarea $ editorCitation docData
+    Data.Text.IO.writeFile (direcotry</>input) $ unMaybeTextarea $ editorContent docData
     let output = downloadPdfFileName
-    handleProcess False "pandoc" ["--sandbox", "-F", "pandoc-security", "--metadata-file", "yaml.yaml", "-F", "pandoc-theorem", "-C", "--bibliography=" ++ "bib.bib", "-o", output] input output
+    return (proc "pandoc" ["--sandbox", "-F", "pandoc-security", "--metadata-file", "yaml.yaml", "-F", "pandoc-theorem", "-C", "--bibliography=" ++ "bib.bib", "-o", output, input], output)
+    --handleProcess False "pandoc" ["--sandbox", "-F", "pandoc-security", "--metadata-file", "yaml.yaml", "-F", "pandoc-theorem", "-C", "--bibliography=" ++ "bib.bib", "-o", output] input output
   
-texToPdf :: EditorData -> IO FilePath
-texToPdf docData'=do
-    let output = "download.pdf"
+texToPdf :: FilePath -> EditorData -> IO (CreateProcess, FilePath)
+texToPdf direcotry docData'=do
+    let output = downloadPdfFileName
     let input = takeBaseName output ++ ".tex"
     let docData = preProcessEditorData docData'
     let document = Data.Text.unlines [
             "\\documentclass{article}"
+            , "\\usepackage{biblatex}"
+            , "\\addbibresource{bib.bib}"
             , unMaybeTextarea (editorPreamble docData)
             , "\\begin{document}"
             , case editorContent docData of
                 Just x -> unTextarea x
                 _ -> "coming soon..."
-            , if (isJust $ editorCitation docData) then "\\bibliography{bib.bib}\\bibliographystyle{plain}" else ""
+            , if (isJust $ editorCitation docData) then "\\printbibliography[heading=none]" else ""--if not cited?
             , "\\end{document}"
             ]
-    Data.Text.IO.writeFile input document
-    Data.Text.IO.writeFile "bib.bib" $ unMaybeTextarea $ editorCitation docData
-    handleProcess False "latexmk" [] input output
+    Data.Text.IO.writeFile (direcotry</>input) document
+    Data.Text.IO.writeFile (direcotry</>"bib.bib") $ unMaybeTextarea $ editorCitation docData
+    return (proc "latexmk" ["-pdf", "-halt-on-error", "-interaction=nonstopmode", input], output)
+    --handleProcess False "latexmk" [] input output
 
-mdToHtml :: EditorData -> IO FilePath
-mdToHtml docData=do
+mdToHtml :: FilePath -> EditorData -> IO (CreateProcess, FilePath)
+mdToHtml direcotry docData=do
     let input = "md.md"
-    Data.Text.IO.writeFile ("yaml.yaml") $ textareaToYaml $ editorPreamble docData
-    Data.Text.IO.writeFile ("bib.bib")  $ unMaybeTextarea $ editorCitation docData
-    Data.Text.IO.writeFile (input) $ unMaybeTextarea $ editorContent docData
+    Data.Text.IO.writeFile (direcotry</>"yaml.yaml") $ textareaToYaml $ editorPreamble docData
+    Data.Text.IO.writeFile (direcotry</>"bib.bib")  $ unMaybeTextarea $ editorCitation docData
+    Data.Text.IO.writeFile (direcotry</>input) $ unMaybeTextarea $ editorContent docData
     let output = "output.html"
-    handleProcess False "pandoc" ["--sandbox","-F", "pandoc-table", "-F", "pandoc-security", "--metadata-file", "yaml.yaml", "-F","pandoc-theorem", "-F", "math-filter", "-C", "--bibliography=" ++ "bib.bib" , "-o", output] input output
+    return (proc "pandoc" ["--sandbox", "-F", "pandoc-table", "-F", "pandoc-security", "--metadata-file", "yaml.yaml", "-F","pandoc-theorem", "-F", "math-filter", "-C", "--bibliography=" ++ "bib.bib" , "-o", output, input], output)
+    --handleProcess False "pandoc" ["--sandbox","-F", "pandoc-table", "-F", "pandoc-security", "--metadata-file", "yaml.yaml", "-F","pandoc-theorem", "-F", "math-filter", "-C", "--bibliography=" ++ "bib.bib" , "-o", output] input output
 
-mdToHtmlSimple :: Text -> IO FilePath
-mdToHtmlSimple title=do
+mdToHtmlSimple :: FilePath -> Text -> IO (CreateProcess, FilePath)
+mdToHtmlSimple direcotry title=do
     let input = "md.md"
-    Data.Text.IO.writeFile (input) $ title
-    let output = "simple.html"
-    handleProcess True "pandoc" ["--sandbox", "-F", "pandoc-security", "-F", "math-filter", "-o", output] input output
+    Data.Text.IO.writeFile (direcotry</>input) $ title
+    let output = "simple.html" -- temporary solution.
+    return (proc "pandoc" ["--sandbox", "-F", "pandoc-security", "-F", "math-filter", "-o", output, input], output)
+    --handleProcess True "pandoc" ["--sandbox", "-F", "pandoc-security", "-F", "math-filter", "-o", output] input output
     --return $ "<div style='width:520px'>"<>pack errorString<>"</div>"
 
-texToHtml:: EditorData -> IO FilePath
-texToHtml docData'=do
+texToHtml:: FilePath -> EditorData -> IO (CreateProcess, FilePath)
+texToHtml direcotry docData'=do
     let input = "tex.tex"
     let docData = preProcessEditorData docData'
-    Data.Text.IO.writeFile ("yaml.yaml") $ textareaToYaml $ editorPreamble docData
-    Data.Text.IO.writeFile ("bib.bib")  $ unMaybeTextarea $ editorCitation docData
-    Data.Text.IO.writeFile (input) $ unMaybeTextarea $ editorContent docData
+    Data.Text.IO.writeFile (direcotry</>"yaml.yaml") $ textareaToYaml $ editorPreamble docData
+    Data.Text.IO.writeFile (direcotry</>"bib.bib")  $ unMaybeTextarea $ editorCitation docData
+    Data.Text.IO.writeFile (direcotry</>input) $ unMaybeTextarea $ editorContent docData
     let output = "output.html"
-    handleProcess False "pandoc" ["--sandbox", "-F", "pandoc-table", "-F", "pandoc-security", "--metadata-file", "yaml.yaml", "-F", "math-filter", "-C", "--bibliography=" ++ "bib.bib", "-f", "latex+raw_tex", "-o", output] input output
+    return (proc "pandoc" ["--sandbox", "-F", "pandoc-table", "-F", "pandoc-security", "--metadata-file", "yaml.yaml", "-F", "math-filter", "-C", "--bibliography=" ++ "bib.bib", "-f", "latex+raw_tex", "-o", output, input], output)
+    --handleProcess False "pandoc" ["--sandbox", "-F", "pandoc-table", "-F", "pandoc-security", "--metadata-file", "yaml.yaml", "-F", "math-filter", "-C", "--bibliography=" ++ "bib.bib", "-f", "latex+raw_tex", "-o", output] input output
 
-texToHtmlSimple :: Text -> IO FilePath
-texToHtmlSimple title=do
+texToHtmlSimple :: FilePath -> Text -> IO (CreateProcess, FilePath)
+texToHtmlSimple direcotry title=do
     let input = "tex.tex"
-    let output = "output.html"
-    Data.Text.IO.writeFile (input) $ title
-    handleProcess True "pandoc" ["--sandbox", "-F", "pandoc-security", "-F", "math-filter", "-f", "latex+raw_tex", "-o", output] input output
+    let output = "simple.html" -- temporary solution
+    Data.Text.IO.writeFile (direcotry</>input) $ title
+    return (proc "pandoc" ["--sandbox", "-F", "pandoc-security", "-F", "math-filter", "-f", "latex+raw_tex", "-o", output, input], output)
+    --handleProcess True "pandoc" ["--sandbox", "-F", "pandoc-security", "-F", "math-filter", "-f", "latex+raw_tex", "-o", output] input output
 
-texToSvg :: EditorData -> IO FilePath
-texToSvg docData = do
+texToSvg :: FilePath -> EditorData -> IO (CreateProcess, FilePath)
+texToSvg direcotry docData = do
     let input = "content.tex"
     let output = "output.svg"
-    Data.Text.IO.writeFile ("preamble.txt") $ unMaybeTextarea $ editorPreamble docData
-    Data.Text.IO.writeFile (input) $ unMaybeTextarea $ editorContent docData
-    handleProcess False "tex-to-svg" ["preamble.txt", output] input output
+    Data.Text.IO.writeFile (direcotry</>"preamble.txt") $ unMaybeTextarea $ editorPreamble docData
+    Data.Text.IO.writeFile (direcotry</>input) $ unMaybeTextarea $ editorContent docData
+    return (proc "tex-to-svg" ["preamble.txt", output, input], output)
+    --handleProcess False "tex-to-svg" ["preamble.txt", output] input output
 
 -- should be replaced. This is a temporary solution
 scaleHeader :: Int -> Text -> Text

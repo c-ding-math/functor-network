@@ -17,10 +17,10 @@ module Handler.EditUserEntry (
 import Import
 import Yesod.Form.Bootstrap3
 import Handler.EditComment(deleteEntryRecursive)
-import Handler.Parse(parse,editorWidget,userTemporaryDirectory)
+import Handler.Parse(editorWidget,userTemporaryDirectory,cacheEntryPdf,purgeEntryPdf)
 import Handler.NewEntrySubscription(insertDefaultEntrySubscription)
 import Handler.NewUserSubscription(userSubscriptionNotification)
-import Parse.Parser(mdToHtml,mdToHtmlSimple,texToHtml,texToHtmlSimple,EditorData(..))
+import Parse.Parser(parse,mdToHtml,mdToHtmlSimple,texToHtml,texToHtmlSimple,EditorData(..))
 --import Text.Shakespeare.Text
 
 data EntryInput=EntryInput
@@ -138,9 +138,19 @@ getNewUserEntryR =  do
                             alert("Title is too long. Please make it shorter.");
                             return false;
                         }else if (title.length>0){
-                            var progressBar=$('<div class="progress" style="width:38%;height:0.5em;"><div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width:100%"></div></div>');
+                            var progressBar=$('<div class="progress" style="width:38%;height:0.5em;"><div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div></div>');
                             $('<div/>',{style:"position: fixed;top: 0;right: 0;bottom: 0;left: 0;display: flex;justify-content: center;align-items: center;z-index: 2;"}).append(progressBar).appendTo('body');
                             $('<div/>',{style:"position: fixed;top: 0;right: 0;bottom: 0;left: 0;display: flex;justify-content: center;align-items: center;z-index: 1;background-color:#000;opacity:0.5;"}).appendTo('body');
+                            var i=0;
+                            var counterBack = setInterval(function(){
+                                    i++;
+                                    if (i<=100){
+                                        progressBar.find(".progress-bar").css("width",i+"%");
+                                    }else{
+                                        clearInterval(counterBack);
+                                    }
+
+                                }, 300);
                         }
                     });
                 });
@@ -250,9 +260,19 @@ getEditUserEntryR entryId = do
                             alert("Title is too long. Please make it shorter.");
                             return false;
                         }else if (title.length>0){
-                            var progressBar=$('<div class="progress" style="width:38%;height:0.5em;"><div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width:100%"></div></div>');
+                            var progressBar=$('<div class="progress" style="width:38%;height:0.5em;"><div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div></div>');
                             $('<div/>',{style:"position: fixed;top: 0;right: 0;bottom: 0;left: 0;display: flex;justify-content: center;align-items: center;z-index: 2;"}).append(progressBar).appendTo('body');
                             $('<div/>',{style:"position: fixed;top: 0;right: 0;bottom: 0;left: 0;display: flex;justify-content: center;align-items: center;z-index: 1;background-color:#000;opacity:0.5;"}).appendTo('body');
+                            var i=0;
+                            var counterBack = setInterval(function(){
+                                    i++;
+                                    if (i<=100){
+                                        progressBar.find(".progress-bar").css("width",i+"%");
+                                    }else{
+                                        clearInterval(counterBack);
+                                    }
+
+                                }, 300);
                         }
                     });
                 });
@@ -290,6 +310,7 @@ postNewUserEntryR = do
                             }
                         insertDefaultEntrySubscription entryId
                         return entryId
+                    cacheEntryPdf entryId
                     subscribers <- runDB $ selectList [UserSubscriptionUserId ==. userId, UserSubscriptionVerified ==. True] []
                     forM_ subscribers $ \(Entity subscriptionId subscription) -> do
                         
@@ -324,6 +345,7 @@ postNewUserEntryR = do
                             }
                         insertDefaultEntrySubscription entryId
                         return entryId
+                    cacheEntryPdf entryId
                     setMessage $ [hamlet|
                                     Your post, #
                                     <a .alert-link href=@{UserEntryR userId entryId}>#{inputTitle formData}
@@ -355,6 +377,7 @@ postEditUserEntryR  entryId = do
             case entryAction of
                 Just "delete"->  do
                     runDB $ deleteEntryRecursive entryId
+                    purgeEntryPdf entryId
                     setMessage $ [shamlet|Your post, #{inputTitle formData}, has been deleted.|] --getUrlRenderParams
                     redirect $ NewUserEntryR
                 Just "publish"-> do
@@ -379,6 +402,7 @@ postEditUserEntryR  entryId = do
                         ,EntryBodyHtml=.bodyHtml
                         ,EntryFeatured=.isFeatured bodyHtml
                         ] 
+                    cacheEntryPdf entryId
                     setMessage $ [hamlet|
                                     Your post, #
                                     <a .alert-link href=@{UserEntryR userId entryId}>#{inputTitle formData}
@@ -405,7 +429,7 @@ postEditUserEntryR  entryId = do
                             ,EntryBodyHtml=.bodyHtml
                             ,EntryFeatured=.isFeatured bodyHtml
                             ] 
-                        
+                    cacheEntryPdf entryId    
                     setMessage $ [hamlet|
                                     Your post, #
                                     <a .alert-link href=@{UserEntryR userId entryId}>#{inputTitle formData}

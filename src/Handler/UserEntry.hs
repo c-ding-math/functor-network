@@ -5,20 +5,21 @@ module Handler.UserEntry where
 
 import Import
 --import Yesod.Form.Bootstrap3
-import Handler.Parse(editorWidget)
+import Handler.Parse(editorWidget,doesEntryPdfExist)
 import Parse.Parser(scaleHeader)
 import Handler.Tree(treeWidget)
 import Handler.Vote(voteWidget)
-import Handler.Download(downloadWidget)
+--import Handler.Download(downloadWidget)
 import Handler.EditComment(getChildIds,newCommentForm,CommentInput(..))
 import Handler.NewEntrySubscription(subscribeToEntryWidget)
 --import Data.Text(strip)
-
 
 getUserEntryR :: UserId ->  EntryId -> Handler Html
 getUserEntryR authorId entryId = do    
     maybeUserId<-maybeAuthId
     maybeUser<-maybeAuth
+    pdfExists<-doesEntryPdfExist entryId
+
     (entry,entryAuthor,entryCategoryEntities, entryVoteList, commentListData)<-runDB $ do
         entry<-get404 entryId
         
@@ -132,8 +133,13 @@ getUserEntryR authorId entryId = do
                 <span.badge style="color:inherit;background-color:inherit;border:1px solid;" :null entryVoteList:.hidden>#{show $ length entryVoteList}
         <li .categorize>
             <a.text-muted href=# data-action=@{TreeR entryId}>_{MsgCategorize}
-        <li .download>
-            <a.text-muted href=@{DownloadR entryId}>_{MsgDownload}
+        $if pdfExists
+            <li .download>
+                $maybe _ <-maybeUserId
+                    <a.text-muted href=@{DownloadR authorId entryId}>_{MsgDownload}
+                $nothing
+                    <a.text-muted href=@{AuthR LoginR}>_{MsgDownload}
+
         $if isAdministrator maybeUserId entry
             <li .edit>
                 <a.text-muted href=@{EditUserEntryR entryId}>_{MsgEdit}
@@ -198,7 +204,7 @@ getUserEntryR authorId entryId = do
         when (isJust maybeUserId)
             voteWidget 
         menuWidget
-        downloadWidget entryId
+        --downloadWidget entryId
 
         
 menuWidget::Widget

@@ -9,8 +9,8 @@ import Yesod.Form.Bootstrap3
 import Handler.EditComment(getChildIds,CommentInput(..))
 import Handler.UserEntry(menuWidget)
 import Parse.Parser(mdToHtml,texToHtml,EditorData(..))
-import Handler.Parse(editorWidget)
-import Handler.Parse(parse,userTemporaryDirectory)
+import Parse.Parser(parse)
+import Handler.Parse(editorWidget,userTemporaryDirectory)
 import Handler.NewEntrySubscription(entrySubscriptionNotification,insertDefaultEntrySubscription)
 import Handler.EditComment(deleteEditCommentR)
 

@@ -5,8 +5,8 @@ module Handler.EditCategory where
 
 import Import
 import Yesod.Form.Bootstrap3
-import Parse.Parser(texToHtmlSimple)
-import Handler.Parse(parse,userTemporaryDirectory)
+import Parse.Parser(parse,texToHtmlSimple)
+import Handler.Parse(userTemporaryDirectory)
 
 data CategoryInput = CategoryInput
     { categoryTitle :: Text
