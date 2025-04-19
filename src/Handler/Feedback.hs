@@ -9,8 +9,8 @@ import Yesod.Form.Bootstrap3
 import Handler.EditComment(getChildIds,CommentInput(..))
 import Handler.UserEntry(menuWidget)
 import Parse.Parser(mdToHtml,texToHtml,EditorData(..))
-import Handler.Parser(editorWidget)
-import Handler.Parser(parse,userTemporaryDirectory)
+import Parse.Parser(parse)
+import Handler.Parse(editorWidget,userTemporaryDirectory)
 import Handler.NewEntrySubscription(entrySubscriptionNotification,insertDefaultEntrySubscription)
 import Handler.EditComment(deleteEditCommentR)
 
@@ -21,9 +21,9 @@ data FeedbackInput = FeedbackInput
 
 feedbackForm :: Maybe FeedbackInput ->  Form FeedbackInput
 feedbackForm feedback = renderBootstrap3 BootstrapBasicForm $ FeedbackInput
-    <$> areq textField subjectSetting (subject <$> feedback)
+    <$> areq textField subjectSettings (subject <$> feedback)
     <*> areq textareaField editorSettings (content <$> feedback) where  
-        subjectSetting = FieldSettings
+        subjectSettings = FieldSettings
             { fsLabel = "Subject"
             , fsTooltip = Nothing
             , fsId = Nothing
@@ -222,14 +222,13 @@ postFeedbackR = do
                     ((result, _), _) <- runFormPost $ feedbackForm Nothing
                     case result of
                         FormSuccess feedback -> do
-                            request <- waiRequest
+                            --request <- waiRequest
                             
                             let feedbackEmailAddress ="feedback@functor.network"
                                 emailSubject = subject feedback
-                                emailText = [stext|#{unTextarea(content feedback)} #{show request}|]
+                                emailText = [stext|#{unTextarea(content feedback)}|]
                                 emailHtml = [shamlet|
                                     #{unTextarea(content feedback)}
-                                    <p>#{show request}
                                     |]
                             sendAppEmail feedbackEmailAddress $ AppEmail emailSubject emailText emailHtml
                             defaultLayout $ do
@@ -276,7 +275,7 @@ postEditFeedbackR entryId = do
             userDir<-userTemporaryDirectory
             let title = "Feedback"
                 
-            bodyHtml <- liftIO $ parse userDir parser editorData
+            bodyHtml <- liftIO $ parse Nothing userDir parser editorData
             let commentData=Entry 
                         {entryUserId=userId
                         ,entryType=Feedback

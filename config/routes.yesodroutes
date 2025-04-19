@@ -12,7 +12,7 @@
 / HomeR GET POST
 /entries EntriesR GET
 /feedback FeedbackR GET POST
-/parser/input/#Text/output/#Text ParserR POST
+/parser/from/#Text/to/#Text ParseR POST
 /help/#Text EditHelpR GET
 /users UsersR GET
 /user/#UserId UserHomeR GET !user
@@ -21,6 +21,7 @@
 --/user/#UserId/entries EntriesR GET !user
 /entry NewUserEntryR GET POST !user !login
 /user/#UserId/entry/#EntryId UserEntryR GET !user
+/user/#UserId/entry/#EntryId/pdf DownloadR GET !login
 /entry/#EntryId/edit EditUserEntryR GET POST !user !admin
 /about/edit EditUserAboutR GET POST !user !admin
 
@@ -29,7 +30,7 @@
 /category NewCategoryR POST !user !login
 /tree/node/#EntryId TreeR POST !login
 /vote/#EntryId VoteR POST
-/redirect RedirectR GET
+--/redirect RedirectR GET
 
 /files FilesR GET POST !user !login
 /file/#FileId FileR DELETE !admin
@@ -49,10 +50,15 @@
 /feedback/#EntryId/edit EditFeedbackR POST DELETE !login
 /user/#UserId/comments CommentsR GET !user
 
+/maintain/entry/#EntryId MaintainEntryR GET POST
 /edit/entry/#EntryId EditEntryR GET POST
 /edit/page/#Text EditPageR GET POST
 --/page/#Text/edit EditUserPageR GET POST !user
 /pages PagesR GET
+/tool/#Text ToolR GET POST
+/slug SlugR GET POST
+
 !/#Text PageR GET
 --!/user/#UserId/#Text UserPageR GET !user
+
 

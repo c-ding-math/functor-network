@@ -1,3 +1,4 @@
+Error: Error
 PermissionDenied: Permission denied
 
 SitePath: Site path
@@ -20,7 +21,7 @@ PleaseConfirmUnregistration: Please enter the precise confirmation text to delet
 ID: ID. 
 Password: Password
 ForgotPassword: Forgot password
-SetPassword: Set a new password
+ResetPassword: Reset password
 EnterPasswordResetEmail: Enter your e-mail address below, and a password reset e-mail will be sent to you.
 Or: or
 LogIn: Log in
@@ -66,12 +67,16 @@ Private: Private
 Reset: Reset
 Title: Title
 Body: Body
+Featured: Featured
 PublishPost: Publish post
 SaveDraft: Save draft
 Draft: Draft
 ChangeSaved: Changes Saved
 
+Preview: Preview
+Download: Download
 File: File
+RecommendedFileSize: Recommended size: < 2MB
 FileTooLarge maxSize@Int: The file is too large. The maximum file size is #{show maxSize} MB.
 FileTypeNotAllowed: File type not allowed.
 NoFileSelected: No file selected.
@@ -155,7 +160,9 @@ EmailSubscriptions: Email subscriptions
 EmailAddress: Email address
 SubscriptionVerified: Your subscription has been verified.
 SubscriptionDeleted: Subscription deleted
-VerificationEmailSent email@Text: A verification email has been sent to #{email}. Please click the link in the email to verify your account.
+EnterVerificationKey: Please find the verification key in the email and enter it below.
+VerificationKey: verification key
+Confirm: Confirm
 OtherSubscriptions: Other subscriptions
 
 Feedback: Feedback
@@ -210,6 +217,7 @@ Liked: Liked
 Vote: Vote
 Voted: Voted
 
+Maintain: Maintain
 Maintenance: Maintenance
 SiteMaintenance: Site maintenance
 Redirecting: Redirecting...

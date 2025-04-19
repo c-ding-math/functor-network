@@ -31,6 +31,8 @@ data AppSettings = AppSettings
     -- ^ Base for all static file URLs.
     , appStaticDir              :: String
     -- ^ Directory from which to serve static files.
+    , appCacheDir               :: String
+    -- ^ Directory in which to store cache files.
     , appDatabaseConf           :: SqliteConf
     -- ^ Configuration settings for accessing the database.
     , appRoot                   :: Maybe Text
@@ -87,6 +89,7 @@ instance FromJSON AppSettings where
 #endif
         appStaticRoot             <- o .: "static-root"
         appStaticDir              <- o .: "static-dir"
+        appCacheDir               <- o .: "cache-dir"
         appDatabaseConf           <- o .: "database"
         appRoot                   <- o .:? "approot"
         appHost                   <- fromString <$> o .: "host"

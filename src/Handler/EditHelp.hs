@@ -4,7 +4,7 @@ module Handler.EditHelp where
 
 import Import
 import Yesod.Form.Bootstrap3
-import Handler.Parser(editorWidget)
+import Handler.Parse(editorWidget)
 
 data EntryInput=EntryInput
     { inputFormat::Format

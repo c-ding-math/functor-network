@@ -5,9 +5,9 @@ module Handler.EditComment where
 
 import Import
 import Yesod.Form.Bootstrap3
-import Handler.Parser(parse,userTemporaryDirectory)
+import Handler.Parse(userTemporaryDirectory)
 import Handler.NewEntrySubscription(entrySubscriptionNotification,insertDefaultEntrySubscription)
-import Parse.Parser(mdToHtml,texToHtml,EditorData(..))
+import Parse.Parser(parse,mdToHtml,texToHtml,EditorData(..))
 import Handler.Tree(getRootEntryId)
 --import Text.Shakespeare.Text
 
@@ -96,7 +96,7 @@ postEditCommentR entryId = do
             userDir<-userTemporaryDirectory
             let title = "Comment"
                 
-            bodyHtml <- liftIO $ parse userDir parser editorData
+            bodyHtml <- liftIO $ parse Nothing userDir parser editorData
             let commentData=Entry 
                         {entryUserId=userId
                         ,entryType=Comment

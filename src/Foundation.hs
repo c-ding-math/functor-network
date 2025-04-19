@@ -209,7 +209,7 @@ instance Yesod App where
                                 , menuItemAccessCallback =  mcurrentRoute == Just (SettingsR)
                                 }
                             , FooterRight $ MenuItem
-                                { menuItemLabel = "Version 2024-11-20"
+                                { menuItemLabel = "Version 2025-04-18"
                                 , menuItemRoute = PageR "Changelog"
                                 , menuItemAccessCallback =  mcurrentRoute == Just (SettingsR)
                                 }
@@ -295,14 +295,15 @@ instance Yesod App where
     isAuthorized (CommentsR _) _ = return Authorized
     isAuthorized (PageR _) _ = return Authorized
     isAuthorized (EditHelpR _) _ = return Authorized
-    isAuthorized (ParserR _ _) _ = return Authorized
+    isAuthorized (ParseR _ _) _ = return Authorized
     isAuthorized (EditUserSubscriptionR _) _ = return Authorized
     isAuthorized (NewUserSubscriptionR _) _ = return Authorized
     isAuthorized (EditEntrySubscriptionR _) _ = return Authorized
     isAuthorized (NewEntrySubscriptionR _) _ = return Authorized
     isAuthorized EntriesR _ = return Authorized
     isAuthorized FeedbackR _ = return Authorized
-    isAuthorized RedirectR _ = return Authorized
+    isAuthorized (ToolR _) _ = return Authorized
+    --isAuthorized RedirectR _ = return Authorized
 
     -- Routes requiring authentication.
     --isAuthorized (EditUserPageR _) _ = isAuthenticated
@@ -310,13 +311,13 @@ instance Yesod App where
     isAuthorized EditUserAboutR _ = isAuthenticated
     isAuthorized AccountR _ = isAuthenticated
     isAuthorized FilesR _ = isAuthenticated
-    --isAuthorized (ParserR _ _) _ = isAuthenticated
     isAuthorized (EditCommentR _) _ = isAuthenticated
     isAuthorized (EditFeedbackR _) _ = isAuthenticated
     isAuthorized NewUserEntryR _ = isAuthenticated
     isAuthorized NewCategoryR _ = isAuthenticated
     isAuthorized (TreeR _) _ = isAuthenticated
     isAuthorized (VoteR _) _ = isAuthenticated
+    isAuthorized (DownloadR _ _) _ = isAuthenticated
     
     -- owner routes
     isAuthorized (EditUserEntryR entryId) _ = isAdmin entryId
@@ -331,6 +332,8 @@ instance Yesod App where
     isAuthorized (EditPageR _ ) _ = isAppAdministrator
     isAuthorized PagesR _ = isAppAdministrator
     isAuthorized MaintenanceR _ = isAppAdministrator
+    isAuthorized (MaintainEntryR _ ) _ = isAppAdministrator
+    isAuthorized SlugR _ = isAppAdministrator
     
     -- This function creates static content files in the static folder
     -- and names them based on a hash of their content. This allows
@@ -425,7 +428,7 @@ instance YesodAuth App where
 
     -- Where to send a user after successful login
     loginDest :: App -> Route App
-    loginDest _ = RedirectR
+    loginDest _ = HomeR
     -- Where to send a user after logout
     logoutDest :: App -> Route App
     logoutDest _ = HomeR
@@ -442,19 +445,18 @@ instance YesodAuth App where
                 addMessage "success" $ [hamlet|
                     You are now logged in. #
                     <a .alert-link.pull-right href=@{UserEntriesR uid}>My Blog
-                    <script>if (window.location.href == "@{UserEntriesR uid}"){document.querySelector(".alert-link").remove();}
                 |] urlRenderParam 
             _ -> addMessage "success" "You are now logged in."
 
     authenticate :: (MonadHandler m, HandlerSite m ~ App)
                  => Creds App -> m (AuthenticationResult App)
-    authenticate creds = liftHandler $ runDB $ do
-        mCurrentUserId<-maybeAuthId
+    authenticate creds = liftHandler $ do 
+      mCurrentUserId<-maybeAuthId
+      currentTime<-liftIO getCurrentTime
+      msgRender<-getMessageRender
+      runDB $ do
         let plugin= credsPlugin creds
             ident = credsIdent creds
-            
-        currentTime<-liftIO getCurrentTime
-        msgRender<-getMessageRender
         
         case plugin of 
             
@@ -527,14 +529,14 @@ instance YesodAuth App where
 instance YesodAuthEmail App where
     type AuthEmailId App = EmailId
 
-    afterPasswordRoute _ = RedirectR
+    afterPasswordRoute _ = SettingsR
     
     addUnverified email verkey = liftHandler $ runDB $ do
         maybeUserId<-maybeAuthId
         currentTime<-liftIO getCurrentTime
         --forwardedFor <- lookupHeader "X-Forwarded-For"
-        request <- waiRequest
-        let client = Just $ show request
+        --request <- waiRequest
+        --let client = Just $ show request
         insert $ Email 
             {
                 emailUserId=maybeUserId
@@ -542,77 +544,60 @@ instance YesodAuthEmail App where
                 , emailVerkey= (Just verkey) 
                 , emailVerified=False
                 , emailInserted=currentTime
-                , emailClient = client
+                , emailClient = Nothing
             }
 
-    sendVerifyEmail email _ verurl = do
-        hasSetPass<-liftHandler $ runDB $ do
-            mEmail <- getBy $ UniqueEmail email
-            case mEmail of   
-                Just (Entity _ e) -> do                
-                    let muid=emailUserId e
-                    case muid of 
-                        Nothing->return False
-                        Just uid -> do
-                            mUser<-get uid
-                            return $ case mUser of
-                                Just u | isJust (userPassword u)->True
-                                _->False
-                Nothing -> return False
-        let url =case hasSetPass of
-                True -> verurl<>"/has-set-pass"
-                _->verurl
-
-        liftHandler $ sendAppEmail email $ AppEmail subject (text url) (html url)
-
+    sendVerifyEmail email verkey _ = liftHandler $ sendAppEmail email $ AppEmail subject text html
       where
-        subject="Verify your email address"
-        text url=   [stext|
-                        Please confirm your email address by clicking on the link below.
-
-                        #{url}
-
-                        Thank you,
-                        
-                        #{appName}
-                    |]
-        html url=   [shamlet|
-                        <p>Please confirm your email address by clicking on the link below.
-                        <p>
-                            <a href=#{url}>#{url}
-                        <p>Thank you,
-                        <p>#{appName}
-                    |]
-        --appName="Functor Network"::Text
-
-    sendForgotPasswordEmail email _ verurl =  do
-        liftHandler $ sendAppEmail email $ AppEmail subject text html
-      where
+        --workaround: It is the registration workflow if the key begins with "r"
+        key = "r" <> verkey
         subject="Verify your email address"
         text =  [stext|
-                    Please confirm your email address by clicking on the link below.
+                    Please confirm your email address with the verification key below.
 
-                    #{verurl}
+                    #{key}
 
                     Thank you,
                     
                     #{appName}
                 |]
         html =  [shamlet|
-                    <p>Please confirm your email address by clicking on the link below.
-                    <p>
-                        <a href=#{verurl}>#{verurl}
+                    <p>Please confirm your email address with the verification key below.
+                    <div style="font-size:1.5em; font-weight:bold;">
+                        #{key}
                     <p>Thank you,
                     <p>#{appName}
                 |]
-        --appName="Functor Network"::Text
+
+    sendForgotPasswordEmail email verkey _ = liftHandler $ sendAppEmail email $ AppEmail subject text html
+      where
+        --workaround: It is the forgot password workflow if the key begins with "f"
+        key = "f" <> verkey
+        subject="Verify your email address"
+        text =  [stext|
+                    Please confirm your email address with the verification key below.
+
+                    #{key}
+
+                    Thank you,
+                    
+                    #{appName}
+                |]
+        html =  [shamlet|
+                    <p>Please confirm your email address with the verification key below.
+                    <div style="font-size:1.5em; font-weight:bold;">
+                        #{key}
+                    <p>Thank you,
+                    <p>#{appName}
+                |]
 
     getVerifyKey = liftHandler . runDB . fmap (join . fmap emailVerkey) . get
     setVerifyKey lid key = liftHandler $ runDB $ update lid [EmailVerkey =. Just key]
-    verifyAccount lid = liftHandler $ runDB $ do
+    verifyAccount lid = liftHandler $ do
+      currentTime<-liftIO getCurrentTime
+      msgRender<-getMessageRender
+      runDB $ do
         maybeEmail <- get lid
-        currentTime<-liftIO getCurrentTime
-        msgRender<-getMessageRender
         
         case maybeEmail of 
             Just email -> do
@@ -887,27 +872,63 @@ instance YesodAuthEmail App where
                 |]
 
     -- | Response after sending a confirmation email.
-    confirmationEmailSentResponse :: Text -> AuthHandler site TypedContent
     confirmationEmailSentResponse identifier = do
+        toParent <- getRouteToParent
+        let toBeReplaced = "TOBEREPLACED"::Text
+        verificationRoute <- liftHandler $ runDB $ do
+            mEmail <- getBy $ UniqueEmail identifier
+            case mEmail of   
+                Just (Entity eid e) -> do                
+                    hasSetPass <- case emailUserId e of 
+                        Nothing->return False
+                        Just uid -> do
+                            mUser<-get uid
+                            return $ case mUser of
+                                Just u -> isJust (userPassword u)
+                                _->False
+                    return $ toParent $ verifyR (toPathPiece eid) toBeReplaced hasSetPass
+                Nothing -> notFound
+        
         mr <- getMessageRender
-        --urlRender <- getUrlRender
-        --let feedbackUrl = urlRender FeedbackR
-        let feedbackUrl = "https://functor.network/feedback"::Text--to be replaced
         selectRep $ do
-            provideJsonMessage (mr msg)
+            provideJsonMessage (mr (Msg.ConfirmationEmailSent identifier))
             provideRep $ authLayout $ do
               setTitleI Msg.ConfirmationEmailSentTitle
               [whamlet|
-                <p>A verification email has been sent to #{identifier}. Please click the link in the email to verify your account.
+                <p>_{Msg.ConfirmationEmailSent identifier} _{MsgEnterVerificationKey}
+                <div class="form-inline">
+                    <div .form-group.required>
+                        <label class="sr-only">_{MsgVerificationKey}
+                        <input .form-control type=text name=key placeholder=_{MsgVerificationKey}>
+                    <button #confirm-button .btn .btn-primary type=button>_{MsgConfirm}
+                <hr>
                 <p>Receive no email? There are some steps you can take:
                 <ul>
                     <li> Wait a minute.
                     <li> Make sure you typed your email address correctly.
                     <li> Add our notification email <code>noreply@functor.network</code> to your whitelist with your provider and try again.
-                    <li> Feedback <a href="#{feedbackUrl}">here</a>. We will help you out.
+                    <li> <a href=@{FeedbackR}>Feedback here</a>. We will help you out.
               |]
-      where
-        msg = Msg.ConfirmationEmailSent identifier
+              toWidget [julius|
+                $("input[name=key]").focus();
+                $("#confirm-button").on("click", function(){
+                    let key = $("input[name=key]").val();
+                    let isForgotPasswordWorkflow;
+                    if (key.charAt(0) == "f"){
+                        isForgotPasswordWorkflow = true;
+                    } else {
+                        isForgotPasswordWorkflow = false;
+                    }
+                    let toBeReplaced = #{toBeReplaced};
+                        verificationRoute = "@{verificationRoute}";
+                        windowLocation = verificationRoute.replace(toBeReplaced, key.substr(1));
+                    if (isForgotPasswordWorkflow){
+                        window.location = windowLocation.replace("/has-set-pass","");
+                    } else {
+                        window.location.href = windowLocation;
+                    }
+                });
+              |]
 
     needOldPassword _ =return False
 

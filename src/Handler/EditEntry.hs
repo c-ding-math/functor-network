@@ -6,8 +6,9 @@
 module Handler.EditEntry where
 
 import Import
+--import Control.Monad (when)
 import Handler.EditComment(deleteEntryRecursive)
-import Handler.Parser(editorWidget)
+import Handler.Parse(editorWidget,cacheEntryPdf,purgeEntryPdf)
 import Handler.EditUserEntry(EntryInput(..),entryInputForm,entry2Html)
 --import Database.Persist.Sql
 
@@ -38,25 +39,28 @@ getEditEntryR entryId = do
     defaultLayout $ do
         setTitleI MsgEdit
         [whamlet|
-<a href=@{UserEntryR (entryUserId entry) entryId}>View
+
 <form  method=post enctype=#{inputEnctype}>
     
     <div .text-left>
-        <button .btn .btn-default .save type=submit name=action value=save>_{MsgSave}
-        <button .btn .btn-default .delete type=submit name=action value=delete>_{MsgDelete}
+        <a .btn .btn-default .pull-right href=@{UserEntryR (entryUserId entry) entryId}>View
         $maybe nextEntryId <- mNextEntryId
-            <a .btn .btn-default .next href=@{EditEntryR nextEntryId}>Next
+            <a .btn .btn-default .pull-right .next href=@{EditEntryR nextEntryId}>Next
+        <button .btn .btn-default .save type=submit name=action value=save>_{MsgSave}
            
-        <button .btn .btn-default .auto-save type=submit name=action value=autosave>auto save
+
     ^{inputWidget}
+    <div .text-left>
+        <button .btn .btn-default .delete type=submit name=action value=delete>_{MsgDelete}
+        <button .btn .btn-default .auto-save .hidden type=submit name=action value=autosave>auto save
         |]
         if autoProcess == Just "true" 
           then
             toWidget [julius|
                 $(document).ready(function(){
-                    setTimeout(function(){
-                        $('.btn.auto-save').click();
-                    }, 100);
+                    //setTimeout(function(){
+                            $('.btn.auto-save').click();
+                    //}, 100);
                 });
             |]     
           else    
@@ -94,6 +98,7 @@ postEditEntryR  entryId = do
             case entryAction of
                 Just "delete"->  do
                     runDB $ deleteEntryRecursive entryId
+                    purgeEntryPdf entryId
                     setMessage $ [shamlet|The post, #{inputTitle formData}, has been deleted.|] --getUrlRenderParams
 
                 _-> do 
@@ -109,7 +114,7 @@ postEditEntryR  entryId = do
                             ,EntryTitleHtml=.titleHtml
                             ,EntryBodyHtml=.bodyHtml
                             ] 
-                        
+                    when (entryType entry == UserPost) $ cacheEntryPdf entryId   
                     setMessage $ [hamlet|
                                     The post, #
                                     <a .alert-link href=@{UserEntryR authorId entryId}>#{inputTitle formData}

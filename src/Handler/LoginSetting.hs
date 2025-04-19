@@ -12,7 +12,7 @@ getLoginSettingR _ = do
         then [whamlet|
             <form method=post>
                 <p>_{MsgTheLastLoginMethod}
-                <button  .btn .btn-primary type=submit name=action value=cancel>_{MsgOkay}
+                <a .btn .btn-primary href=@{SettingsR}>_{MsgOkay}
         |]
         else[whamlet|
             <form method=post>
@@ -23,13 +23,19 @@ getLoginSettingR _ = do
     
 postLoginSettingR :: LoginId -> Handler Html
 postLoginSettingR loginId = do
-    action<-lookupPostParam "action"
-    case action of 
-        Just "delete"->do 
-            runDB $ delete loginId 
-            setMessageI MsgLoginDeleted
+    theLast<-theLastLogin
+    if theLast
+        then do 
+            setMessageI MsgTheLastLoginMethod
             redirect SettingsR
-        _->redirect SettingsR
+        else do
+            action<-lookupPostParam "action"
+            case action of 
+                Just "delete"->do 
+                    runDB $ delete loginId 
+                    setMessageI MsgLoginDeleted
+                    redirect SettingsR
+                _->redirect SettingsR
 
 getEmailSettingR :: EmailId -> Handler Html
 getEmailSettingR _ = do
@@ -38,7 +44,7 @@ getEmailSettingR _ = do
         then [whamlet|
             <form method=post>
                 <p>_{MsgTheLastLoginMethod}
-                <button  .btn .btn-default type=submit name=action value=cancel>_{MsgOkay}
+                <a .btn .btn-primary href=@{SettingsR}>_{MsgOkay}
         |]
         else[whamlet|
             <form method=post>

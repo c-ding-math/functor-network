@@ -7,8 +7,8 @@ module Handler.EditPage where
 
 import Import
 import Yesod.Form.Bootstrap3
-import Handler.Parser(parse,editorWidget,userTemporaryDirectory)
-import Parse.Parser (mdToHtml,texToHtml,EditorData(..))
+import Handler.Parse(editorWidget,userTemporaryDirectory)
+import Parse.Parser (parse,mdToHtml,texToHtml,EditorData(..))
 --import qualified Data.Text as T
 --import System.Directory
 
@@ -106,7 +106,7 @@ postEditPageR title = do
                     Format "tex"->texToHtml
                     _->mdToHtml
             userDir<-userTemporaryDirectory
-            bodyHtml<- liftIO $  parse userDir parser editorData
+            bodyHtml<- liftIO $ parse Nothing userDir parser editorData
             urlRenderParams<- getUrlRenderParams
             case entryAction of
                 Just "delete"->case mEntry of 

@@ -1,5 +1,6 @@
 .container{
     min-width:520px;
+    overflow: hidden;
 }
 .navbar-inverse{
     background-color: black;
@@ -230,11 +231,18 @@ body {
     top: 0;
 }
 
-.math{display: inline-block;}
+.math{
+    display: inline-block;
+    max-width: 100%;
+    vertical-align: bottom;
+    overflow-x:auto;
+    overflow-y:hidden;
+}
 .display.math{
     display: block;
     margin-top: 0.5rem;
     margin-bottom: 0.5rem;
+    overflow:unset;
 }
 ul .display.math span, ol .display.math span, blockquote .display.math span{
     float: right;
@@ -255,6 +263,10 @@ div.mark{
     padding: 1em 2em 0.5em;
 }
 
+.theorem-like-lable{
+    margin-right:0.5em;
+}
+/*
 .theorem-like-label{
     font-weight: bold;
 }
@@ -273,6 +285,7 @@ div.mark{
 .theorem-like-title:not(:empty)::after {
     content:").";
 }
+*/
 .proof-like>*:last-child::after{ 
     content: "\25FB";
     float: right;
