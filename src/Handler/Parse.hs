@@ -10,7 +10,7 @@ import Import
 import System.Directory
 import System.FilePath
 import System.Random
-import Parse.Parser(parse, downloadPdfFileName, preProcessEditorData, texToPdf, texToHtml, texToHtmlSimple, mdToPdf, mdToHtml, mdToHtmlSimple, texToSvg, EditorData(..))
+import Parse.Parser(unMaybeTextarea, parse, downloadPdfFileName, preProcessEditorData, texToPdf, texToHtml, texToHtmlSimple, mdToPdf, mdToHtml, mdToHtmlSimple, texToSvg, EditorData(..))
 --import Data.Text.IO
 --import qualified Data.Text as T
 --import Codec.Archive.Zip
@@ -22,6 +22,7 @@ type OutputFormat=Text
 
 postParseR :: InputFormat->OutputFormat-> Handler RepPlain
 postParseR inputFormat outputFormat = do
+    maybeUserId <- maybeAuthId
     userDir<-userTemporaryDirectory
     subdirectoriesNumber<-liftIO $ countActiveSubdirectories $ takeDirectory userDir
     if subdirectoriesNumber > 0 then do
@@ -29,15 +30,32 @@ postParseR inputFormat outputFormat = do
             busyMessage= "Busy..."
         return $ RepPlain $ toContent $ busyMessage
     else do  
-        let parser = case (inputFormat,outputFormat) of
-                ("tex","svg") -> texToSvg
-                ("tex","html") -> texToHtml
-                _ -> mdToHtml
+        let lengthLimit = 10000
         docData<- requireCheckJsonBody ::Handler EditorData
-        preview<-liftIO $ parse Nothing userDir parser docData  
-        return $ RepPlain $ toContent $ case preview of
-            "\n"->""
-            x->x
+        if isJust maybeUserId || length (unMaybeTextarea (editorContent docData)) + length (unMaybeTextarea (editorPreamble docData)) + length (unMaybeTextarea (editorCitation docData)) < lengthLimit
+            then do
+                let parser = case (inputFormat,outputFormat) of
+                        ("tex","svg") -> texToSvg
+                        ("tex","html") -> texToHtml
+                        _ -> mdToHtml     
+                preview<-liftIO $ parse Nothing userDir parser docData  
+                return $ RepPlain $ toContent $ case preview of
+                    "\n"->""
+                    x->x
+            else if isJust maybeUserId
+            then do
+                let parser = case (inputFormat,outputFormat) of
+                        ("tex","svg") -> texToSvg
+                        ("tex","html") -> texToHtml
+                        _ -> mdToHtml     
+                preview<-liftIO $ parse Nothing userDir parser docData  
+                return $ RepPlain $ toContent $ case preview of
+                    "\n"->""
+                    x->x
+            else do
+                let lengthLimitMessage :: Text
+                    lengthLimitMessage = pack $ "Up to " ++ show lengthLimit ++ " characters for non-logged-in users."  
+                return $ RepPlain $ toContent $ "<div class='alert-warning parser-message'>"<>(lengthLimitMessage)<>"</div>"
 
 getDownloadR :: UserId -> EntryId -> Handler Html
 getDownloadR _ entryId = do

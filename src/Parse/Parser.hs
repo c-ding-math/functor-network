@@ -4,6 +4,7 @@
 --{-# LANGUAGE NoImplicitPrelude #-}
 
 module Parse.Parser (
+    unMaybeTextarea,
     downloadPdfFileName,
     mdToPdf,
     texToPdf,
@@ -74,7 +75,7 @@ parse mFileName tmpDir parser docData = do
                 let errorString = "Error! " ++ stdout ++ stderr ++"."
                 renderError errorString
         Nothing -> do
-            --killOldProcesses timeLimit "latex"
+            killOldProcesses timeLimit "latex"
             let errorString = "Error! " ++ "It takes too long to render the document. Please check whether there is an infinite loop in your LaTeX code."
             renderError errorString
     case mFileName of
@@ -86,7 +87,7 @@ parse mFileName tmpDir parser docData = do
     removeDirectoryRecursive tmpDir
     return $ renderedText
   where 
-        timeLimit = 10
+        timeLimit = 60
         renderError errorString = return $ 
             renderTags [
                     TagOpen "div" [("class", "alert-danger parser-message")],

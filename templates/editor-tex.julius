@@ -310,6 +310,7 @@ function preamble() {
                 warning.remove();
             }
     }
-
+    checkPreamble();
+    
     return false;
 }
