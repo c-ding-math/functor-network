@@ -20,19 +20,23 @@ In a word, every feature on our platform is thoughtfully designed for mathematic
 
 ## Comparison
 
-|           | Our platform  | Other platform |
-|-----------|---------------|----------------|
-| writing post directly in latex | supports | doesn't support |
-| math-featured markdown | supports | maybe supports, but has limited features on math |
-| math formula rendering | has built-in support | doesn't support or needs add-ons to support |
-| keep latex code unchanged | yes | may eat backslashes, encode `<`, `&` and other math symbols |
-| latex packages | supports. You can use different latex packages for each post separately | doesn't support |
-| automated numbering and referencing | supports. You can use `\label{}` and `\ref{}` for this. | doesn't support or partially supports |
-| custom latex commands | supports. You can define your own latex command for each post. | maybe supports |
-| theorem-like environments | supports | doesn't support |
-| bibliography | supports | maybe supports |
-| clean and neat | Yes. Our platform is designed with minimalism in mind. It even looks a bit abstract. | may have many unnecessary functions |
-| editor | provides a plain text editor with a preview window. You can focus more on the content itself rather than its appearance. | provides a WYSIWYG editor. This kind of editor may be annoying when handling math content. |
+We make a comparison with other blog platform to clarify our features:
+
+| Feature                          | Our Platform                                              | Other Platforms                                            |
+|----------------------------------|------------------------------------------------------------|------------------------------------------------------------|
+| Write posts directly in LaTeX    | Supported                                                  | Not supported                                              |
+| Math formula rendering           | Built-in support                                           | Not supported or requires add-ons                         |
+| Preserve LaTeX code              | Yes                                                        | May corrupt backslashes or encode symbols like `<`, `&`, etc. |
+| LaTeX packages                   | Supported — different packages can be used per post        | Not supported                                              |
+| Automated numbering and referencing | Supported                                               | Not supported or only partially supported                 |
+| Custom LaTeX commands            | Supported                                                  | Possibly supported                                         |
+| Theorem-like environments        | Supported                                                  | Not supported                                              |
+| Bibliography                     | Supported                                                  | Possibly supported                                         |
+| Markdown with math features      | Supported                                                  | Possibly supported but limited                             |
+| PDF export                       | Supported                                                  | Not supported                                              |
+| Design philosophy                | Clean and minimal — intentionally abstract                 | Often cluttered with unnecessary features                  |
+| Editor                           | Plain text editor with live preview — focuses on content   | WYSIWYG editor — may be problematic for math content       |
+
 
 ## Development
 
