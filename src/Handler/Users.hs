@@ -27,7 +27,7 @@ $if null userListOrderedByEntries
     <div>_{MsgNothingFound}
 $else 
     <div .entries>
-        <p>#{total} people have already registered on the platform.  Here is the list of the top #{topAmount} users ordered by the amount of published posts:
+        <p>A total of #{total} users have already joined the platform. Below is a list of the top 100 users ranked by the number of posts published.
         <ul .users.list-inline>
             $forall (Entity uid u, m, _)<-userListOrderedByEntries
                 <li style="width:12em; margin-right:0.5em;">
