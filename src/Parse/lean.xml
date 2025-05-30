@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<language name="lean" version="1.0" kateversion="2.4" section="Languages"
+          extensions="*.lean" mimetype="text/x-lean" author="Converted from highlight.js"
+          license="MIT">
+  <highlighting>
+    <list name="keywords">
+      <item>theorem</item>
+      <item>lemma</item>
+      <item>definition</item>
+      <item>def</item>
+      <item>class</item>
+      <item>structure</item>
+      <item>instance</item>
+      <item>example</item>
+      <item>inductive</item>
+      <item>coinductive</item>
+      <item>axiom</item>
+      <item>axioms</item>
+      <item>hypothesis</item>
+      <item>constant</item>
+      <item>constants</item>
+      <item>universe</item>
+      <item>universes</item>
+      <item>variable</item>
+      <item>variables</item>
+      <item>parameter</item>
+      <item>parameters</item>
+      <item>begin</item>
+      <item>end</item>
+      <item>infix</item>
+      <item>infixr</item>
+      <item>import</item>
+      <item>open</item>
+      <item>theory</item>
+      <item>prelude</item>
+      <item>renaming</item>
+      <item>hiding</item>
+      <item>exposing</item>
+      <item>calc</item>
+      <item>match</item>
+      <item>do</item>
+      <item>by</item>
+      <item>let</item>
+      <item>in</item>
+      <item>extends</item>
+      <item>fun</item>
+      <item>assume</item>
+      <item>#check</item>
+      <item>#eval</item>
+      <item>#reduce</item>
+      <item>#print</item>
+      <item>λ</item>
+      <item>∀</item>
+      <item>∃</item>
+      <item>⨁</item>
+      <item>Π</item>
+    </list>
+
+    <list name="builtins">
+      <item>Type</item>
+      <item>Prop</item>
+      <item>Sort</item>
+      <item>rw</item>
+      <item>rewrite</item>
+      <item>rwa</item>
+      <item>erw</item>
+      <item>subst</item>
+      <item>simp</item>
+      <item>unfold</item>
+      <item>induction</item>
+      <item>apply</item>
+      <item>refl</item>
+      <item>rfl</item>
+      <item>exact</item>
+      <item>constructor</item>
+      <item>left</item>
+      <item>right</item>
+      <item>split</item>
+      <item>cases</item>
+      <item>rcases</item>
+      <item>intros</item>
+      <item>assumption</item>
+      <item>have</item>
+      <item>show</item>
+      <item>from</item>
+      <item>congr</item>
+      <item>ring</item>
+    </list>
+
+    <list name="literals">
+      <item>tt</item>
+      <item>ff</item>
+    </list>
+
+    <list name="errors">
+      <item>sorry</item>
+      <item>admit</item>
+    </list>
+
+    <contexts>
+      <context name="Normal" attribute="Normal Text" lineEndContext="#stay">
+        <keyword attribute="Keyword" context="#stay" String="keywords"/>
+        <keyword attribute="BuiltIn" context="#stay" String="builtins"/>
+        <keyword attribute="Literal" context="#stay" String="literals"/>
+        <keyword attribute="Error" context="#stay" String="errors"/>
+        <RegExpr attribute="Comment" context="#stay" String="--.*"/>
+        <RegExpr attribute="Comment" context="BlockComment" String="/-[^-]"/>
+        <RegExpr attribute="String" context="String" String="&quot;"/>
+        <!--<RegExpr attribute="Number" context="#stay" String="\b\d+(\.\d+)?\b"/>-->
+        <RegExpr attribute="Symbol" context="#stay" String=":=|→|←|⇒|⟹|::|:|=|≠|≤|≥|&lt;|&gt;|\+|-|\*|/"/>
+        <RegExpr attribute="Punctuation" context="#stay" String="[()\[\]{},.;]"/>
+      </context>
+
+      <context name="BlockComment" attribute="Comment" lineEndContext="#stay">
+        <RegExpr attribute="Comment" context="Normal" String="-/"/>
+        <AnyChar attribute="Comment" context="#stay" String="."/>
+      </context>
+
+      <context name="String" attribute="String" lineEndContext="#stay">
+        <RegExpr attribute="String" context="Normal" String="&quot;"/>
+        <AnyChar attribute="String" context="#stay" String="."/>
+      </context>
+    </contexts>
+
+    <itemDatas>
+      <itemData name="Normal Text" defStyleNum="dsNormal"/>
+      <itemData name="Keyword" defStyleNum="dsKeyword"/>
+      <itemData name="BuiltIn" defStyleNum="dsFunction"/>
+      <itemData name="Literal" defStyleNum="dsDecVal"/>
+      <itemData name="Error" defStyleNum="dsError"/>
+      <itemData name="Comment" defStyleNum="dsComment"/>
+      <itemData name="String" defStyleNum="dsString"/>
+      <!--<itemData name="Number" defStyleNum="dsDecVal"/>-->
+      <itemData name="Symbol" defStyleNum="dsOperator"/>
+      <itemData name="Punctuation" defStyleNum="dsNormal"/>
+    </itemDatas>
+  </highlighting>
+</language>
