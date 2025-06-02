@@ -136,8 +136,9 @@ mdToHtml direcotry docData=do
     Data.Text.IO.writeFile (direcotry</>"yaml.yaml") $ textareaToYaml $ editorPreamble docData
     Data.Text.IO.writeFile (direcotry</>"bib.bib")  $ unMaybeTextarea $ editorCitation docData
     Data.Text.IO.writeFile (direcotry</>input) $ unMaybeTextarea $ editorContent docData
+    highlightXmlPath <- getCurrentDirectory >>= \dir -> return $ dir </> "src" </> "Parse" </> "lean.xml"
     let output = "output.html"
-    return (proc "pandoc" ["--sandbox", "-F", "pandoc-table", "-F", "pandoc-security", "--metadata-file", "yaml.yaml", "-F","pandoc-theorem", "-F", "math-filter", "-C", "--bibliography=" ++ "bib.bib" , "-o", output, input], output)
+    return (proc "pandoc" ["--sandbox", "-F", "pandoc-table", "-F", "pandoc-security", "--metadata-file", "yaml.yaml", "-F","pandoc-theorem", "-F", "math-filter", "-C", "--bibliography=" ++ "bib.bib" , "--syntax-definition=" ++ highlightXmlPath, "-o", output, input], output)
     --handleProcess False "pandoc" ["--sandbox","-F", "pandoc-table", "-F", "pandoc-security", "--metadata-file", "yaml.yaml", "-F","pandoc-theorem", "-F", "math-filter", "-C", "--bibliography=" ++ "bib.bib" , "-o", output] input output
 
 mdToHtmlSimple :: FilePath -> Text -> IO (CreateProcess, FilePath)
@@ -156,8 +157,9 @@ texToHtml direcotry docData'=do
     Data.Text.IO.writeFile (direcotry</>"yaml.yaml") $ textareaToYaml $ editorPreamble docData
     Data.Text.IO.writeFile (direcotry</>"bib.bib")  $ unMaybeTextarea $ editorCitation docData
     Data.Text.IO.writeFile (direcotry</>input) $ unMaybeTextarea $ editorContent docData
+    highlightXmlPath <- getCurrentDirectory >>= \dir -> return $ dir </> "src" </> "Parse" </> "lean.xml"
     let output = "output.html"
-    return (proc "pandoc" ["--sandbox", "-F", "pandoc-table", "-F", "pandoc-security", "--metadata-file", "yaml.yaml", "-F", "math-filter", "-C", "--bibliography=" ++ "bib.bib", "-f", "latex+raw_tex", "-o", output, input], output)
+    return (proc "pandoc" ["--sandbox", "-F", "pandoc-table", "-F", "pandoc-security", "--metadata-file", "yaml.yaml", "-F", "math-filter", "-C", "--bibliography=" ++ "bib.bib", "-f", "latex+raw_tex", "--syntax-definition=" ++ highlightXmlPath, "-o", output, input], output)
     --handleProcess False "pandoc" ["--sandbox", "-F", "pandoc-table", "-F", "pandoc-security", "--metadata-file", "yaml.yaml", "-F", "math-filter", "-C", "--bibliography=" ++ "bib.bib", "-f", "latex+raw_tex", "-o", output] input output
 
 texToHtmlSimple :: FilePath -> Text -> IO (CreateProcess, FilePath)
