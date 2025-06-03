@@ -8,7 +8,7 @@ import Import
 --import Control.Monad (when)
 import Yesod.Form.Bootstrap3
 --import Handler.EditComment(deleteEntryRecursive)
-import Handler.Parse(editorWidget,cacheEntryPdf,purgeEntryPdf)
+import Handler.Parse(editorWidget,cacheEntryPdf)
 import Handler.EditUserEntry(EntryInput(..),entry2Html)
 
 

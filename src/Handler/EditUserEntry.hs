@@ -17,7 +17,7 @@ module Handler.EditUserEntry (
 import Import
 import Yesod.Form.Bootstrap3
 import Handler.EditComment(deleteEntryRecursive)
-import Handler.Parse(editorWidget,userTemporaryDirectory,cacheEntryPdf,purgeEntryPdf)
+import Handler.Parse(editorWidget,userTemporaryDirectory,cacheEntryPdf)
 import Handler.NewEntrySubscription(insertDefaultEntrySubscription)
 import Handler.NewUserSubscription(userSubscriptionNotification)
 import Parse.Parser(parse,mdToHtml,mdToHtmlSimple,texToHtml,texToHtmlSimple,EditorData(..))
@@ -377,7 +377,7 @@ postEditUserEntryR  entryId = do
             case entryAction of
                 Just "delete"->  do
                     runDB $ deleteEntryRecursive entryId
-                    purgeEntryPdf entryId
+                    --purgeEntryPdf entryId
                     setMessage $ [shamlet|Your post, #{inputTitle formData}, has been deleted.|] --getUrlRenderParams
                     redirect $ NewUserEntryR
                 Just "publish"-> do

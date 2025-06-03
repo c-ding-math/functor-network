@@ -38,6 +38,18 @@ We make a comparison with other blog platform to clarify our features:
 | Editor                           | Plain text editor with live preview — focuses on content   | WYSIWYG editor — may be problematic for math content       |
 
 
-## Development
+## Credits
 
-The project is developed on the [Yesod](https://www.yesodweb.com/) web framework. To build the project, you can follow the framework's instructions. 
+**Functor Network** is developed by [Chun Ding](https://github.com/c-ding-math), © 2023-2025 Chun Ding, licensed under the [MIT License](https://opensource.org/licenses/MIT).  
+It is built on the [Yesod](https://www.yesodweb.com/) web framework, © 2012–2017 Michael Snoyman, also under the [MIT License](https://opensource.org/licenses/MIT).
+
+This project includes the following third-party resources:
+
+- `static/js/jquery.min.js` — [jQuery](https://jquery.com/), © 2005–2025 jQuery Foundation, [MIT License](https://opensource.org/licenses/MIT)  
+- `static/css/bootstrap.min.css` — [Bootstrap](https://getbootstrap.com/), © 2011–2025 Twitter, Inc., [MIT License](https://opensource.org/licenses/MIT)  
+- `static/js/bootstrap.min.js` — [Bootstrap](https://getbootstrap.com/), © 2011–2025 Twitter, Inc., [MIT License](https://opensource.org/licenses/MIT)  
+- SVG icons from [Bootstrap](https://getbootstrap.com/), © 2011–2025 Twitter, Inc., [MIT License](https://opensource.org/licenses/MIT)  
+- Syntax definition for Lean language highlighting — © 2025 [Hagb (Junyu Guo)](https://github.com/Hagb), [MIT License](https://opensource.org/licenses/MIT)  
+- `/home/ding/functor-network/static/editor` — [Ace Editor](https://ace.c9.io/), © 2010 Ajax.org B.V., [License](static/editor/LICENSE)
+- `static/js/js.cookie.min.js` - [js-cookie](https://github.com/js-cookie/js-cookie), © 2018 Klaus Hartl, Fagner Brack, GitHub Contributors
+

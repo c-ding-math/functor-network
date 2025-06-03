@@ -209,7 +209,7 @@ instance Yesod App where
                                 , menuItemAccessCallback =  mcurrentRoute == Just (SettingsR)
                                 }
                             , FooterRight $ MenuItem
-                                { menuItemLabel = "Version 2025-04-18"
+                                { menuItemLabel = "Version 2025-06-03"
                                 , menuItemRoute = PageR "Changelog"
                                 , menuItemAccessCallback =  mcurrentRoute == Just (SettingsR)
                                 }

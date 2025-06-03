@@ -52,6 +52,7 @@ getEntriesR = do
 
     defaultLayout $ do
         setTitleI MsgPosts
+        setDescriptionIdemp $ "Latest posts on " <> appName
         [whamlet|
             <div .page-header style="min-width:520px;">  
                 <form .search-form .pull-right method=get enctype=#{searchFormEnctype} style="max-width:15em;">

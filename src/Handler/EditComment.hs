@@ -5,7 +5,7 @@ module Handler.EditComment where
 
 import Import
 import Yesod.Form.Bootstrap3
-import Handler.Parse(userTemporaryDirectory)
+import Handler.Parse(userTemporaryDirectory,purgeEntryPdf)
 import Handler.NewEntrySubscription(entrySubscriptionNotification,insertDefaultEntrySubscription)
 import Parse.Parser(parse,mdToHtml,texToHtml,EditorData(..))
 import Handler.Tree(getRootEntryId)
@@ -146,6 +146,7 @@ postEditCommentR entryId = do
 deleteEntryRecursive :: EntryId -> ReaderT SqlBackend (HandlerFor App) ()
 deleteEntryRecursive entryId = do
     children<-getChildIds entryId 
+    _<-liftHandler $ mapM purgeEntryPdf $ entryId:children
     deleteWhere [EntryId <-. children++[entryId]]
     return ()
     
