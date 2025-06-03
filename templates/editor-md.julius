@@ -1,5 +1,5 @@
 
-editor.session.setMode("ace/mode/markdown");
+//editor.session.setMode("ace/mode/markdown");
 $(refs.syntax).attr("href", $(refs.syntax).attr("href") + "?format=md");
 
 function citation() {

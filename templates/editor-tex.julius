@@ -1,4 +1,4 @@
-editor.session.setMode("ace/mode/latex");
+//editor.session.setMode("ace/mode/latex");
 $(refs.syntax).attr("href", $(refs.syntax).attr("href") + "?format=tex");
 $(refs.example).attr("href", '@{EditHelpR "syntax"}?format=tex#editor');
 $(refs.theorem).remove();
