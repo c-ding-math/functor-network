@@ -2,7 +2,7 @@ function dynamicModal(options){
     const modalId = 'dynamicModal_' + Date.now();
 
     const modalHtml = `
-    <div class="modal fade flex-center" id="${modalId}" tabindex="-1" aria-hidden="true" role="dialog">
+    <div class="modal fade" id="${modalId}" tabindex="-1" aria-hidden="true" role="dialog">
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">
@@ -27,4 +27,5 @@ function dynamicModal(options){
     $modal.on('hidden.bs.modal', function () {
         $modal.remove();
     });
+    return $modal;
 }

@@ -223,6 +223,7 @@ Maintenance: Maintenance
 SiteMaintenance: Site maintenance
 Redirecting: Redirecting...
 
+QRCode: QR code
 Share: Share
 ShareLink: Share link
 ShareVia: Share via

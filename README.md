@@ -52,4 +52,4 @@ This project includes the following third-party resources:
 - Syntax definition for Lean language highlighting — © 2025 [Hagb (Junyu Guo)](https://github.com/Hagb), [MIT License](https://opensource.org/licenses/MIT)  
 - `/home/ding/functor-network/static/editor` — [Ace Editor](https://ace.c9.io/), © 2010 Ajax.org B.V., [License](static/editor/LICENSE)
 - `static/js/js.cookie.min.js` - [js-cookie](https://github.com/js-cookie/js-cookie), © 2018 Klaus Hartl, Fagner Brack, GitHub Contributors, [MIT License](https://opensource.org/licenses/MIT)
-
+- `static/js/qrcode.min.js` - [QRCode.js](https://github.com/davidshimjs/qrcodejs), © 2012 davidshimjs, [MIT License](https://opensource.org/licenses/MIT)

@@ -270,6 +270,7 @@ menuWidget=do
 shareWidget :: Widget
 shareWidget = do
     msgRender <- getMessageRender
+    addScript $ StaticR js_qrcode_min_js
     toWidget [julius|
         $(document).ready(function() {
             $(".menu .share a").click(function(e){
@@ -285,12 +286,13 @@ shareWidget = do
                 let messages = {
                     shareLink: #{msgRender MsgShareLink},
                     link: #{msgRender MsgLink},
+                    qrCode: #{msgRender MsgQRCode},
                     copy: #{msgRender MsgCopy},
                     copied: #{msgRender MsgCopied},
                     shareVia: #{msgRender MsgShareVia},
                     close: #{msgRender MsgClose}
                 };
-                dynamicModal({
+                var modal = dynamicModal({
                     header: `<b>${messages.shareLink}</b>`,
                     body: `
                         <form>
@@ -304,10 +306,27 @@ shareWidget = do
                             `<div class="share-buttons">`+ 
                             apis.map(function(item) {
                                     return `<a class="btn btn-secondary" href="${item.api}${shareUrl}" target="_blank"><img src="${item.icon}" alt="${item.name}"></a>`;
-                                    }).join(``) +
+                                    }).join(``) + `` + 
+                            `<a tabindex="0" role="button" class="btn btn-secondary" data-toggle="popover"><img src=@{StaticR icons_qr_code_svg} alt="QR code"></a>` +
                             `</div>` +
                         `</form>`,
                     footer: `<button class='btn btn-default' type='button' data-dismiss="modal">${messages.close}</button>`,
+                });   
+                let qrCodeSize = 128;
+                var qrCodeContainer = $("<div/>", {class:'qrcode-container',height: qrCodeSize, width: qrCodeSize});
+                modal.find('a[data-toggle="popover"]').popover({
+                    placement: "right",
+                    html: true,
+                    content: qrCodeContainer,
+                    trigger: "focus" 
+                });
+                modal.find('a[data-toggle="popover"]').on('shown.bs.popover', function () {
+                    qrCodeContainer.empty();
+                    var qrcode = new QRCode(qrCodeContainer[0], {
+                        text: shareUrl,
+                        width: qrCodeSize,
+                        height: qrCodeSize,
+                    });
                 });
 
             });
