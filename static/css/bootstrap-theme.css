@@ -342,6 +342,17 @@ div.csl-indent {
     }
 }
 
+/* modal */
+.modal.flex-center {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+}
+.modal.flex-center .modal-dialog {
+  margin: 0; 
+}
+
 /* editor */
 .editor-toolbar{
     min-width: max-content;

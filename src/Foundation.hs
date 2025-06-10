@@ -263,7 +263,7 @@ instance Yesod App where
             addStylesheet $ StaticR css_bootstrap_min_css
             addStylesheet $ StaticR css_bootstrap_theme_css
             addScript $ StaticR js_bootstrap_min_js
-            --addScript $ StaticR js_bootstrap_theme_js
+            addScript $ StaticR js_bootstrap_theme_js
             
             --addStylesheet $ StaticR css_entry_css
                                     -- ^ generated from @Settings/StaticFiles.hs@

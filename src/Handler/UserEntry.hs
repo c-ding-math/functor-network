@@ -139,7 +139,8 @@ getUserEntryR authorId entryId = do
                     <a.text-muted href=@{DownloadR authorId entryId}>_{MsgDownload}
                 $nothing
                     <a.text-muted href=@{AuthR LoginR}>_{MsgDownload}
-
+        <li .share>
+            <a.text-muted href=# data-link=@{UserEntryR authorId entryId}>_{MsgShare}
         $if isAdministrator maybeUserId entry
             <li .edit>
                 <a.text-muted href=@{EditUserEntryR entryId}>_{MsgEdit}
@@ -204,6 +205,7 @@ getUserEntryR authorId entryId = do
         when (isJust maybeUserId)
             voteWidget 
         menuWidget
+        shareWidget
         --downloadWidget entryId
 
         
@@ -265,3 +267,49 @@ menuWidget=do
     |]
 
 
+shareWidget :: Widget
+shareWidget = do
+    msgRender <- getMessageRender
+    toWidget [julius|
+        $(document).ready(function() {
+            $(".menu .share a").click(function(e){
+                e.preventDefault();
+                //apis: email, twitter, facebook, mathstodon, bluesky, reddit, wordpress, blogger
+                let apis =[
+                    {api: "mailto:?body=", name: "Email", icon: "@{StaticR icons_envelope_svg}"},
+                    {api: "https://mathstodon.xyz/share?text=",  name: "Mathstodon", icon: "@{StaticR icons_mathstodon_logo_svg}"},
+                    {api: "https://www.reddit.com/submit?text=",  name: "Reddit", icon: "@{StaticR icons_reddit_logo_svg}"},
+                    {api: "https://x.com/intent/post?text=",  name: "X", icon: "@{StaticR icons_twitter_logo_svg}"},
+                ];
+                let shareUrl=$(this).attr("data-link");
+                let messages = {
+                    shareLink: #{msgRender MsgShareLink},
+                    link: #{msgRender MsgLink},
+                    copy: #{msgRender MsgCopy},
+                    copied: #{msgRender MsgCopied},
+                    shareVia: #{msgRender MsgShareVia},
+                    close: #{msgRender MsgClose}
+                };
+                dynamicModal({
+                    header: `<b>${messages.shareLink}</b>`,
+                    body: `
+                        <form>
+                            <label class="control-label">${messages.link}</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" value="${shareUrl}" readonly>
+                                <div class="input-group-btn"><button type="button" class="btn btn-primary" onclick="navigator.clipboard.writeText('${shareUrl}');that=$(this);that.html('${messages.copied}');setTimeout(function(){that.html('${messages.copy}');}, 2000);">${messages.copy}</button></div>
+                            </div>
+                            <hr>
+                            <label>${messages.shareVia}</label>` +
+                            `<div class="share-buttons">`+ 
+                            apis.map(function(item) {
+                                    return `<a class="btn btn-secondary" href="${item.api}${shareUrl}" target="_blank"><img src="${item.icon}" alt="${item.name}"></a>`;
+                                    }).join(``) +
+                            `</div>` +
+                        `</form>`,
+                    footer: `<button class='btn btn-default' type='button' data-dismiss="modal">${messages.close}</button>`,
+                });
+
+            });
+        });
+    |]
