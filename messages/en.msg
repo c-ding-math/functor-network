@@ -88,6 +88,7 @@ FileSaved: File saved
 SomethingWrong: Something went wrong
 Actions: Actions
 Copy: Copy
+Copied: Copied
 ClickToCopy: Click to copy
 FileDeletionConfirmation: Are you sure that you want to delete the file?
 FileDeleted: File Deleted.
@@ -221,3 +222,9 @@ Maintain: Maintain
 Maintenance: Maintenance
 SiteMaintenance: Site maintenance
 Redirecting: Redirecting...
+
+QRCode: QR code
+Share: Share
+ShareLink: Share link
+ShareVia: Share via
+Close: Close

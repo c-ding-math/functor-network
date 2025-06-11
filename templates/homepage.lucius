@@ -8,7 +8,7 @@
 .jumbotron h2 {
     margin-top: 0;
     margin-bottom: 32px;
-    font-family: Georgia, "Times New Roman", Times, serif;
+    /*font-family: Georgia, "Times New Roman", Times, serif;*/
 }
 .bs-docs-section{
     padding-top: 2em;

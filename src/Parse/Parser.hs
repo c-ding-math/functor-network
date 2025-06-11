@@ -74,7 +74,8 @@ parse mFileName tmpDir parser docData = do
                             else outputText
                         
             _ -> do 
-                let errorString = "Error! " ++ stdout ++ stderr ++"."
+                let errorInfo = (stdout ++ stderr) ?=~/ [edBlockSensitive|Error at .*:///|]
+                let errorString = "Error! " ++ errorInfo ++"."
                 renderError errorString
         Nothing -> do
             killOldProcesses timeLimit "latex"
@@ -221,6 +222,7 @@ unMaybeTextarea ta = case ta of
     Just (Textarea t) -> t
     Nothing -> ""
 
+leanXml :: Text
 leanXml = Import.toStrict [stext|
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
@@ -273,14 +275,15 @@ leanXml = Import.toStrict [stext|
         </list>
         <!-- { "match": "#(print|eval|reduce|check|check_failure)\\b", "name": "keyword.other.lean4"
         }, -->
-        <list name="Commands"> <!-- dsPreprocessor -->
+        <!-- dsPreprocessor -->
+        <!--<list name="Commands">
             <item>#print</item>
             <item>#eval</item>
             <item>#reduce</item>
             <item>#check</item>
             <item>#check_failure</item>
             <item>#align</item>
-        </list>
+        </list>-->
         <!-- TODO {
             "match": "\\bderiving\\s+instance\\b",
             "name": "keyword.other.command.lean4"
@@ -591,7 +594,8 @@ leanXml = Import.toStrict [stext|
                 <keyword attribute="Modifiers" context="#stay" String="Modifiers" />
                 <RegExpr attribute="Modifiers" context="#stay" String="(?:attribute\b\s*|@)\[[^\]]*\]" />
                 <keyword attribute="sorry" context="#stay" String="sorry" />
-                <keyword attribute="Commands" context="#stay" String="Commands" />
+                <!--<keyword attribute="Commands" context="#stay" String="Commands" />-->
+                <RegExpr attribute="Commands" context="#stay" String="^\s*#[^\s]+" />
                 <keyword attribute="import" context="Importing" String="import" />
                 <keyword attribute="ControlFlows" context="#stay" String="ControlFlows" />
                 <keyword attribute="Definitions" context="defining" String="Definitions" />
