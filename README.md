@@ -17,7 +17,7 @@ In a word, every feature on our platform is thoughtfully designed for mathematic
 
 - **Minimalist & Focused.** No clutter. No distractions. Just a clean, efficient, and secure space for your mathematical thoughts.  
 
-Other small but useful features, including syntax highlighting for Lean, support for social sharing platforms commonly used by mathematicians, and so on.
+Other small yet useful features include syntax highlighting for Lean and integration with social platforms popular among mathematicians.
 
 
 ## Comparison
