@@ -17,6 +17,8 @@ In a word, every feature on our platform is thoughtfully designed for mathematic
 
 - **Minimalist & Focused.** No clutter. No distractions. Just a clean, efficient, and secure space for your mathematical thoughts.  
 
+Other small but useful features, including syntax highlighting for Lean, support for social sharing platforms commonly used by mathematicians, and so on.
+
 
 ## Comparison
 
@@ -34,6 +36,7 @@ We make a comparison with other blog platform to clarify our features:
 | Bibliography                     | Supported                                                  | Possibly supported                                         |
 | Markdown with math features      | Supported                                                  | Possibly supported but limited                             |
 | PDF export                       | Supported                                                  | Not supported                                              |
+| Syntax highlight for Lean        | Supported                                                  | Possibly supported                                              |
 | Design philosophy                | Clean and minimal — intentionally abstract                 | Often cluttered with unnecessary features                  |
 | Editor                           | Plain text editor with live preview — focuses on content   | WYSIWYG editor — may be problematic for math content       |
 
@@ -46,10 +49,9 @@ It is built on the [Yesod](https://www.yesodweb.com/) web framework, © 2012–2
 This project includes the following third-party resources:
 
 - `static/js/jquery.min.js` — [jQuery](https://jquery.com/), © 2005–2025 jQuery Foundation, [MIT License](https://opensource.org/licenses/MIT)  
-- `static/css/bootstrap.min.css` — [Bootstrap](https://getbootstrap.com/), © 2011–2025 Twitter, Inc., [MIT License](https://opensource.org/licenses/MIT)  
-- `static/js/bootstrap.min.js` — [Bootstrap](https://getbootstrap.com/), © 2011–2025 Twitter, Inc., [MIT License](https://opensource.org/licenses/MIT)  
+- `static/css/bootstrap.min.css` and `static/js/bootstrap.min.js` — [Bootstrap](https://getbootstrap.com/), © 2011–2025 Twitter, Inc., [MIT License](https://opensource.org/licenses/MIT)  
 - SVG icons from [Bootstrap](https://getbootstrap.com/), © 2011–2025 Twitter, Inc., [MIT License](https://opensource.org/licenses/MIT)  
 - Syntax definition for Lean language highlighting — © 2025 [Hagb (Junyu Guo)](https://github.com/Hagb), [MIT License](https://opensource.org/licenses/MIT)  
-- `/home/ding/functor-network/static/editor` — [Ace Editor](https://ace.c9.io/), © 2010 Ajax.org B.V., [License](static/editor/LICENSE)
+- `static/editor` — [Ace Editor](https://ace.c9.io/), © 2010 Ajax.org B.V., [License](static/editor/LICENSE)
 - `static/js/js.cookie.min.js` - [js-cookie](https://github.com/js-cookie/js-cookie), © 2018 Klaus Hartl, Fagner Brack, GitHub Contributors, [MIT License](https://opensource.org/licenses/MIT)
 - `static/js/qrcode.min.js` - [QRCode.js](https://github.com/davidshimjs/qrcodejs), © 2012 davidshimjs, [MIT License](https://opensource.org/licenses/MIT)
