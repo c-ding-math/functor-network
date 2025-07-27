@@ -94,9 +94,9 @@ getEditUserAboutR = do
                     <label>_{MsgAvatar}
                     <p>
                         $maybe avatar <- userAvatar user
-                            <img.avatar.img-rounded src=#{avatar} alt=#{userName user} width=128>
+                            <img.avatar.img-rounded width=128 src=#{avatar} alt=#{userName user}>
                         $nothing
-                            <img.avatar.img-rounded src=@{StaticR $ StaticRoute ["icons","default-avatar.svg"] []} alt=#{userName user}>
+                            <img.avatar.img-rounded width=128 src=@{StaticR $ StaticRoute ["icons","default-avatar.svg"] []} alt=#{userName user}>
                     <button type=button .btn .btn-default #avatar-button>_{MsgChangeAvatar}
                     <div .modal.fade #avatar-modal>
                         <div .modal-dialog>

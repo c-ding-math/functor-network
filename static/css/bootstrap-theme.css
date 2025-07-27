@@ -30,7 +30,7 @@ figure{
 .footer {
   width: 100%;
   margin-bottom: 0;
-  margin-top:4em;
+  margin-top:2.5em;
   background-color:transparent;
   border: none;
   border-top: 1px solid #e7e7e7;
@@ -148,7 +148,7 @@ textarea{
     border-radius: 4px;
 }
 
-.entry-title, .entry-content, .editor-preview, .nav-brand, .by, .to {
+.entry-title, .entry-content, .editor-preview, .navbar-brand, .by, .to, #comment a {
     /*font-family: Georgia,Cambria,"Times New Roman",Times,serif;*/
     font-family: Georgia, "Times New Roman", Times, serif;
 }
@@ -173,15 +173,21 @@ a.text-muted:hover {
     color:#333;
 }
 
+ul.entry-list>li{
+    padding-top: 1.5em;
+    padding-bottom: 1em;
+}
+ul.entry-list>li>*{
+    min-width:520px;
+    max-width:574px;
+    margin:auto;
+}
 ul.entry-list>li>a{
     color: black;
-}
-ul.entry-list>li>a:hover{
-    text-decoration: green underline;
+    display: block;
 }
 ul.entry-list>li>a>.entry-title{
     margin-top:0.25em;
-    margin-bottom:1em;
 }
 ul.no-author>li>.entry-meta>ul>li.by{
     display:none;

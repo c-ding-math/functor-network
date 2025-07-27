@@ -34,7 +34,11 @@ getUserHomeR authorId = do
                 <div .entry-content style="margin-bottom:0">
                     <div .entry-content-wrapper>
                         $maybe about <- mAbout
-                            #{preEscapedToMarkup (entryBodyHtml (entityVal about))}
+                            $if isJust (entryBody (entityVal about))
+                                #{preEscapedToMarkup (entryBodyHtml (entityVal about))}
+                            $else
+                                <div style="width:519.3906239999999px;">
+                                    <p>_{MsgNoAbout}
                         $nothing
                             <div style="width:519.3906239999999px;">
                                 <p>_{MsgNoAbout}

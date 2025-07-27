@@ -85,9 +85,9 @@ entryListWidget style entryList = do
         return $ zip3 entryList authors categoryLists
 
     [whamlet|
-<ul .entry-list .#{style}>
+<ul .list-group .entry-list .#{style}>
     $forall (Entity entryId entry, author, entryCategoryEntities)<- listData
-        <li .entry-item :entryStatus entry == Draft:.draft>
+        <li .list-group-item .entry-item :entryStatus entry == Draft:.draft>
             <div .entry-meta>
                 <ul.list-inline>
                     <li .by>
