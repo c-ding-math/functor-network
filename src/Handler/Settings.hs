@@ -198,11 +198,6 @@ getSettingsR = do
             <section .profile-setting #profile-setting>
                 <h2>_{MsgProfile}
                 <div>
-                    <form .name-form method=post enctype=#{nameEnctype}>
-                        ^{nameWidget}
-                        <button .btn .btn-default type=submit name=setting value=name>_{MsgSave}
-                    <p>
-                <div>
                     <label>_{MsgAvatar}
                     <p>
                         $maybe avatar <- userAvatar user
@@ -226,7 +221,11 @@ getSettingsR = do
                                         ^{avatarWidget}
                                         <button .btn .btn-default type=submit name=setting value=avatar>_{MsgSave}
                     <p>
-                
+                <div>
+                    <form .name-form method=post enctype=#{nameEnctype}>
+                        ^{nameWidget}
+                        <button .btn .btn-default type=submit name=setting value=name>_{MsgSave}
+                    <p>                
                 <div>
                     <label>_{MsgAbout}
                     <div>
@@ -289,8 +288,7 @@ getSettingsR = do
             }
 
             .avatar{
-                height:128px;
-                max-width:100%;
+                width:128px;
             }
             textarea{
                 min-width:520px;
