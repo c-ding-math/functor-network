@@ -125,6 +125,6 @@ entryListWidget style entryList = do
                                         <li>
                                             <a href=@{CategoriesR (entryUserId category)}#{"#entry-" <> toPathPiece categoryId}>#{preEscapedToMarkup $ entryTitleHtml category}
 
-            <a href=@{UserEntryR (entryUserId entry) entryId}>
+            <a.stretched-link href=@{UserEntryR (entryUserId entry) entryId}>
                 <h3 .entry-title>#{preEscapedToMarkup(scaleHeader 3 (entryTitleHtml entry))}
     |]

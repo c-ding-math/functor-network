@@ -14,6 +14,8 @@
     padding-top: 2em;
     padding-bottom: 2em;
     line-height: 2em;
+    max-width: 768px;
+    margin: auto;
 }
 .alert-info {
     position: relative;

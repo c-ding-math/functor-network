@@ -196,7 +196,7 @@ AllPosts: All posts
 MyOwnPosts: My own posts
 OthersPosts: Others' posts
 
-RecentActivities: Recent activities
+Statistics: Statistics
 NoActivity: No activity yet.
 PublishedPosts: Published posts
 CategorizedPosts: Categorized posts

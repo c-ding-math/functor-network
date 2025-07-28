@@ -174,8 +174,8 @@ a.text-muted:hover {
 }
 
 ul.entry-list>li{
-    padding-top: 1.5em;
-    padding-bottom: 1em;
+    padding-top: 1em;
+    
 }
 ul.entry-list>li>*{
     min-width:520px;

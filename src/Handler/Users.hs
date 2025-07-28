@@ -34,7 +34,7 @@ $else
         <ul.users.list-inline>
             $forall (Entity uid u, m)<-userListOrderedByPosts
                 <li>
-                    <a href=@{UserHomeR uid} style="display:block">
+                    <a.stretched-link href=@{UserHomeR uid}>
                      <div.panel.panel-default>
                       <div.panel-body>  
                         <h4 .entry-title>#{userName u}
