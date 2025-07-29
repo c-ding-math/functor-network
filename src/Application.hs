@@ -82,6 +82,7 @@ import Handler.MaintainEntry
 import Handler.Tool
 import Handler.Slug
 import Handler.Download
+import Handler.UserFeed
 --import Handler.Redirect
 
 -- This line actually creates our YesodDispatch instance. It is the second half

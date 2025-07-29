@@ -303,6 +303,7 @@ instance Yesod App where
     isAuthorized EntriesR _ = return Authorized
     isAuthorized FeedbackR _ = return Authorized
     isAuthorized (ToolR _) _ = return Authorized
+    isAuthorized (UserFeedR _) _ = return Authorized
     --isAuthorized RedirectR _ = return Authorized
 
     -- Routes requiring authentication.

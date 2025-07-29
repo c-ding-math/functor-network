@@ -4,9 +4,8 @@
 module Handler.UserHome where
 
 import Import
-import qualified Data.Map as Map
 import Data.Time
-import Data.Time.Calendar (addGregorianMonthsClip)
+--import Data.Time.Calendar (addGregorianMonthsClip)
 import Handler.Tree(getRootEntryId)
 
 getUserHomeR :: UserId -> Handler Html
