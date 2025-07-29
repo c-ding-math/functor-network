@@ -4,167 +4,231 @@
 module Handler.UserHome where
 
 import Import
-import Handler.Tree (getRootEntryId)
-
-data Activity = Activity {
-    activityTime :: UTCTime,
-    activityTitle :: Text,
-    activityText :: Text,
-    activityLink :: Text
-}   
+import qualified Data.Map as Map
+import Data.Time
+import Data.Time.Calendar (addGregorianMonthsClip)
+import Handler.Tree(getRootEntryId)
 
 getUserHomeR :: UserId -> Handler Html
 getUserHomeR authorId = do
-    isAuthor <- fmap (== Just authorId) maybeAuthId
-    urlRender <- getUrlRender
-    (author, statics, activities, mAbout)  <- runDB $ do
+    mUserId <- maybeAuthId
+    (author, mAbout, postChart, commentChart) <- runDB $ do
         author <- get404 authorId
-        entries <- selectList [EntryUserId ==. authorId, EntryStatus ==. Publish, EntryType <-. [UserPost, Category, Comment]] [Desc EntryInserted]
-        activities' <- mapM (\(Entity entryId entry) -> case entryType entry of
-            UserPost -> return $ Just $ Activity (entryInserted entry) "Published post" (entryTitleHtml entry) (urlRender (UserEntryR (entryUserId entry) entryId))
-            Category -> return $ Just $ Activity (entryInserted entry) "Created category" (entryTitleHtml entry) (urlRender (CategoriesR (entryUserId entry)) <> ("#entry-" <> toPathPiece entryId))
-            Comment -> do
-                rootEntryId <- getRootEntryId entryId
-                rootEntry <- get404 rootEntryId
-                if entryStatus rootEntry == Publish && entryType rootEntry == UserPost
-                    then return $ Just $ Activity (entryInserted entry) "Commented on" (entryTitleHtml rootEntry) (urlRender (UserEntryR (entryUserId rootEntry) rootEntryId) <> ("#entry-" <> toPathPiece entryId))
-                    else return $ Nothing
-            _-> return $ Nothing) entries
-        statics <- do
-            let publishedPosts = length [x | x <- entries, entryType (entityVal x) == UserPost]
-            comments <- do
-                let comments'= [x | x <- entries, entryType (entityVal x) == Comment]
-                publicComments <- filterM  (\(Entity key _) -> do
-                    rootEntryId <- getRootEntryId key
-                    rootEntry <- get404 rootEntryId
-                    return $ entryStatus rootEntry == Publish && entryType rootEntry == UserPost
-                    ) comments'
-                return $ length publicComments
-            categorizedPosts <- do 
-                let categories = [x | x <- entries, entryType (entityVal x) == Category]
-                trees <- forM categories $ \category -> do
-                    tree <- selectList [EntryTreeParent ==. entityKey category] []
-                    filterM (\(Entity _ x) -> do
-                        entry <- get404 $ entryTreeNode x
-                        return $ entryStatus entry == Publish && entryType entry == UserPost
-                        ) tree
-
-                return $ length $ concat $ trees
-            return (publishedPosts, categorizedPosts, comments)
         mAbout <- selectFirst [EntryUserId ==. authorId, EntryType ==. UserPage] [Desc EntryInserted]
-        return (author, statics, take 100 (catMaybes activities'), mAbout)
-                
-
+        --Chart data
+        -- chart x axis is month, y axis is number of posts
+        currentTime <- liftIO getCurrentTime
+        let firstDayNextMonth = firstDayNextMonthUTC currentTime
+        let chartX = [formatTime defaultTimeLocale "%b" (addMonth n currentTime) | n <- [-11..0]]
+        chartYPost <- mapM (\n -> do
+                let time = addMonth n firstDayNextMonth
+                y <- count [EntryUserId ==. authorId, EntryType ==. UserPost, EntryStatus ==. Publish, EntryInserted <=. time]
+                return y) [-11..0]
+        chartYComment <- mapM (\n -> do
+                let time = addMonth n firstDayNextMonth
+                comments <- selectList [EntryUserId ==. authorId, EntryType ==. Comment, EntryStatus ==. Publish, EntryInserted <=. time] []
+                comments' <- filterM (\(Entity commentId _) -> do
+                    rootEntryId <- getRootEntryId commentId
+                    e <- get404 rootEntryId
+                    return $ entryStatus e == Publish
+                    ) comments
+                return (length comments')) [-11..0]
+        let postChartData = zip chartX chartYPost
+        let commentChartData = zip chartX chartYComment
+        
+        return (author, mAbout, postChartData, commentChartData)
     defaultLayout $ do
         setTitle $ toHtml $ userName author
         [whamlet|
-            <div .page-header>
-            <section style="border:1px solid #ccc; margin-bottom:2.5em;">
-                <div .card>
-                    <div .basics>
-                        $maybe avatar <- userAvatar author
-                            <img.avatar.img-rounded src=#{avatar} alt=#{userName author}>
-                        $nothing
-                            <img.avatar.img-rounded src=@{StaticR $ StaticRoute ["icons","default-avatar.svg"] []} alt=#{userName author}>
-                        <h4 .name>#{userName author}
-                        $if isAuthor
-                                <a .text-muted href=@{SettingsR}#profile-setting>
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16"><path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/><path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/></svg><!-- Copyright (c) 2011-2024 The Bootstrap Authors, Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE) -->
 
-                    <div .statistics>
-                      $with (publishedPosts, categorizedPosts, comments) <- statics
-                        <ul.list-inline.text-lowercase>
-                            <li title=_{MsgPublishPosts $ pluralize publishedPosts "post"}>
-                                <a href=@{UserEntriesR authorId}>
-                                    _{MsgPublishedPosts}
-                                <span.badge>#{publishedPosts}
-                            <li title=_{MsgCategorizePosts $ pluralize categorizedPosts "post"}>
-                                <a href=@{CategoriesR authorId}>
-                                    _{MsgCategorizedPosts}
-                                <span.badge>#{categorizedPosts}
-                            <li title=_{MsgPostComments $ pluralize comments "comment"}>
-                                <a href=@{CommentsR authorId}>
-                                    _{MsgPostedComments}
-                                <span.badge>#{comments}
-                <article #about .entry style="margin-bottom:0">
-                    <div .entry-content style="margin-bottom:0">
-                        <div .entry-content-wrapper>
-                            $maybe about <- mAbout
+            <div .page-header>
+            <div.user>
+                $maybe avatar <- userAvatar author
+                    <img.img-rounded src=#{avatar} alt=#{userName author}>
+                $nothing
+                    <img.img-rounded src=@{StaticR $ StaticRoute ["icons","default-avatar.svg"] []} alt=#{userName author}>
+                <h1 .user-name.entry-title>#{userName author}
+                <div .user-id>No. #{toPathPiece authorId}
+                $if mUserId == Just authorId
+                    $if isJust mAbout
+                        <a.edit-profile.pull-right.btn.btn-default href=@{EditUserAboutR}>_{MsgEdit}
+                    $else
+                        <a.edit-profile.pull-right.btn.btn-primary href=@{EditUserAboutR}>_{MsgEdit}
+
+            <article #about .entry style="margin-bottom:0">
+                <div .entry-content style="margin-bottom:0">
+                    <div .entry-content-wrapper>
+                        $maybe about <- mAbout
+                            $if isJust (entryBody (entityVal about))
                                 #{preEscapedToMarkup (entryBodyHtml (entityVal about))}
-                            $nothing
+                            $else
                                 <div style="width:519.3906239999999px;">
                                     <p>_{MsgNoAbout}
-                            $if isAuthor
-                                
-                                    <a .text-muted href=@{EditUserAboutR}>_{MsgEdit}
-            <section>    
-                <div .activities>
-                    <div .or>
-                        <span.text-muted.text-lowercase> _{MsgRecentActivities}
-                    <ul>
-                        $forall activity <- activities
-                            <li>
-                                <time .text-muted.pull-right>#{utcToDate (activityTime activity)}
-                                <span .toLower>#{activityTitle activity} 
-                                <a href=#{activityLink activity}>#{preEscapedToMarkup (activityText activity)}
-                        <li>
-                            <time .text-muted.pull-right>#{utcToDate (userInserted author)}
-                            <span .toLower>Registered an account
-                
+                        $nothing
+                            <div style="width:519.3906239999999px;">
+                                <p>_{MsgNoAbout}
+            <div .or>
+                <span.text-muted.text-lowercase> _{MsgStatistics}
+            <div.charts>
+                <a.stretched-link href=@{UserEntriesR authorId}">
+                    <div .panel.panel-default>
+                        <div .panel-body>
+                            <h4>_{MsgPosts}
+                            <div id="post-chart">
+                                <canvas id="postsLineChart"></canvas>     
+                <a.stretched-link href=@{CommentsR authorId}>
+                    <div .panel.panel-default>
+                        <div .panel-body>
+                            <h4>_{MsgComments}
+                            <div id="comment-chart">
+                                <canvas id="commentsLineChart"></canvas>
+                                   
+        |]
+        addScript $ StaticR js_chart_min_js
+        toWidget [julius|
+    const chartOptions = {
+          responsive: true,
+          maintainAspectRatio: true,
+          animation: false,
+          plugins: {
+            legend: {
+                display: false
+                }
+          },
+
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: 'total',
+            },
+            ticks: {
+                stepSize: 1
+            },
+            grid: {
+                display: false
+            }
+          },
+          x: {
+            title: {
+              display: true,
+              text: 'month',
+            },
+            grid: {
+                display: false
+            }
+          }
+        }
+      }
+    const postLabels = #{toJSON (map fst postChart)};
+    const postData = #{toJSON (map snd postChart)};
+    const ctxPost = document.getElementById('postsLineChart').getContext('2d');
+    const postsLineChart = new Chart(ctxPost, {
+      type: 'line',
+      data: {
+        labels: postLabels,
+        datasets: [{
+          //label: 'total posts',
+          data: postData,
+          pointBackgroundColor: '#333',
+          pointBorderColor: '#333',
+          borderColor: '#333',
+          borderWidth: 1,
+          //backgroundColor: 'rgba(75, 192, 192, 0.2)',
+          //tension: 0.3, 
+          //pointRadius: 5,
+          //fill: true
+        }]
+      },
+      options: chartOptions
+    });
+    const commentLabels = #{toJSON (map fst commentChart)};
+    const commentData = #{toJSON (map snd commentChart)};
+    const ctxComment = document.getElementById('commentsLineChart').getContext('2d');
+    const commentsLineChart = new Chart(ctxComment, {
+      type: 'line',
+      data: {
+        labels: commentLabels,
+        datasets: [{
+          //label: 'total comments',
+          data: commentData,
+          pointBackgroundColor: '#333',
+          pointBorderColor: '#333',
+          borderColor: '#333',
+          borderWidth: 1,
+          //backgroundColor: 'rgba(75, 192, 192, 0.2)',
+          //tension: 0.3, 
+          //pointRadius: 5,
+          //fill: true
+        }]
+      },
+      options: chartOptions
+    });
         |]
         toWidget [lucius|
-.card {
-    text-align: center;
-    border-bottom: 1px solid #ccc;
-    background-color: black;
-    color: white;
-}
-.card .badge {
-    background-color: #f5f5f5;
-    color: black;
-}
-.avatar {
-    height:128px;
-    max-width:100%;
-}
-.basics {
-    padding: 2em 2em 0.5em;
-    position: relative;
-}
-.basics .name {
-    font-weight: bold;
-}
-.basics a {
-    color: #ccc;
-    position: absolute;
-    right: 1em;
-    top: 1em;
-}
-.basics a:hover {
-    color: white;
-}
-.statistics {
-    min-width:max-content;
-}
-.statistics ul>li {
-    padding: 0 0.5em;
-}
-.statistics a{
-    color: #00a000;
-}
-.statistics a:hover{
-    color: #008000;
-}
-.activities ul>li {
-    padding: 0.5em 1.5em 0.5em 0;
-}
-.page-header {
-    border:none;
-}
-.entry-content{
-    padding: 1em 1em 0.5em;
-}
+            .page-header {
+                border:none;
+            }
+
+            .user {
+                display:grid;
+                align-items: center;
+                column-gap: 1em;
+                grid-template-columns: 128px auto auto;
+                margin-bottom: 1em;
+            }
+            .user img {
+                grid-row: 1/3;
+                width: 128px;
+            }
+            .user-name {
+                grid-column: 2/4;
+            }
+            .user-id {
+                color: #777;
+            }
+            .edit-profile {
+                justify-self: right;
+            }
+
+            .or {
+                margin-top: 3em;
+                margin-bottom: 3em;
+            }
+
+            .charts {
+                display: grid;
+                grid-template-columns: auto auto;
+                column-gap: 2px;
+                justify-content: space-between;
+            }
+            .charts canvas {
+                margin: auto;
+                width: 300px;
+            }
+            @media (max-width: 768px) {
+                .charts canvas {
+                    margin: auto;
+                    width: 200px;
+                }
+            }
         |]
 
-pluralize :: Int -> Text -> Text
-pluralize n text = if n <= 1 then (pack (show n)) <>" "<> text else (pack (show n)) <>" "<> text <>"s"
+
+-- | Subtract months from UTCTime
+addMonth :: Integer -> UTCTime -> UTCTime
+addMonth n utcTime=
+  let day = utctDay utcTime
+      timeOfDay = timeToTimeOfDay $ utctDayTime utcTime
+      newDay = addGregorianMonthsClip n day
+  in UTCTime newDay (timeOfDayToTime timeOfDay)
+
+-- | Get the first day of the next month at 00:00:00 UTC
+firstDayNextMonthUTC :: UTCTime -> UTCTime
+firstDayNextMonthUTC now = 
+  let today = utctDay now
+      (year, month, _) = toGregorian today
+      (newYear, newMonth) = if month == 12 then (year + 1, 1) else (year, month + 1)
+      firstDay = fromGregorian newYear newMonth 1
+  in UTCTime firstDay 0  

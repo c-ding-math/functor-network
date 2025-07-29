@@ -43,9 +43,7 @@ Anonymous: Anonymous
 Name: Name
 Avatar: Avatar
 About: About
-VerifyAndSave: Verify & save
-VerificationNoRelMeLink: Verification failed. Please ensure that you have pasted the verification link into your about page.
-VerificationNoResponse: Verification failed. Please ensure that your about page is accessible.
+ProfileUpdated: Profile updated
 Follow: Follow
 Subscription: Subscription
 Notification: Notification
@@ -198,7 +196,7 @@ AllPosts: All posts
 MyOwnPosts: My own posts
 OthersPosts: Others' posts
 
-RecentActivities: Recent activities
+Statistics: Statistics
 NoActivity: No activity yet.
 PublishedPosts: Published posts
 CategorizedPosts: Categorized posts
@@ -208,7 +206,6 @@ CategorizePosts count@Text: The author has categorized #{count}.
 PostComments count@Text: The author has posted #{count} on published posts.
 HaveCommentsOn: The author have comments on the following posts:
 NoAbout: I think, therefore I am
-SelfIntroduction: Self introduction
 Settings: Settings
 ChangeAvatar: Change avatar
 Upload: Upload

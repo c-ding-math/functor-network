@@ -137,7 +137,8 @@ getSettingsR = do
             
             <section .login-setting>
                 <h2>_{MsgLogin}
-                <div>
+                <div.panel>
+                 <div.panel-body>
                     <label>_{MsgEmail}
                     <div>
                         $if not $ null emails 
@@ -183,7 +184,8 @@ getSettingsR = do
 
             <!-- <section .site-setting>
                 <h2>_{MsgSite}
-                <div>
+                <div.panel>
+                 <div.panel-body>
                     <label>_{MsgSitePath}
                     $if (null sites)
                         <p>
@@ -197,12 +199,8 @@ getSettingsR = do
                 <p> -->
             <section .profile-setting #profile-setting>
                 <h2>_{MsgProfile}
-                <div>
-                    <form .name-form method=post enctype=#{nameEnctype}>
-                        ^{nameWidget}
-                        <button .btn .btn-default type=submit name=setting value=name>_{MsgSave}
-                    <p>
-                <div>
+                <div.panel>
+                 <div.panel-body>
                     <label>_{MsgAvatar}
                     <p>
                         $maybe avatar <- userAvatar user
@@ -226,8 +224,12 @@ getSettingsR = do
                                         ^{avatarWidget}
                                         <button .btn .btn-default type=submit name=setting value=avatar>_{MsgSave}
                     <p>
-                
-                <div>
+                  <div>
+                    <form .name-form method=post enctype=#{nameEnctype}>
+                        ^{nameWidget}
+                        <button .btn .btn-default type=submit name=setting value=name>_{MsgSave}
+                    <p>                
+                  <div>
                     <label>_{MsgAbout}
                     <div>
                         <a .btn .btn-default href=@{EditUserAboutR}>_{MsgEdit}
@@ -235,7 +237,8 @@ getSettingsR = do
                     <p>
             <section .email-setting>
                 <h2>_{MsgNotification} 
-                <div>
+                <div.panel>
+                  <div.panel-body>
                     <form .email-form method=post enctype=#{emailEnctype}>
                         ^{emailWidget}
                         $#<p .text-muted>_{MsgNotifyMeViaEmail "noreply@functor.network"}
@@ -245,30 +248,32 @@ getSettingsR = do
                     <p>
             <section #editor-setting .editor-setting>    
                 <h2>_{MsgEditor}
-                <div>                    
+                <div.panel>
+                 <div.panel-body>
                     <form .format-form method=post enctype=#{formatEnctype}>
                         ^{formatWidget}
                         <button .btn .btn-default type=submit name=setting value=format>_{MsgSave}
                     <p>
-                <div>                    
+                  <div>                    
                     <form method=post enctype=#{preambleEnctype}>
                         ^{preambleWidget}
                         <button .btn .btn-default type=submit name=setting value=preamble>_{MsgSave}
                     <p>
-                <div>                    
+                  <div>                    
                     <form method=post enctype=#{citationEnctype}>
                         ^{citationWidget}
                         <button .btn .btn-default type=submit name=setting value=citation>_{MsgSave}
                     <p>
             <section .account-setting>
                 <h2>_{MsgAccount}
-                <div>
+                <div.panel>
+                 <div.panel-body>
                     <label>_{MsgID} 
                     #{toPathPiece userId}
                     <div>           
                         <a .btn .btn-default href=@{AccountR}>_{MsgDelete}
                     <p>
-                <div>
+                  <div>
                     <label>_{MsgPassword}
                     <div>
                         <a .btn .btn-default href=@{AuthR setpassR}>_{MsgResetPassword}
@@ -277,8 +282,11 @@ getSettingsR = do
         |]
         toWidget [lucius|
             section+section{
-                margin-top:2em;
-                border-top:1px solid #ccc;
+                margin-top:3em;
+            }
+            .panel-body{
+                max-width:574px;
+                margin: auto;
             }
             .menu ul{
                 display:inline-block;
@@ -289,8 +297,7 @@ getSettingsR = do
             }
 
             .avatar{
-                height:128px;
-                max-width:100%;
+                width:128px;
             }
             textarea{
                 min-width:520px;

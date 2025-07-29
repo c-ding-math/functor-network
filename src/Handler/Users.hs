@@ -5,34 +5,39 @@
 module Handler.Users where
 
 import Import
+import qualified Data.Set as Set
 
 getUsersR :: Handler Html
 getUsersR = do
     -- list users ordered by the amount of entries
-    let topAmount = 100::Int
-    (total,userListOrderedByEntries) <- runDB $ do
-        allUsers<- selectList [] [Asc UserInserted]
-        userListWithEntries <- mapM (\(Entity uid user) -> do
-            entries <- selectList [EntryUserId==.uid,EntryStatus==.Publish,EntryType==.UserPost] [Desc EntryInserted]
-            let featuredEntries = filter (\(Entity _ e) -> entryFeatured e) entries
-            return (Entity uid user, length entries, length featuredEntries)) allUsers
-        return (length allUsers, take topAmount $ sortBy (comparing (\(_,m,n)->(Down m,Down n))) userListWithEntries)
-        
+    (userListOrderedByPosts, total) <-runDB $ do 
+        -- Get all users
+        userCount <- count ([]::[Filter User])
+        -- Get featured entries for the top users
+        featuredEntries <- selectList [EntryFeatured ==. True, EntryType ==. UserPost, EntryStatus ==. Publish] [] 
+        let userIds = Set.toList . Set.fromList $ map (entryUserId . entityVal) featuredEntries
+        userListWithPostCount <- mapM (\uid -> do 
+            postCount <- count [EntryUserId ==. uid, EntryType ==. UserPost, EntryStatus ==. Publish]
+            user <- get404 uid
+            return (Entity uid user, postCount)) userIds
+        return (sortOn (negate . snd) userListWithPostCount, userCount)
     defaultLayout $ do
         setTitleI MsgUsers
         [whamlet|
 <div .page-header>
     <h1>_{MsgActiveUsers}
-$if null userListOrderedByEntries
+$if null userListOrderedByPosts
     <div>_{MsgNothingFound}
 $else 
     <div .entries>
-        <p>A total of #{total} users have already joined the platform. Below is a list of the top 100 users ranked by the number of posts published.
-        <ul .users.list-inline>
-            $forall (Entity uid u, m, _)<-userListOrderedByEntries
-                <li style="width:12em; margin-right:0.5em;">
-                    <a href=@{UserHomeR uid}>
-                        <h4>#{userName u}
-                    <span .text-muted>#{m} published posts
-                    <p .text-muted>registered #{utcToDate (userInserted u)}
+        <p>A total of #{total} users have already joined the platform. Below is a list of active members ranked by the number of posts published.
+        <ul.users.list-inline>
+            $forall (Entity uid u, m)<-userListOrderedByPosts
+                <li>
+                    <a.stretched-link href=@{UserHomeR uid}>
+                     <div.panel.panel-default>
+                      <div.panel-body>  
+                        <h4 .entry-title>#{userName u}
+                        <span .text-muted>#{m} published posts
+                        <p .text-muted>joined on #{utcToDate (userInserted u)}
         |]
