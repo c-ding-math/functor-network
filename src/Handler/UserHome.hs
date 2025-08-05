@@ -4,10 +4,11 @@
 module Handler.UserHome where
 
 import Import
-import qualified Data.Map as Map
 import Data.Time
-import Data.Time.Calendar (addGregorianMonthsClip)
+--import Data.Time.Calendar (addGregorianMonthsClip)
 import Handler.Tree(getRootEntryId)
+import Handler.NewUserSubscription (subscribeToUserWidget)
+import Handler.UserEntry(shareWidget)
 
 getUserHomeR :: UserId -> Handler Html
 getUserHomeR authorId = do
@@ -49,11 +50,17 @@ getUserHomeR authorId = do
                     <img.img-rounded src=@{StaticR $ StaticRoute ["icons","default-avatar.svg"] []} alt=#{userName author}>
                 <h1 .user-name.entry-title>#{userName author}
                 <div .user-id>No. #{toPathPiece authorId}
-                $if mUserId == Just authorId
-                    $if isJust mAbout
-                        <a.edit-profile.pull-right.btn.btn-default href=@{EditUserAboutR}>_{MsgEdit}
+                <div .user-actions>
+                    $if (mUserId == Just authorId) && (isJust mAbout)
+                            <a#share-link.btn.btn-primary href=# data-link=@{UserHomeR authorId}>_{MsgShare}
                     $else
-                        <a.edit-profile.pull-right.btn.btn-primary href=@{EditUserAboutR}>_{MsgEdit}
+                            <a#share-link.btn.btn-default href=# data-link=@{UserHomeR authorId}>_{MsgShare}
+                    ^{subscribeToUserWidget authorId}
+                    $if mUserId == Just authorId
+                        $if isJust mAbout
+                            <a.edit-profile.btn.btn-default href=@{EditUserAboutR}>_{MsgEdit}
+                        $else
+                            <a.edit-profile.btn.btn-primary href=@{EditUserAboutR}>_{MsgEdit}
 
             <article #about .entry style="margin-bottom:0">
                 <div .entry-content style="margin-bottom:0">
@@ -84,6 +91,8 @@ getUserHomeR authorId = do
                                 <canvas id="commentsLineChart"></canvas>
                                    
         |]
+        toWidgetHead [hamlet|<link rel="alternate" type="application/rss+xml" href=@{UserFeedR authorId} title=#{userName author}>|]
+        shareWidget
         addScript $ StaticR js_chart_min_js
         toWidget [julius|
     const chartOptions = {
@@ -188,7 +197,7 @@ getUserHomeR authorId = do
             .user-id {
                 color: #777;
             }
-            .edit-profile {
+            .user-actions {
                 justify-self: right;
             }
 

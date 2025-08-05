@@ -1,5 +1,5 @@
 name:    functor-network
-version: "3.2.1"
+version: "3.3.1"
 
 dependencies:
 
@@ -62,6 +62,7 @@ dependencies:
 - split==0.2.*
 - async==2.2.*
 - tagsoup==0.14.*
+- yesod-newsfeed==1.7.*
 
 
 # The library contains all of our application code. The executable

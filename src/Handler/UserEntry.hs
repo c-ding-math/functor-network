@@ -273,7 +273,7 @@ shareWidget = do
     addScript $ StaticR js_qrcode_min_js
     toWidget [julius|
         $(document).ready(function() {
-            $(".menu .share a").click(function(e){
+            $(".menu .share a, #share-link").click(function(e){
                 e.preventDefault();
                 //apis: email, twitter, facebook, mathstodon, bluesky, reddit, wordpress, blogger
                 let apis =[

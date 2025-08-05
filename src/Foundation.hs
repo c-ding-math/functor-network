@@ -201,20 +201,7 @@ instance Yesod App where
                                 , menuItemAccessCallback = True
                                 }
                             ]
-                ++  case mcurrentRoute == Just (SettingsR) of
-                        True -> 
-                            [ FooterLeft $ MenuItem
-                                { menuItemLabel = "Feedback"
-                                , menuItemRoute = FeedbackR
-                                , menuItemAccessCallback =  mcurrentRoute == Just (SettingsR)
-                                }
-                            , FooterRight $ MenuItem
-                                { menuItemLabel = "Version 2025-06-03"
-                                , menuItemRoute = PageR "Changelog"
-                                , menuItemAccessCallback =  mcurrentRoute == Just (SettingsR)
-                                }
-                            ]
-                        False -> 
+                ++  
                             [ FooterLeft $ MenuItem
                                 { menuItemLabel = "About"
                                 , menuItemRoute = PageR "About"
@@ -231,8 +218,18 @@ instance Yesod App where
                                 , menuItemAccessCallback = True
                                 }
                             , FooterLeft $ MenuItem
+                                { menuItemLabel = "Tools"  
+                                , menuItemRoute = PageR "Tools"
+                                , menuItemAccessCallback = isNothing mAuthorEntity
+                                }              
+                            , FooterRight $ MenuItem
                                 { menuItemLabel = "Feedback"
                                 , menuItemRoute = FeedbackR
+                                , menuItemAccessCallback = True
+                                }
+                            , FooterRight $ MenuItem
+                                { menuItemLabel = "Donate"
+                                , menuItemRoute = PageR "Donate"
                                 , menuItemAccessCallback = True
                                 }
                             ]
@@ -303,6 +300,7 @@ instance Yesod App where
     isAuthorized EntriesR _ = return Authorized
     isAuthorized FeedbackR _ = return Authorized
     isAuthorized (ToolR _) _ = return Authorized
+    isAuthorized (UserFeedR _) _ = return Authorized
     --isAuthorized RedirectR _ = return Authorized
 
     -- Routes requiring authentication.

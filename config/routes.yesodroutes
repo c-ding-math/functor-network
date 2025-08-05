@@ -62,3 +62,4 @@
 --!/user/#UserId/#Text UserPageR GET !user
 
 
+/user/#UserId/feed UserFeedR GET
