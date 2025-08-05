@@ -5,6 +5,11 @@
 .navbar-inverse{
     background-color: black;
 }
+.navbar-brand img{
+    width:25px;
+    height:25px;
+    margin-right:8px;
+}
 figure{
     text-align: center;
 }
@@ -20,7 +25,12 @@ figure{
     color: green;
     font-weight:inherit;
 }
-
+.tabs-title {
+    pointer-events:none;
+    color: #333 !important;
+    font-weight:bold;
+    padding-left: 0 !important;
+}
 .page-header {
   margin-top: 22px;
 }

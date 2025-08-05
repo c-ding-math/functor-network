@@ -147,6 +147,9 @@ UserSubscriptionConfirmation email@Text: Your subscription via email #{email} ha
 EntrySubscriptionConfirmation email@Text: Your subscription via email #{email} has been confirmed. You will receive an email notification when the post receives a new comment.
 Unsubscribe: Unsubscribe
 UnsubscribeAll: Unsubscribe all
+OpenFeed: Open feed
+Feed: Feed
+SubscribeToUserFeed: Copy the feed link to your favorite feed reader to receive updates on the author's posts.
 SubscribeToUser: Please enter your email address below. You will receive an email notification when the author publishes a new post.
 SubscribeToPost: Please enter your email address below. You will receive an email notification when the post receives a new comment.
 SubscribeToComment: Please enter your email address below. You will receive an email notification when the comment receives a reply.

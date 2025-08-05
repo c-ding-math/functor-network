@@ -4,7 +4,6 @@
 module Handler.UserFeed where
 
 import Import
-import Data.Maybe
 --import Yesod.Feed
 
 getUserFeedR :: UserId -> Handler TypedContent
@@ -13,7 +12,7 @@ getUserFeedR authorId = do
     (author,posts) <- runDB $ do
         author <- get404 authorId
         posts <- selectList [EntryUserId ==. authorId, EntryType ==. UserPost, EntryStatus ==. Publish] [Desc EntryInserted, LimitTo 20]
-        entry <- selectFirst [EntryUserId ==. authorId, EntryType ==. UserPost, EntryStatus ==. Publish] [Desc EntryInserted, LimitTo 20]
+        --entry <- selectFirst [EntryUserId ==. authorId, EntryType ==. UserPost, EntryStatus ==. Publish] [Desc EntryInserted, LimitTo 20]
         return (author,posts)
     
     --urlRender <- getUrlRender
@@ -43,7 +42,7 @@ getUserFeedR authorId = do
 toFeedEntry (Entity entryId entry) = FeedEntry
     { feedEntryTitle    = entryTitle entry
     , feedEntryLink     = UserEntryR (entryUserId entry) entryId -- Assumes an UserEntryR (entryUserId entry) route exists
-    , feedEntryContent  = toHtml $ case entryBody entry of Just body -> take 512 (unTextarea body) <> " ..."; Nothing -> "comming soon..."
+    , feedEntryContent  = toHtml $ case entryBody entry of Just body -> take 512 (unTextarea body) <> "[...]"; Nothing -> "comming soon..."
     , feedEntryUpdated  = entryInserted entry
     , feedEntryEnclosure= Nothing
     , feedEntryCategories=[]

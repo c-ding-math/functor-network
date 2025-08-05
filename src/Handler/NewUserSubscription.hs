@@ -80,15 +80,34 @@ subscribeToUserWidget authorId = do
         <div .modal.fade>
             <div .modal-dialog>
                 <div .modal-content>
-                    <div .modal-header>
+                    <div .modal-header style="border:none;">
                         <button type=button .close data-dismiss=modal>&times;
-                        <b .modal-title>_{MsgSubscribe}
+                        <div .modal-title>
+                            <ul .nav.nav-tabs role=tablist>
+                                <li .disabled>
+                                    <a.tabs-title href=#>
+                                        _{MsgSubscribe}
+                                <li .active>
+                                    <a href=#newsletter data-toggle=tab>_{MsgEmail}
+                                <li>
+                                    <a href=#feed data-toggle=tab>_{MsgFeed}    
                     <div .modal-body>
+                     <div .tab-content>
+                      <div #newsletter.tab-pane.fade.in.active>
                         <form method=post action=@{NewUserSubscriptionR authorId} enctype=#{subscribeEnctype}>
                             <p>_{MsgSubscribeToUser}
                             ^{subscribeWidget}
-                            <.text-right>
+                            <div.text-right>
                                 <button type=submit .btn.btn-primary>_{MsgSubscribe}
+                      <div #feed.tab-pane.fade>
+                        <p>_{MsgSubscribeToUserFeed}
+                        <div .input-group>
+                            <input #feed-url .form-control type=url value=@{UserFeedR authorId} readonly>
+                            <span .input-group-btn>
+                                <button type=button .btn.btn-default onclick="navigator.clipboard.writeText($('#feed-url').val());that=$(this);that.html('_{MsgCopied}');setTimeout(function(){that.html('_{MsgCopy}');}, 2000);">_{MsgCopy}
+                        <p>
+                        <div.text-right>
+                            <a href=@{UserFeedR authorId} target=_blank .btn.btn-primary>_{MsgOpenFeed}
     |]
     toWidget [julius|
 $(document).ready(function(){
@@ -99,13 +118,7 @@ $(document).ready(function(){
     }); 
 });
     |]
-    toWidget [lucius|
-        .page-header{
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-        }
-    |]
+
     
 userSubscriptionConfirmation :: Text -> User -> AppEmail
 userSubscriptionConfirmation url author = AppEmail emailSubject emailText emailHtml

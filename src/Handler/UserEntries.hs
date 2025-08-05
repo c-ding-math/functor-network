@@ -72,18 +72,17 @@ getUserEntriesR authorId = do
             
             $maybe searchText <- mSeachText
                 <p>_{MsgPostsContaining searchText}:
-            $if null entryList
-                
+            $if null entryList    
                 $if mCurrentUserId == Just authorId
                     $if null userEntryList
                         <p>_{MsgNoPost} #
-                            <a href=@{NewUserEntryR}>_{MsgFirstPost}
-                        
+                            <a href=@{NewUserEntryR}>_{MsgFirstPost}   
                 $else
                     <p>_{MsgNoPost}
             $else
                 ^{entryListWidget "no-author" entryList}
         |]
+        toWidgetHead [hamlet|<link rel="alternate" type="application/rss+xml" href=@{UserFeedR authorId} title=#{userName author}>|]
         toWidget [lucius| 
             .page-header {
                 display: flex;
