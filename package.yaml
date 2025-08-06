@@ -63,6 +63,7 @@ dependencies:
 - async==2.2.*
 - tagsoup==0.14.*
 - yesod-newsfeed==1.7.*
+- yesod-sitemap==1.6.*
 
 
 # The library contains all of our application code. The executable

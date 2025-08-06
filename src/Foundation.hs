@@ -284,6 +284,8 @@ instance Yesod App where
     isAuthorized RobotsR _ = return Authorized
     isAuthorized (StaticR _) _ = return Authorized
     isAuthorized UsersR _ = return Authorized
+    isAuthorized EntriesR _ = return Authorized
+    isAuthorized FeedbackR _ = return Authorized
     isAuthorized (UserHomeR _) _ = return Authorized
     isAuthorized (UserEntriesR _) _ = return Authorized
     isAuthorized (CategoriesR _) _ = return Authorized
@@ -297,10 +299,9 @@ instance Yesod App where
     isAuthorized (NewUserSubscriptionR _) _ = return Authorized
     isAuthorized (EditEntrySubscriptionR _) _ = return Authorized
     isAuthorized (NewEntrySubscriptionR _) _ = return Authorized
-    isAuthorized EntriesR _ = return Authorized
-    isAuthorized FeedbackR _ = return Authorized
     isAuthorized (ToolR _) _ = return Authorized
     isAuthorized (UserFeedR _) _ = return Authorized
+    isAuthorized SitemapR _ = return Authorized
     --isAuthorized RedirectR _ = return Authorized
 
     -- Routes requiring authentication.

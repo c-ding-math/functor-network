@@ -189,7 +189,7 @@ ul.entry-list>li{
 }
 ul.entry-list>li>*{
     min-width:520px;
-    max-width:574px;
+    max-width:666px;
     margin:auto;
 }
 ul.entry-list>li>a{

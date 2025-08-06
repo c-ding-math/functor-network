@@ -10,6 +10,7 @@
 /maintenance MaintenanceR GET POST
 
 / HomeR GET POST
+/sitemap.xml SitemapR GET
 /entries EntriesR GET
 /feedback FeedbackR GET POST
 /parser/from/#Text/to/#Text ParseR POST
@@ -17,6 +18,7 @@
 /users UsersR GET
 /user/#UserId UserHomeR GET !user
 /user/#UserId/entries UserEntriesR GET !user
+/user/#UserId/feed UserFeedR GET !user
 
 --/user/#UserId/entries EntriesR GET !user
 /entry NewUserEntryR GET POST !user !login
@@ -62,4 +64,5 @@
 --!/user/#UserId/#Text UserPageR GET !user
 
 
-/user/#UserId/feed UserFeedR GET
+
+/data/#UserId DataR GET
