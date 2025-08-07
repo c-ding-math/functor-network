@@ -36,6 +36,8 @@
 
 /files FilesR GET POST !user !login
 /file/#FileId FileR DELETE !admin
+/data DataR GET !user !login
+
 
 /settings SettingsR GET POST !user !login
 /setting/account AccountR GET POST !user !login
@@ -62,7 +64,3 @@
 
 !/#Text PageR GET
 --!/user/#UserId/#Text UserPageR GET !user
-
-
-
-/data/#UserId DataR GET

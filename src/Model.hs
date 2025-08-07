@@ -23,11 +23,15 @@ import Database.Persist.Quasi
 -- http://www.yesodweb.com/book/persistent/
 
 data EntryType =  Post | Page | Comment | UserPage | UserPost | Feedback | Category
-    deriving (Show, Read, Eq)
+    deriving (Show, Read, Eq, Generic)
+instance FromJSON EntryType where
+instance ToJSON EntryType where
 derivePersistField "EntryType"
 
 data EntryStatus =  Publish | Draft 
-    deriving (Show, Read, Eq)
+    deriving (Show, Read, Eq, Generic)
+instance FromJSON EntryStatus where
+instance ToJSON EntryStatus where
 derivePersistField "EntryStatus"
 
 data Format = Format Text

@@ -64,3 +64,4 @@ deleteUserRecursive userId =do
                 else do
                     deleteEntryRecursive $ entityKey entry
         delete userId
+        -- todo: delete files owned by user

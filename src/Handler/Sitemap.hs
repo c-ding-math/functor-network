@@ -5,7 +5,6 @@ module Handler.Sitemap where
 import Import
 import qualified Data.Set as Set
 import Yesod.Sitemap
-import Data.Conduit (yield)
 
 getSitemapR :: Handler TypedContent
 getSitemapR = do
@@ -42,14 +41,14 @@ getSitemapR = do
         , sitemapChangeFreq = Nothing
         , sitemapPriority = Just 0.5
     }
-    forM_ pages $ \(Entity entryId entry) -> do
+    forM_ pages $ \(Entity _ entry) -> do
         yield $ SitemapUrl {
             sitemapLoc = PageR (entryTitle entry)
             , sitemapLastMod = Just $ entryUpdated entry
             , sitemapChangeFreq = Nothing
             , sitemapPriority = Just 0.6
         }
-    forM_ profiles $ \(Entity entryId entry) -> do
+    forM_ profiles $ \(Entity _ entry) -> do
         yield $ SitemapUrl {
             sitemapLoc = UserHomeR (entryUserId entry)
             , sitemapLastMod = Just $ entryUpdated entry

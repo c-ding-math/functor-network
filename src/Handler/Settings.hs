@@ -264,6 +264,18 @@ getSettingsR = do
                         ^{citationWidget}
                         <button .btn .btn-default type=submit name=setting value=citation>_{MsgSave}
                     <p>
+            <section .data-setting>
+                <h2>_{MsgData}
+                <div.panel>
+                 <div.panel-body>
+                    <label>_{MsgData}
+                    <div>
+                        <a .btn .btn-default href=@{DataR}>_{MsgExportData}
+                    <p>
+                    <label>_{MsgFiles}
+                    <div>
+                        <a .btn .btn-default href=@{FilesR}>_{MsgManageFiles}
+                    <p>
             <section .account-setting>
                 <h2>_{MsgAccount}
                 <div.panel>

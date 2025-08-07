@@ -317,6 +317,7 @@ instance Yesod App where
     isAuthorized (TreeR _) _ = isAuthenticated
     isAuthorized (VoteR _) _ = isAuthenticated
     isAuthorized (DownloadR _ _) _ = isAuthenticated
+    isAuthorized DataR _ = isAuthenticated
     
     -- owner routes
     isAuthorized (EditUserEntryR entryId) _ = isAdmin entryId

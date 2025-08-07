@@ -1,19 +1,19 @@
 -- By default this file is used by `persistFileWith` in Model.hs (which is imported by Foundation.hs)
 -- Syntax for this file here: https://github.com/yesodweb/persistent/blob/master/docs/Persistent-entity-syntax.md
-Vote
+Vote json
     userId UserId OnDeleteCascade
     entryId EntryId OnDeleteCascade
     inserted UTCTime default=CURRENT_TIME
     UniqueVote userId entryId
     deriving Show
 
-EntryTree
+EntryTree json
     node EntryId OnDeleteCascade
     parent EntryId  OnDeleteCascade
     inserted UTCTime default=CURRENT_TIME
     UniqueEntryTree node parent
     
-UserSubscription
+UserSubscription json
     email Text
     userId UserId OnDeleteCascade
     inserted UTCTime
@@ -23,7 +23,7 @@ UserSubscription
     UniqueUserSubscription email userId
     deriving Show
 
-EntrySubscription
+EntrySubscription json
     email Text
     entryId EntryId OnDeleteCascade
     inserted UTCTime
@@ -33,7 +33,7 @@ EntrySubscription
     UniqueEntrySubscription email entryId
     deriving Show
 
-Entry
+Entry json
     userId UserId OnDeleteCascade
     inserted UTCTime default=CURRENT_TIME
     updated UTCTime default=CURRENT_TIME
@@ -48,13 +48,13 @@ Entry
     bodyHtml Text
     featured Bool default=False
 
-File 
+File json
     userId UserId OnDeleteCascade
     format Format
     inserted UTCTime
     description Text
 
-Maintenance
+Maintenance json
     userId UserId OnDeleteCascade
     from UTCTime
     duration Int
@@ -70,7 +70,7 @@ Email json
     UniqueEmail address
     deriving Show Read Eq
 
-Login --via third parties
+Login json --via third parties
     userId UserId Maybe OnDeleteCascade
     ident Text
     plugin Text

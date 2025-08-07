@@ -73,7 +73,11 @@ ChangeSaved: Changes Saved
 
 Preview: Preview
 Download: Download
+ExportData: Export data
+ManageFiles: Manage files
+Data: Data
 File: File
+Files: Files
 RecommendedFileSize: Recommended size: < 2MB
 FileTooLarge maxSize@Int: The file is too large. The maximum file size is #{show maxSize} MB.
 FileTypeNotAllowed: File type not allowed.
