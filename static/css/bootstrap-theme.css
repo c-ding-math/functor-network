@@ -155,12 +155,12 @@ textarea{
     margin-top: 1em;
     margin-bottom: 2em;
 }
-.entry-content {
+.entry-body {
     margin-bottom: 0.5em;
     border-radius: 4px;
 }
 
-.entry-title, .entry-content, .editor-preview, .navbar-brand, .by, .to, #comment a {
+.entry-title, .entry-body, .editor-preview, .navbar-brand, .by, .to, #comment a {
     /*font-family: Georgia,Cambria,"Times New Roman",Times,serif;*/
     font-family: Georgia, "Times New Roman", Times, serif;
 }
@@ -229,12 +229,10 @@ body {
     max-width:832px;
     margin:auto;
 }
-.entry-content .entry-content-wrapper, .entry-content .default-entry-content-wrapper, .editor-preview .entry-content-wrapper{
+.entry-body .entry-content-wrapper, .editor-preview .entry-content-wrapper{
+    width:min-content;
     margin:auto;
     color:black;
-}
-.default-entry-content-wrapper{
-    max-width: 519.3906239999999px;
 }
 .parser-message{
     padding: 0.5em 1em;
@@ -351,11 +349,11 @@ div.csl-indent {
     body, .or span, .modal-content{
         background-color: #f5f5f5;
     }
-    .entry-content, .editor-preview{
+    .entry-body, .editor-preview{
         background-color: white;
         border: 1px solid #ccc;
     }
-    .entry-content {
+    .entry-body {
         padding: 1em 0.5em 0.5em;
     }
 }

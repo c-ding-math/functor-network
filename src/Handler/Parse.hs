@@ -135,7 +135,7 @@ cacheEntryPdf entryId = do
             parse (Just pdfPath) tempDir parser editorData >> return ()
             return ()
 -}
-    urlRender <- getUrlRender
+    --urlRender <- getUrlRender
     (entryAuthor, entry)<- runDB $ do 
         entry <- get404 entryId
         author <- get404 $ entryUserId entry
@@ -158,12 +158,12 @@ cacheEntryPdf entryId = do
       <li .at>
         
         #{utcToDate (entryInserted entry)}
-  <div .entry-content>
+  <div .entry-body>
       
         $if (entryBody entry) /= Nothing
             #{preEscapedToMarkup(entryBodyHtml entry)}
         $else
-            <div.default-entry-content-wrapper>
+            <div style="width:519.3906239999999px;">
                 <p>Coming soon...
                 |]
 

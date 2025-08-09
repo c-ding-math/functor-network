@@ -119,7 +119,7 @@ mdToPdf direcotry docData = do
     Data.Text.IO.writeFile (direcotry</>"bib.bib")  $ unMaybeTextarea $ editorCitation docData
     Data.Text.IO.writeFile (direcotry</>input) $ unMaybeTextarea $ editorContent docData
     let output = downloadPdfFileName
-    return (proc "pandoc" ["--sandbox", "-C", "--bibliography=" ++ "bib.bib", "-F", "pandoc-security", "--metadata-file", "yaml.yaml", "-F", "pandoc-theorem", "-o", output, input], output)
+    return (proc "pandoc" ["--sandbox", "--metadata-file", "yaml.yaml", "-C", "--bibliography=" ++ "bib.bib", "-F", "pandoc-security", "-F", "pandoc-theorem", "-o", output, input], output)
     --handleProcess False "pandoc" ["--sandbox", "-F", "pandoc-security", "--metadata-file", "yaml.yaml", "-F", "pandoc-theorem", "-C", "--bibliography=" ++ "bib.bib", "-o", output] input output
   
 texToPdf :: FilePath -> EditorData -> IO (CreateProcess, FilePath)
@@ -152,7 +152,7 @@ mdToHtml direcotry docData=do
     Data.Text.IO.writeFile (direcotry</>input) $ unMaybeTextarea $ editorContent docData
     Data.Text.IO.writeFile (direcotry</>"lean.xml") leanXml
     let output = "output.html"
-    return (proc "pandoc" ["--sandbox", "-C", "--bibliography=" ++ "bib.bib" , "-F", "pandoc-table", "-F", "pandoc-security", "--metadata-file", "yaml.yaml", "-F","pandoc-theorem", "-F", "math-filter", "--syntax-definition=lean.xml", "-o", output, input], output)
+    return (proc "pandoc" ["--sandbox", "--metadata-file", "yaml.yaml", "-C", "--bibliography=" ++ "bib.bib" , "-F", "pandoc-table", "-F", "pandoc-security", "-F","pandoc-theorem", "-F", "math-filter", "--syntax-definition=lean.xml", "-o", output, input], output)
     --handleProcess False "pandoc" ["--sandbox","-F", "pandoc-table", "-F", "pandoc-security", "--metadata-file", "yaml.yaml", "-F","pandoc-theorem", "-F", "math-filter", "-C", "--bibliography=" ++ "bib.bib" , "-o", output] input output
 
 mdToHtmlSimple :: FilePath -> Text -> IO (CreateProcess, FilePath)
@@ -173,7 +173,7 @@ texToHtml direcotry docData'=do
     Data.Text.IO.writeFile (direcotry</>input) $ unMaybeTextarea $ editorContent docData
     Data.Text.IO.writeFile (direcotry</>"lean.xml") leanXml
     let output = "output.html"
-    return (proc "pandoc" ["--sandbox", "-C", "--bibliography=" ++ "bib.bib", "-F", "pandoc-table", "-F", "pandoc-security", "--metadata-file", "yaml.yaml", "-F", "math-filter", "-f", "latex+raw_tex", "--syntax-definition=lean.xml", "-o", output, input], output)
+    return (proc "pandoc" ["--sandbox", "--metadata-file", "yaml.yaml", "-C", "--bibliography=" ++ "bib.bib", "-F", "pandoc-table", "-F", "pandoc-security", "-F", "math-filter", "-f", "latex+raw_tex", "--syntax-definition=lean.xml", "-o", output, input], output)
     --handleProcess False "pandoc" ["--sandbox", "-F", "pandoc-table", "-F", "pandoc-security", "--metadata-file", "yaml.yaml", "-F", "math-filter", "-C", "--bibliography=" ++ "bib.bib", "-f", "latex+raw_tex", "-o", output] input output
 
 texToHtmlSimple :: FilePath -> Text -> IO (CreateProcess, FilePath)

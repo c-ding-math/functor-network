@@ -107,11 +107,12 @@ getUserEntryR authorId entryId = do
                     $forall (Entity categoryId category)<-entryCategoryEntities
                         <li>
                             <a href=@{CategoriesR (entryUserId category)}#{"#entry-" <> toPathPiece categoryId}>#{preEscapedToMarkup $ entryTitleHtml category}
-  <div .entry-content>
+  <div .entry-body>
+    <div .entry-content-wrapper>
         $if (entryBody entry) /= Nothing
             #{preEscapedToMarkup(entryBodyHtml entry)}
         $else
-            <div .default-entry-content-wrapper>
+            <div style="width:519.3906239999999px;">
                 <p>_{MsgComingSoon}
   <div .menu>
     <ul.list-inline.text-lowercase>
@@ -163,8 +164,9 @@ getUserEntryR authorId entryId = do
                         <span title="date"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clock" viewBox="0 0 16 16"><path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71z"/><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0"/></svg><!-- Copyright (c) 2011-2024 The Bootstrap Authors, Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE) -->
                         #{utcToDate (entryInserted comment)}
 
-                <div .entry-content>
-                    <div .entry-content-wrapper>#{preEscapedToMarkup (entryBodyHtml comment)}  
+                <div .entry-body>
+                    <div .entry-content-wrapper>
+                        #{preEscapedToMarkup (entryBodyHtml comment)}  
                 <div.menu>
                     <ul.list-inline.text-lowercase>                
                         <li .reply>

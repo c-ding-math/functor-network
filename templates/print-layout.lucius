@@ -72,6 +72,11 @@
   }
 
   @page {
+    @bottom-center {
+      content: counter(page);
+    }
+  }
+  @page {
     margin-left:0;
     margin-right:0;
   }
@@ -88,5 +93,14 @@
     color: #000 !important;
     margin-bottom: 1em !important;
     margin-top: 1 !important;
+  }
+  .footnotes-end-of-document{
+    max-width:555px;
+  }
+  .entry-body > * {
+    margin:auto;
+  }
+  .math{
+    overflow:visible;
   }
 }
