@@ -115,7 +115,7 @@ editor.commands.removeCommand("showSettingsMenu");
 
 var editorContainer = $(editor.container);
 var informationArea = $("<div/>",{class: "editor-information"});
-var previewArea = $("<div/>",{class: "entry-content-wrapper"});
+var previewArea = $("<div/>");
 var entryBody = $("textarea[name='content']");
 editor.session.setValue(entryBody.val());
 editorWrapper.append(editorContainer).append($("<div/>",{class: "editor-preview"}).append(informationArea).append(previewArea)).insertAfter(entryBody).css({width: "100%", border:entryBody.css("border"), "border-radius":entryBody.css("border-radius")});

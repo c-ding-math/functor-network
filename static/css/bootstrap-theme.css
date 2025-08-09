@@ -1,3 +1,5 @@
+:root {
+}
 .container{
     min-width:520px;
     overflow: hidden;
@@ -227,13 +229,12 @@ body {
     max-width:832px;
     margin:auto;
 }
-.entry-content .entry-content-wrapper, .editor-preview .entry-content-wrapper{
+.entry-content .entry-content-wrapper, .entry-content .default-entry-content-wrapper, .editor-preview .entry-content-wrapper{
     margin:auto;
-    width:min-content;
     color:black;
 }
-.entry-content-wrapper .center{
-    text-align: center;
+.default-entry-content-wrapper{
+    max-width: 519.3906239999999px;
 }
 .parser-message{
     padding: 0.5em 1em;

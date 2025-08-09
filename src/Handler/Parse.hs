@@ -10,12 +10,15 @@ import Import
 import System.Directory
 import System.FilePath
 import System.Random
-import Parse.Parser(unMaybeTextarea, parse, downloadPdfFileName, preProcessEditorData, texToPdf, texToHtml, texToHtmlSimple, mdToPdf, mdToHtml, mdToHtmlSimple, texToSvg, EditorData(..))
+import Parse.Parser(scaleHeader, htmlToPdf, unMaybeTextarea, parse, downloadPdfFileName, preProcessEditorData, texToPdf, texToHtml, texToHtmlSimple, mdToPdf, mdToHtml, mdToHtmlSimple, texToSvg, EditorData(..))
 --import Data.Text.IO
 --import qualified Data.Text as T
 --import Codec.Archive.Zip
 --import qualified Prelude
 --import System.Environment (getExecutablePath)
+import Text.Hamlet          (hamletFile)
+import qualified Data.Text.Encoding as TE
+import qualified Data.CaseInsensitive as CI
 
 type InputFormat=Text
 type OutputFormat=Text
@@ -89,7 +92,7 @@ purgeEntryPdf entryId = do
 
 cacheEntryPdf :: EntryId -> Handler ()
 cacheEntryPdf entryId = do
-        urlRender <- getUrlRender
+{-        urlRender <- getUrlRender
         --userId<-requireAuthId 
         (author, entry)<- runDB $ do 
             entry <- get404 entryId
@@ -131,6 +134,57 @@ cacheEntryPdf entryId = do
             removeFile pdfPath `Import.catch` ((\_ -> return ())::IOException -> IO ())
             parse (Just pdfPath) tempDir parser editorData >> return ()
             return ()
+-}
+    urlRender <- getUrlRender
+    (entryAuthor, entry)<- runDB $ do 
+        entry <- get404 entryId
+        author <- get404 $ entryUserId entry
+        return (author, entry)
+
+    html <- printLayout $ do
+                [whamlet|
+<article .entry :entryStatus entry == Draft:.draft #entry-#{toPathPiece entryId}>
+
+  <div .entry-meta>
+    <a .stretch-link href=@{UserEntryR (entryUserId entry) entryId}>
+        <h1 .entry-title>#{preEscapedToMarkup(scaleHeader 1 (entryTitleHtml entry))}
+    <ul.list-inline>
+      <li .by>
+        
+        <a href=@{UserHomeR (entryUserId entry)}>#{userName entryAuthor}
+      <li>
+        <span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-dot" viewBox="0 0 16 16"><path d="M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3"/>
+      <li .at>
+        
+        #{utcToDate (entryInserted entry)}
+  <div .entry-content>
+      
+        $if (entryBody entry) /= Nothing
+            #{preEscapedToMarkup(entryBodyHtml entry)}
+        $else
+            <div.default-entry-content-wrapper>
+                <p>Coming soon...
+                |]
+
+    tempDir<-userTemporaryDirectory --don't use this dirctory when using forkIO
+    pdfPath <- entryPdfPath entryId
+    liftIO $ do
+        removeFile pdfPath `Import.catch` ((\_ -> return ())::IOException -> IO ())
+        parse (Just pdfPath) tempDir htmlToPdf html >> return ()
+        return ()
+
+printLayout :: Widget -> Handler Html
+printLayout widget = do
+
+    pc <- widgetToPageContent $ do
+        addStylesheet $ StaticR css_bootstrap_min_css
+        addStylesheet $ StaticR css_bootstrap_theme_css
+        addScript $ StaticR js_bootstrap_min_js
+        addScript $ StaticR js_bootstrap_theme_js  
+    
+        $(widgetFile "print-layout")
+    withUrlRenderer $(hamletFile "templates/print-layout-wrapper.hamlet")
 
 -- | cache entry
 cacheEntry :: Entity Entry -> Handler ()

@@ -108,11 +108,10 @@ getUserEntryR authorId entryId = do
                         <li>
                             <a href=@{CategoriesR (entryUserId category)}#{"#entry-" <> toPathPiece categoryId}>#{preEscapedToMarkup $ entryTitleHtml category}
   <div .entry-content>
-      <div .entry-content-wrapper>
         $if (entryBody entry) /= Nothing
             #{preEscapedToMarkup(entryBodyHtml entry)}
         $else
-            <div style="width:519.3906239999999px;">
+            <div .default-entry-content-wrapper>
                 <p>_{MsgComingSoon}
   <div .menu>
     <ul.list-inline.text-lowercase>
