@@ -140,7 +140,7 @@ getUserEntryR authorId entryId = do
                 $nothing
                     <a.text-muted href=@{AuthR LoginR}>_{MsgDownload}
         <li .share>
-            <a.text-muted href=# data-link=@{UserEntryR authorId entryId}>_{MsgShare}
+            <a.text-muted href=# data-share-url=@{UserEntryR authorId entryId} data-share-text="#{entryTitle entry}">_{MsgShare}
         $if isAdministrator maybeUserId entry
             <li .edit>
                 <a.text-muted href=@{EditUserEntryR entryId}>_{MsgEdit}
@@ -276,14 +276,20 @@ shareWidget = do
         $(document).ready(function() {
             $(".menu .share a, #share-link").click(function(e){
                 e.preventDefault();
-                //apis: email, twitter, facebook, mathstodon, bluesky, reddit, wordpress, blogger
+                let shareUrl=$(this).attr("data-share-url");
+                let shareText=encodeURIComponent($(this).attr("data-share-text"));
+                //apis: email, twitter, facebook, mathstodon, linkedin, reddit, wordpress, medium, blogger
                 let apis =[
-                    {api: "mailto:?body=", name: "Email", icon: "@{StaticR icons_envelope_svg}"},
-                    {api: "https://mathstodon.xyz/share?text=",  name: "Mathstodon", icon: "@{StaticR icons_mathstodon_logo_svg}"},
-                    {api: "https://www.reddit.com/submit?text=",  name: "Reddit", icon: "@{StaticR icons_reddit_logo_svg}"},
-                    {api: "https://x.com/intent/post?text=",  name: "X", icon: "@{StaticR icons_twitter_logo_svg}"},
+                    {api: `mailto:?subject=${shareText}&body=${shareUrl}`, name: "Email", icon: "@{StaticR icons_envelope_svg}"},
+                    {api: `https://mathstodon.xyz/share?text=${shareText}&url=${shareUrl}`,  name: "Mathstodon", icon: "@{StaticR icons_mathstodon_logo_svg}"},
+                    {api: `https://www.reddit.com/submit?title=${shareText}&url=${shareUrl}&type=LINK`,  name: "Reddit", icon: "@{StaticR icons_reddit_logo_svg}"},
+                    {api: `https://www.linkedin.com/shareArticle?url=${shareUrl}&title=${shareText}`,  name: "LinkedIn", icon: "@{StaticR icons_linkedin_logo_svg}"},
+                    {api: `https://x.com/intent/post?text=${shareText}&url=${shareUrl}`,  name: "X", icon: "@{StaticR icons_twitter_logo_svg}"},
+                    {api: `https://www.blogger.com/blog-this.g?n=${shareText}&u=${shareUrl}`,  name: "Blogger", icon: "@{StaticR icons_blogger_logo_svg}"},
+                    {api: `https://wordpress.com/press-this.php?u=${shareUrl}&t=${shareText}`,  name: "WordPress", icon: "@{StaticR icons_wordpress_logo_svg}"}
+        
                 ];
-                let shareUrl=$(this).attr("data-link");
+
                 let messages = {
                     shareLink: #{msgRender MsgShareLink},
                     link: #{msgRender MsgLink},
@@ -306,7 +312,7 @@ shareWidget = do
                             <label>${messages.shareVia}</label>` +
                             `<div class="share-buttons">`+ 
                             apis.map(function(item) {
-                                    return `<a class="btn btn-secondary" href="${item.api}${shareUrl}" target="_blank"><img src="${item.icon}" alt="${item.name}"></a>`;
+                                    return `<a class="btn btn-secondary" href="${item.api}" target="_blank"><img src="${item.icon}" alt="${item.name}"></a>`;
                                     }).join(``) + `` + 
                             `<a tabindex="0" role="button" class="btn btn-secondary" data-toggle="popover"><img src=@{StaticR icons_qr_code_svg} alt="QR code"></a>` +
                             `</div>` +
@@ -316,7 +322,7 @@ shareWidget = do
                 let qrCodeSize = 128;
                 var qrCodeContainer = $("<div/>", {class:'qrcode-container',height: qrCodeSize, width: qrCodeSize});
                 modal.find('a[data-toggle="popover"]').popover({
-                    placement: "right",
+                    placement: "top",
                     html: true,
                     content: qrCodeContainer,
                     trigger: "focus" 
