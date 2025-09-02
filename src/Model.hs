@@ -40,5 +40,11 @@ instance FromJSON Format where
 instance ToJSON Format where
 derivePersistField "Format"
 
+data OrderStatus = Pending | Completed | Cancelled | Refunded | Refunding
+    deriving (Show, Read, Eq, Generic)
+instance FromJSON OrderStatus where
+instance ToJSON OrderStatus where
+derivePersistField "OrderStatus"
+
 share [mkPersist sqlSettings, mkMigrate "migrateAll"]
     $(persistFileWith lowerCaseSettings "config/models.persistentmodels")

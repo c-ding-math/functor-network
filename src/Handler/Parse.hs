@@ -65,9 +65,22 @@ getDownloadR _ entryId = do
     --cacheEntryPdf entryId
     pdfPath <- entryPdfPath entryId
     entry <- runDB $ get404 entryId
-    userId <- requireAuthId
-    if (entryStatus entry == Publish) || (entryUserId entry == userId) 
+    mUserId <- maybeAuthId
+    if (entryStatus entry == Publish) || (Just (entryUserId entry) == mUserId) 
         then do
+            _<-runDB $ do
+                currentTime <- liftIO getCurrentTime
+                waiReq <- waiRequest
+                insert $ Order {
+                    orderUserId = mUserId
+                    , orderEntryId = entryId
+                    , orderInserted = currentTime
+                    , orderUpdated = currentTime
+                    , orderStatus = Completed
+                    , orderAmount = 1
+                    , orderDescription = Just $ "Download entry" <> toPathPiece entryId
+                    , orderIdent = pack $ show waiReq
+                }
             sendFile "application/pdf" $ pdfPath
         else do
             notFound

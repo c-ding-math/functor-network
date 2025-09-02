@@ -8,7 +8,7 @@ import Import
 import Handler.Parse(editorWidget,doesEntryPdfExist)
 import Parse.Parser(scaleHeader)
 import Handler.Tree(treeWidget)
-import Handler.Vote(voteWidget)
+import Handler.Vote(voteWidget,likeWidget)
 --import Handler.Download(downloadWidget)
 import Handler.EditComment(getChildIds,newCommentForm,CommentInput(..))
 import Handler.NewEntrySubscription(subscribeToEntryWidget)
@@ -20,9 +20,9 @@ getUserEntryR authorId entryId = do
     maybeUser<-maybeAuth
     pdfExists<-doesEntryPdfExist entryId
 
-    (entry,entryAuthor,entryCategoryEntities, entryVoteList, commentListData)<-runDB $ do
+    (maybePayment,entry,entryAuthor,entryCategoryEntities, entryVoteList, commentListData)<-runDB $ do
         entry<-get404 entryId
-        
+        maybePayment <- selectFirst [PaymentUserId ==. authorId] [Desc PaymentInserted]
         if (entryUserId entry==authorId) && (entryStatus entry==Publish || isAdministrator maybeUserId entry) && (entryType entry==UserPost)
           then do
             --mEntryAuthor<- selectFirst [UserId==.entryUserId entry] []
@@ -50,7 +50,7 @@ getUserEntryR authorId entryId = do
                                 return $ Just (parentCommentId, userName parentCommentAuthor)
                     _ -> return Nothing
                 ) commentEntities
-            return $ (entry,entryAuthor,entryCategoryEntities,entryVoteList,zip4 commentEntities commentAuthors parentCommentMetas commentVoteLists)       
+            return $ (maybePayment,entry,entryAuthor,entryCategoryEntities,entryVoteList,zip4 commentEntities commentAuthors parentCommentMetas commentVoteLists)       
           else notFound
 
     formatParam <- lookupGetParam "format"
@@ -70,6 +70,8 @@ getUserEntryR authorId entryId = do
         [whamlet|
 <article .entry :entryStatus entry == Draft:.draft #entry-#{toPathPiece entryId}>
   <h1 .entry-title>#{preEscapedToMarkup(scaleHeader 1 (entryTitleHtml entry))}
+    $maybe Entity _ payment <- maybePayment
+        <a#like-button.btn.btn-primary.pull-right type=button data-action=@{LikeR entryId} href=#{paymentIdent payment} data-toggle=modal data-target=#like-modal>_{MsgLike}
   <div .entry-meta>
     <ul.list-inline>
       <li .by>
@@ -120,7 +122,8 @@ getUserEntryR authorId entryId = do
             <a.text-muted href=#comment data-action=@{EditCommentR entryId}>_{MsgComment}
         <li .subscribe>
             <a.text-muted href=# data-action=@{NewEntrySubscriptionR entryId}>_{MsgFollow}
-        <li .vote.hidden>
+        $if isNothing maybePayment
+          <li .vote>
             $maybe userId<-maybeUserId
                 <a.text-muted href=# data-action=@{VoteR entryId}>
                     $if (elem userId (map (voteUserId . entityVal) entryVoteList))
@@ -135,10 +138,8 @@ getUserEntryR authorId entryId = do
             <a.text-muted href=# data-action=@{TreeR entryId}>_{MsgCategorize}
         $if pdfExists
             <li .download>
-                $maybe _ <-maybeUserId
                     <a.text-muted href=@{DownloadR authorId entryId}>_{MsgDownload}
-                $nothing
-                    <a.text-muted href=@{AuthR LoginR}>_{MsgDownload}
+
         <li .share>
             <a.text-muted href=# data-share-url=@{UserEntryR authorId entryId} data-share-text="#{entryTitle entry}">_{MsgShare}
         $if isAdministrator maybeUserId entry
@@ -205,6 +206,7 @@ getUserEntryR authorId entryId = do
         treeWidget entryId
         when (isJust maybeUserId)
             voteWidget 
+        likeWidget
         menuWidget
         shareWidget
         --downloadWidget entryId
@@ -312,9 +314,9 @@ shareWidget = do
                             <label>${messages.shareVia}</label>` +
                             `<div class="share-buttons">`+ 
                             apis.map(function(item) {
-                                    return `<a class="btn btn-secondary" href="${item.api}" target="_blank"><img src="${item.icon}" alt="${item.name}"></a>`;
+                                    return `<a class="btn" href="${item.api}" target="_blank"><img src="${item.icon}" alt="${item.name}"></a>`;
                                     }).join(``) + `` + 
-                            `<a tabindex="0" role="button" class="btn btn-secondary" data-toggle="popover"><img src=@{StaticR icons_qr_code_svg} alt="QR code"></a>` +
+                            `<a tabindex="0" role="button" class="btn" data-toggle="popover"><img src=@{StaticR icons_qr_code_svg} alt="QR code"></a>` +
                             `</div>` +
                         `</form>`,
                     footer: `<button class='btn btn-default' type='button' data-dismiss="modal">${messages.close}</button>`,

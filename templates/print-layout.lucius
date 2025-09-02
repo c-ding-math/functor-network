@@ -85,7 +85,8 @@
   }
   .entry-meta{
     background-color: #f5f5f5 !important;
-    padding: 1em 3em !important;
+    padding-top: 1em!important;
+    padding-bottom: 1em!important;
     text-align: center !important;
     margin-bottom: 3em !important;
   }
@@ -93,6 +94,7 @@
     color: #000 !important;
     margin-bottom: 1em !important;
     margin-top: 1 !important;
+    max-width: 555px;
   }
   .footnotes-end-of-document{
     max-width:555px;

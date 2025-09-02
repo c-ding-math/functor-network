@@ -52,9 +52,9 @@ getUserHomeR authorId = do
                 <div .user-id>No. #{toPathPiece authorId}
                 <div .user-actions>
                     $if (mUserId == Just authorId) && (isJust mAbout)
-                            <a#share-link.btn.btn-primary href=# data-link=@{UserHomeR authorId}>_{MsgShare}
+                            <a#share-link.btn.btn-primary href=# data-share-url=@{UserHomeR authorId} data-share-text=#{userName author}>_{MsgShare}
                     $else
-                            <a#share-link.btn.btn-default href=# data-link=@{UserHomeR authorId}>_{MsgShare}
+                            <a#share-link.btn.btn-default href=# data-share-url=@{UserHomeR authorId} data-share-text=#{userName author}>_{MsgShare}
                     ^{subscribeToUserWidget authorId}
                     $if mUserId == Just authorId
                         $if isJust mAbout

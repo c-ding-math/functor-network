@@ -15,6 +15,10 @@
 figure{
     text-align: center;
 }
+caption{
+    text-align: center;
+    color:unset;
+}
 .modal-footer{
     border-top: none;
     padding-top: 0;
@@ -59,11 +63,13 @@ textarea{
 
 ::-webkit-file-upload-button {
     font: inherit;
+    appearance: button;
     -webkit-appearance: button;
 }
 
 ::file-selector-button {
     font: inherit;
+    appearance: button;
     -webkit-appearance: button;
 }
 
@@ -165,13 +171,18 @@ textarea{
     font-family: Georgia, "Times New Roman", Times, serif;
 }
 
+#like-button{
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
 .draft .entry-title::after{
     content:" (draft)";
 }
 
-.entry-meta>ul>li>span:first-child {
+.navbar-nav a span svg, .entry-meta>ul>li>span:first-child {
     vertical-align: -0.125em;
-    font-size: 1em;
+    width: 1em;
+    height:1em;
 }
 ul.category-list>li::marker {
     vertical-align: -0.125em;

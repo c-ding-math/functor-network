@@ -38,6 +38,7 @@ data EmailSetting=EmailSetting{_email::Maybe Text}
 data DefaultFormatSetting=DefaultFormatSetting{_defaultFormat::Format}
 data DefaultPreambleSetting=DefaultPreambleSetting{_defaultPreamble::Maybe Textarea}
 data DefaultCitationSetting=DefaultCitationSetting{_defaultCitation::Maybe Textarea}
+data PaymentSetting=PaymentSetting{_payment::Maybe Text}
 
 nameSettingForm::User->Form NameSetting
 nameSettingForm user=renderBootstrap3 BootstrapBasicForm $ NameSetting
@@ -107,11 +108,15 @@ defaultCitationSettingForm::User->Form DefaultCitationSetting
 defaultCitationSettingForm user=renderBootstrap3 BootstrapBasicForm $ DefaultCitationSetting
     <$> aopt textareaField (bfs MsgDefaultCitation) (Just(userDefaultCitation user))
 
+paymentSettingForm::Maybe Payment -> Form PaymentSetting
+paymentSettingForm mPayment=renderBootstrap3 BootstrapBasicForm $ PaymentSetting
+    <$> aopt urlField (bfs MsgLinkToYourDonationPage) (Just (paymentIdent <$> mPayment))
+
 getSettingsR :: Handler Html
 getSettingsR = do 
     --urlRender<-getUrlRender
     (userId, user)<-requireAuthPair
-    (emails, googles, orcids) <- runDB $ do
+    (emails, googles, orcids, mPayment) <- runDB $ do
         --roleEntities<-selectList [RoleUserId==.userId,RoleType==.Administrator] []  
         --mSites<- mapM (get . roleSiteId . entityVal) roleEntities   
         --sites<-selectList[SiteUserId==.Just userId] [Desc SiteInserted]
@@ -119,7 +124,8 @@ getSettingsR = do
         googles<-selectList [ LoginPlugin==."google",LoginUserId==.Just userId, LoginVerified==.True] [Desc LoginInserted]
         orcids<-selectList [ LoginPlugin==."orcid",LoginUserId==.Just userId, LoginVerified==.True] [Desc LoginInserted]
         --mNotification <-selectFirst [NotificationEmailId<-.map entityKey emails] [Desc NotificationInserted]
-        return $ (emails, googles,orcids)
+        mPayment<-selectFirst [PaymentUserId==.userId] [Desc PaymentInserted]
+        return $ (emails, googles,orcids,entityVal <$> mPayment)
 
     (nameWidget, nameEnctype) <- generateFormPost $ nameSettingForm user
     --(aboutWidget, aboutEnctype) <- generateFormPost $ aboutSettingForm user
@@ -130,6 +136,7 @@ getSettingsR = do
     (emailWidget, emailEnctype) <- generateFormPost $ emailSettingForm user (emailAddress . entityVal <$> emails)
     (preambleWidget, preambleEnctype) <- generateFormPost $ defaultPreambleSettingForm user
     (citationWidget, citationEnctype) <- generateFormPost $ defaultCitationSettingForm user
+    (paymentWidget, paymentEnctype) <- generateFormPost $ paymentSettingForm mPayment
     
     defaultLayout $ do   
         --addStylesheetRemote "https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"     
@@ -290,7 +297,20 @@ getSettingsR = do
                     <div>
                         <a .btn .btn-default href=@{AuthR setpassR}>_{MsgResetPassword}
                     <p>
-
+            <section .payment-setting>
+                <h2>_{MsgDonation}
+                <div.panel>
+                 <div.panel-body>
+                    <form .payment-form method=post enctype=#{paymentEnctype}>
+                        ^{paymentWidget}
+                        <p.text-muted>_{MsgPaymentDescription}
+                        <button .btn .btn-default type=submit name=setting value=payment>_{MsgSave}
+                    <p>
+                    <div>
+                        <label>Support us
+                        <p.text-muted>We're on a mission to grow our platform and bring it to more people. If you've enjoyed being part of it, your donation can help others like you discover and benefit from it too.
+                        <a .btn .btn-default href="https://ko-fi.com/functor_network">_{MsgDonate}
+                    
         |]
         toWidget [lucius|
             section+section{
@@ -480,7 +500,23 @@ postSettingsR = do
                     setMessageI $ MsgChangeSaved
                     redirect $ SettingsR
                 _ -> notFound
-
+        Just "payment"-> do
+            mPaymentEntity <- runDB $ selectFirst [PaymentUserId==.userId] [Desc PaymentInserted]
+            let mPayment = entityVal <$> mPaymentEntity
+            ((result,_), _) <- runFormPost $ paymentSettingForm mPayment
+            case result of
+                FormSuccess res -> do
+                    _<-runDB $ do 
+                        deleteWhere [PaymentUserId==.userId]
+                        case _payment res of
+                            Just payment -> do
+                                currentTime <- liftIO getCurrentTime
+                                _<-insert $ Payment{paymentUserId=userId, paymentPlugin="link", paymentIdent=payment, paymentInserted=currentTime}
+                                return ()
+                            Nothing -> return ()
+                    setMessageI $ MsgChangeSaved
+                    redirect $ SettingsR
+                _ -> notFound
         Just x->invalidArgs [x]
         _->notFound
 

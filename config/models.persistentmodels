@@ -1,5 +1,24 @@
 -- By default this file is used by `persistFileWith` in Model.hs (which is imported by Foundation.hs)
 -- Syntax for this file here: https://github.com/yesodweb/persistent/blob/master/docs/Persistent-entity-syntax.md
+Order json
+    userId UserId Maybe OnDeleteCascade
+    entryId EntryId OnDeleteCascade
+    inserted UTCTime default=CURRENT_TIME
+    updated UTCTime default=CURRENT_TIME
+    status OrderStatus
+    amount Int
+    description Text Maybe
+    ident Text
+    deriving Show
+    
+Payment json
+    userId UserId OnDeleteCascade
+    plugin Text
+    ident Text
+    inserted UTCTime default=CURRENT_TIME
+    UniquePayment plugin ident
+    deriving Show
+
 Vote json
     userId UserId OnDeleteCascade
     entryId EntryId OnDeleteCascade

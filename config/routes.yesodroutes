@@ -32,6 +32,7 @@
 /category NewCategoryR POST !user !login
 /tree/node/#EntryId TreeR POST !login
 /vote/#EntryId VoteR POST
+/like/#EntryId LikeR POST
 --/redirect RedirectR GET
 
 /files FilesR GET POST !user !login
@@ -64,3 +65,4 @@
 
 !/#Text PageR GET
 --!/user/#UserId/#Text UserPageR GET !user
+

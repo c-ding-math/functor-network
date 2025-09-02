@@ -6,7 +6,7 @@
         $if length (navbarRightFilteredMenuItems ++ navbarLeftFilteredMenuItems) > 1
             
             <div .navbar-header>
-                <a .navbar-brand href=@{homeRoute} style="max-width:16em;">
+                <a .navbar-brand href=@{homeRoute}>
                     $if homeRoute == HomeR
                         <img.img-rounded.pull-left src=@{StaticR icons_logo_svg} alt="Logo"/>
                     #{homeTitle}
@@ -22,7 +22,7 @@
                 <ul .nav.navbar-nav.navbar-right>
                     $forall MenuItem label route _ <- navbarRightFilteredMenuItems
                         <li :Just route == mcurrentRoute:.active>
-                            <a href=@{route}>#{label}
+                            <a href=@{route}>#{preEscapedToMarkup label}
 
         $else
             <div .navbar-header style="width:100%;">
@@ -30,7 +30,7 @@
                 <ul .nav.navbar-nav.navbar-right style="float:right;">
                     $forall MenuItem label route _ <- navbarRightFilteredMenuItems
                         <li :Just route == mcurrentRoute:.active>
-                            <a href=@{route}>#{label}
+                            <a href=@{route}>#{preEscapedToMarkup label}
 
 <!-- Page Contents -->
 
@@ -75,12 +75,9 @@ $else
                 <li>
                     <a href=@{route}>#{label}-->
         <ul .nav.navbar-nav.navbar-right>
-            $forall MenuItem label route _ <- footerRightFilteredMenuItems
+            $forall MenuItem label (PageR link) _ <- footerRightFilteredMenuItems
                 <li>
-                    $if route == PageR "Donate"
-                        <a href="https://ko-fi.com/functor_network">#{label}
-                    $else
-                        <a href=@{route}>#{label}
+                        <a href=#{link}>#{preEscapedToMarkup label}
 
             <!--#{appCopyright $ appSettings master}-->
 

@@ -232,3 +232,11 @@ Share: Share
 ShareLink: Share link
 ShareVia: Share via
 Close: Close
+
+Donate: Donate
+Donation: Donation
+LinkToYourDonationPage: Link to your donation page
+PaymentDescription: The donation feature is experimental. Add a link to your donation page to turn it on. Once enabled, a prominent “like” button will appear after each post title. When readers click it, they’ll be invited to support your work. To disable this feature, simply leave the field blank.
+ContinueReading: Continue reading
+SupportAuthor: Support the author
+UnLike: Un-like
