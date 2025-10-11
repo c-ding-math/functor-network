@@ -511,7 +511,7 @@ postSettingsR = do
                         case _payment res of
                             Just payment -> do
                                 currentTime <- liftIO getCurrentTime
-                                _<-insert $ Payment{paymentUserId=userId, paymentPlugin="link", paymentIdent=payment, paymentInserted=currentTime}
+                                _<-insert $ Payment{paymentUserId=userId, paymentPlugin="link", paymentIdent=payment, paymentInserted=currentTime, paymentToken=Nothing, paymentVerified=False}
                                 return ()
                             Nothing -> return ()
                     setMessageI $ MsgChangeSaved

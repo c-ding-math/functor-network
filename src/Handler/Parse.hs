@@ -68,7 +68,7 @@ getDownloadR _ entryId = do
     mUserId <- maybeAuthId
     if (entryStatus entry == Publish) || (Just (entryUserId entry) == mUserId) 
         then do
-            _<-runDB $ do
+            {-_<-runDB $ do
                 currentTime <- liftIO getCurrentTime
                 waiReq <- waiRequest
                 insert $ Order {
@@ -80,7 +80,7 @@ getDownloadR _ entryId = do
                     , orderAmount = 1
                     , orderDescription = Just $ "Download entry" <> toPathPiece entryId
                     , orderIdent = pack $ show waiReq
-                }
+                }-}
             sendFile "application/pdf" $ pdfPath
         else do
             notFound
