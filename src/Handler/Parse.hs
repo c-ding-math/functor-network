@@ -33,19 +33,16 @@ postParseR inputFormat outputFormat = do
             busyMessage= "Busy..."
         return $ RepPlain $ toContent $ busyMessage
     else do  
-        let lengthLimit = 10000
+
         docData<- requireCheckJsonBody ::Handler EditorData
-        if isJust maybeUserId || length (unMaybeTextarea (editorContent docData)) + length (unMaybeTextarea (editorPreamble docData)) + length (unMaybeTextarea (editorCitation docData)) < lengthLimit
-            then do
-                let parser = case (inputFormat,outputFormat) of
-                        ("tex","svg") -> texToSvg
-                        ("tex","html") -> texToHtml
-                        _ -> mdToHtml     
-                preview<-liftIO $ parse Nothing userDir parser docData  
-                return $ RepPlain $ toContent $ case preview of
-                    "\n"->""
-                    x->x
-            else if isJust maybeUserId
+        let lengthLimit = case maybeUserId of
+                Nothing -> 10000
+                Just _  -> 100000
+            lengthLimitMessage::Text
+            lengthLimitMessage = case maybeUserId of
+                Nothing -> pack $ "Up to " ++ show lengthLimit ++ " characters for non-logged-in users." 
+                Just _  -> pack $ "Up to " ++ show lengthLimit ++ " characters."
+        if length (unMaybeTextarea (editorContent docData)) + length (unMaybeTextarea (editorPreamble docData)) + length (unMaybeTextarea (editorCitation docData)) < lengthLimit
             then do
                 let parser = case (inputFormat,outputFormat) of
                         ("tex","svg") -> texToSvg
@@ -56,8 +53,6 @@ postParseR inputFormat outputFormat = do
                     "\n"->""
                     x->x
             else do
-                let lengthLimitMessage :: Text
-                    lengthLimitMessage = pack $ "Up to " ++ show lengthLimit ++ " characters for non-logged-in users."  
                 return $ RepPlain $ toContent $ "<div class='alert-warning parser-message'>"<>(lengthLimitMessage)<>"</div>"
 
 getDownloadR :: UserId -> EntryId -> Handler Html

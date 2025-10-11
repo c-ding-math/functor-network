@@ -240,3 +240,6 @@ PaymentDescription: The donation feature is experimental. Add a link to your don
 ContinueReading: Continue reading
 SupportAuthor: Support the author
 UnLike: Un-like
+
+TitleTooLong: Title too long
+BodyTooLong: Maximum body length exceeded. Please shorten your post.
