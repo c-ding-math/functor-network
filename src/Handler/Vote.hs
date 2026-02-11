@@ -89,7 +89,7 @@ postLikeR entryId = do
                                 delete key
                                 return $ object []
             _ -> do
-                let voterNames = map (userName . entityVal) voters
+                --let voterNames = map (userName . entityVal) voters
                 let message :: Text
                     message = if null voters
                         then "First like! Log in to give your like, or support the author by making a donation."

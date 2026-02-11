@@ -4,7 +4,6 @@ This is the source code for the [Functor Network](https://functor.network) - a b
 
 ## Features
 
-
 In a word, every feature on our platform is thoughtfully designed for mathematicians.
 
 - **Effortless Typesetting.** Typesetting math on the web can be exhausting and time-consuming. On our platform, you focus on the content—we’ll take care of the typesetting.

@@ -917,7 +917,7 @@ instance YesodAuthEmail App where
                 <ul>
                     <li> Wait a minute.
                     <li> Make sure you typed your email address correctly.
-                    <li> Add our notification email <code>noreply@functor.network</code> to your whitelist with your provider and try again.
+                    <li> Add our notification email <code>notification@functor.network</code> to your whitelist with your provider and try again.
                     <li> <a href=@{FeedbackR}>Feedback here</a>. We will help you out.
               |]
               toWidget [julius|

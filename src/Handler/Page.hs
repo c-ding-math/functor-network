@@ -15,7 +15,7 @@ getPageR text = do
                 [whamlet|
 <article .entry :entryStatus entry == Draft:.draft>
     <h1>#{text}
-    <div .entry-content>
+    <div .entry-body>
       <div .entry-content-wrapper>#{preEscapedToMarkup (entryBodyHtml entry)}
     <!--  <ul .entry-menu>
         <li>

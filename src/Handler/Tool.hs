@@ -47,6 +47,7 @@ getToolR "tex-to-svg" = do
     (widget, enctype) <- generateFormPost $ latexForm $ Just $ EditorData (Just $ Textarea defaultPreamble) (Just $ defaultContent) (Just $ Textarea "")
     defaultLayout $ do
         setTitle "LaTeX to SVG"
+        setDescriptionIdemp $ "A LaTeX-to-SVG converter featuring full LaTeX package support"
         [whamlet|
             <h1>LaTeX to SVG
             <form method=post action=@{ToolR "tex-to-svg"} enctype=#{enctype}>
