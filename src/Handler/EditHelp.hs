@@ -69,12 +69,13 @@ getEditHelpR "syntax" = do
         [whamlet|
 <article .entry>
   <h1>#{title}
-  <div .entry-content>
+  <div .entry-body>
     <div .entry-content-wrapper>
         $maybe (Entity _ entry)<-maybeSyntax
             #{preEscapedToMarkup(entryBodyHtml entry)}
         $nothing
-            <p>_{MsgComingSoon}
+            <div style="width:519.3906239999999px;">
+                <p>_{MsgComingSoon}
 <section .new-comment>
             <h3 #editor>Editor Demo
             <form .editor-demo>
@@ -107,12 +108,13 @@ getEditHelpR "editor" = do
         [whamlet|
 <article .entry>
   <h1>#{title}
-  <div .entry-content>
+  <div .entry-body>
     <div .entry-content-wrapper>
         $maybe (Entity _ entry)<-maybeSyntax
             #{preEscapedToMarkup(entryBodyHtml entry)}
         $nothing
-            <p>_{MsgComingSoon}
+            <div style="width:519.3906239999999px;">
+                <p>_{MsgComingSoon}
 <section .new-comment>
             <h3 #editor>Editor Demo
             <form .editor-demo>
@@ -128,12 +130,13 @@ getEditHelpR "format" = do
         [whamlet|
             <article .entry>
                 <h1>#{title}
-                <div .entry-content>
+                <div .entry-body>
                     <div .entry-content-wrapper>
                         $maybe (Entity _ entry)<-mFormat
                             #{preEscapedToMarkup (entryBodyHtml entry)}
-                        $nothing     
-                            <p>_{MsgComingSoon}
+                        $nothing
+                            <div style="width:519.3906239999999px;">
+                                <p>_{MsgComingSoon}
         |]
 
 getEditHelpR "shortcuts" = do
@@ -144,12 +147,13 @@ getEditHelpR "shortcuts" = do
         [whamlet|
             <article .entry>
                 <h1>#{title}
-                <div .entry-content>
+                <div .entry-body>
                     <div .entry-content-wrapper>
                         $maybe (Entity _ entry)<-mShortcuts
                             #{preEscapedToMarkup (entryBodyHtml entry)}
-                        $nothing     
-                            <p>_{MsgComingSoon}
+                        $nothing
+                            <div style="width:519.3906239999999px;">
+                                <p>_{MsgComingSoon}
         |]
 
 getEditHelpR _ = notFound

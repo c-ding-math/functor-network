@@ -23,11 +23,15 @@ import Database.Persist.Quasi
 -- http://www.yesodweb.com/book/persistent/
 
 data EntryType =  Post | Page | Comment | UserPage | UserPost | Feedback | Category
-    deriving (Show, Read, Eq)
+    deriving (Show, Read, Eq, Generic)
+instance FromJSON EntryType where
+instance ToJSON EntryType where
 derivePersistField "EntryType"
 
 data EntryStatus =  Publish | Draft 
-    deriving (Show, Read, Eq)
+    deriving (Show, Read, Eq, Generic)
+instance FromJSON EntryStatus where
+instance ToJSON EntryStatus where
 derivePersistField "EntryStatus"
 
 data Format = Format Text
@@ -35,6 +39,12 @@ data Format = Format Text
 instance FromJSON Format where
 instance ToJSON Format where
 derivePersistField "Format"
+
+data OrderStatus = Pending | Completed | Cancelled | Refunded | Refunding
+    deriving (Show, Read, Eq, Generic)
+instance FromJSON OrderStatus where
+instance ToJSON OrderStatus where
+derivePersistField "OrderStatus"
 
 share [mkPersist sqlSettings, mkMigrate "migrateAll"]
     $(persistFileWith lowerCaseSettings "config/models.persistentmodels")

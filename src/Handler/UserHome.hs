@@ -52,9 +52,9 @@ getUserHomeR authorId = do
                 <div .user-id>No. #{toPathPiece authorId}
                 <div .user-actions>
                     $if (mUserId == Just authorId) && (isJust mAbout)
-                            <a#share-link.btn.btn-primary href=# data-link=@{UserHomeR authorId}>_{MsgShare}
+                            <a#share-link.btn.btn-primary href=# data-share-url=@{UserHomeR authorId} data-share-text=#{userName author}>_{MsgShare}
                     $else
-                            <a#share-link.btn.btn-default href=# data-link=@{UserHomeR authorId}>_{MsgShare}
+                            <a#share-link.btn.btn-default href=# data-share-url=@{UserHomeR authorId} data-share-text=#{userName author}>_{MsgShare}
                     ^{subscribeToUserWidget authorId}
                     $if mUserId == Just authorId
                         $if isJust mAbout
@@ -63,7 +63,7 @@ getUserHomeR authorId = do
                             <a.edit-profile.btn.btn-primary href=@{EditUserAboutR}>_{MsgEdit}
 
             <article #about .entry style="margin-bottom:0">
-                <div .entry-content style="margin-bottom:0">
+                <div .entry-body style="margin-bottom:0">
                     <div .entry-content-wrapper>
                         $maybe about <- mAbout
                             $if isJust (entryBody (entityVal about))

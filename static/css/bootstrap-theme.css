@@ -1,3 +1,5 @@
+:root {
+}
 .container{
     min-width:520px;
     overflow: hidden;
@@ -12,6 +14,10 @@
 }
 figure{
     text-align: center;
+}
+caption{
+    text-align: center;
+    color:unset;
 }
 .modal-footer{
     border-top: none;
@@ -57,11 +63,13 @@ textarea{
 
 ::-webkit-file-upload-button {
     font: inherit;
+    appearance: button;
     -webkit-appearance: button;
 }
 
 ::file-selector-button {
     font: inherit;
+    appearance: button;
     -webkit-appearance: button;
 }
 
@@ -99,7 +107,7 @@ textarea{
     border-color: inherit;
     border-style: solid;
     border-width: 0;
-    border-inline-end-width: var(--bs-border-width);
+    border-inline-end-width: inherit;
     border-radius: 0;
     transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
@@ -153,23 +161,28 @@ textarea{
     margin-top: 1em;
     margin-bottom: 2em;
 }
-.entry-content {
+.entry-body {
     margin-bottom: 0.5em;
     border-radius: 4px;
 }
 
-.entry-title, .entry-content, .editor-preview, .navbar-brand, .by, .to, #comment a {
+.entry-title, .entry-body, .editor-preview, .navbar-brand, .by, .to, #comment a {
     /*font-family: Georgia,Cambria,"Times New Roman",Times,serif;*/
     font-family: Georgia, "Times New Roman", Times, serif;
+}
+
+#like-button{
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 .draft .entry-title::after{
     content:" (draft)";
 }
 
-.entry-meta>ul>li>span:first-child {
+.navbar-nav a span svg, .entry-meta>ul>li>span:first-child {
     vertical-align: -0.125em;
-    font-size: 1em;
+    width: 1em;
+    height:1em;
 }
 ul.category-list>li::marker {
     vertical-align: -0.125em;
@@ -189,7 +202,7 @@ ul.entry-list>li{
 }
 ul.entry-list>li>*{
     min-width:520px;
-    max-width:574px;
+    max-width:666px;
     margin:auto;
 }
 ul.entry-list>li>a{
@@ -227,13 +240,10 @@ body {
     max-width:832px;
     margin:auto;
 }
-.entry-content .entry-content-wrapper, .editor-preview .entry-content-wrapper{
-    margin:auto;
+.entry-body .entry-content-wrapper, .editor-preview .entry-content-wrapper{
     width:min-content;
+    margin:auto;
     color:black;
-}
-.entry-content-wrapper .center{
-    text-align: center;
 }
 .parser-message{
     padding: 0.5em 1em;
@@ -350,11 +360,11 @@ div.csl-indent {
     body, .or span, .modal-content{
         background-color: #f5f5f5;
     }
-    .entry-content, .editor-preview{
+    .entry-body, .editor-preview{
         background-color: white;
         border: 1px solid #ccc;
     }
-    .entry-content {
+    .entry-body {
         padding: 1em 0.5em 0.5em;
     }
 }

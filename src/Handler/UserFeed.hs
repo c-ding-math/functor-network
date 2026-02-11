@@ -38,7 +38,7 @@ getUserFeedR authorId = do
     newsFeed feedInfo
 
 -- Helper function to convert a Entry into a FeedEntry.
---toFeedEntry :: Entity Entry -> FeedEntry Text
+toFeedEntry :: Entity Entry -> FeedEntry (Route App)
 toFeedEntry (Entity entryId entry) = FeedEntry
     { feedEntryTitle    = entryTitle entry
     , feedEntryLink     = UserEntryR (entryUserId entry) entryId -- Assumes an UserEntryR (entryUserId entry) route exists

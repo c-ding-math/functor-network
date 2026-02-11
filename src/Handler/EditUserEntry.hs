@@ -21,7 +21,14 @@ import Handler.Parse(editorWidget,userTemporaryDirectory,cacheEntryPdf)
 import Handler.NewEntrySubscription(insertDefaultEntrySubscription)
 import Handler.NewUserSubscription(userSubscriptionNotification)
 import Parse.Parser(parse,mdToHtml,mdToHtmlSimple,texToHtml,texToHtmlSimple,EditorData(..))
+import Text.Julius (RawJS (..))
 --import Text.Shakespeare.Text
+
+titleMaxLength :: Int
+titleMaxLength=256
+
+bodyMaxLength :: Int
+bodyMaxLength=100000
 
 data EntryInput=EntryInput
     { inputTitle::Text
@@ -120,6 +127,7 @@ getNewUserEntryR =  do
                     }
     (inputWidget, inputEnctype) <- generateFormPost $ entryInputForm $ Just entryInput
     --(inputWidget, inputEnctype) <- generateFormPost $ inputForm $ Just $ Entry "" (userDefaultPreamble user) format "" (userDefaultCitation user) "" 
+    msgRender <- getMessageRender :: HandlerFor App (AppMessage -> Text)
     defaultLayout $ do
         setTitleI MsgEdit
         [whamlet|
@@ -133,9 +141,14 @@ getNewUserEntryR =  do
             [julius|
                 $(document).ready(function(){
                     $('.btn.publish, .btn.draft').click(function(){
+                        let body=editor.getValue();
+                        if(body.length>#{rawJS $ show bodyMaxLength}){
+                            alert(#{msgRender MsgBodyTooLong});
+                            return false;
+                        }
                         var title= $("input[name='title']").val();
-                        if(title.length>256){
-                            alert("Title is too long. Please make it shorter.");
+                        if(title.length>#{rawJS $ show titleMaxLength}){
+                            alert(#{msgRender MsgTitleTooLong});
                             return false;
                         }else if (title.length>0){
                             var progressBar=$('<div class="progress" style="width:38%;height:0.5em;"><div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div></div>');
@@ -234,7 +247,7 @@ getEditUserEntryR entryId = do
         , inputBody=entryBody entry
         , inputCitation=entryCitation entry
         }
-
+    msgRender <- getMessageRender :: HandlerFor App (AppMessage -> Text)
     defaultLayout $ do
         setTitleI MsgEdit
         [whamlet|
@@ -255,9 +268,14 @@ getEditUserEntryR entryId = do
                         };
                     });
                     $('.btn.publish, .btn.draft').click(function(){
+                        let body=editor.getValue();
+                        if(body.length>#{rawJS $ show bodyMaxLength}){
+                            alert(#{msgRender MsgBodyTooLong});
+                            return false;
+                        }
                         var title= $("input[name='title']").val();
-                        if(title.length>256){
-                            alert("Title is too long. Please make it shorter.");
+                        if(title.length>#{rawJS $ show titleMaxLength}){
+                            alert(#{msgRender MsgTitleTooLong});
                             return false;
                         }else if (title.length>0){
                             var progressBar=$('<div class="progress" style="width:38%;height:0.5em;"><div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div></div>');
@@ -285,7 +303,7 @@ postNewUserEntryR = do
     
     ((res, _), _) <- runFormPost $ entryInputForm Nothing
     case res of 
-        FormSuccess formData->  do
+        FormSuccess formData-> if length (inputTitle formData) > titleMaxLength then setMessageI MsgTitleTooLong >> redirect NewUserEntryR else if maybe 0 (length . unTextarea) (inputBody formData) > bodyMaxLength then setMessageI MsgBodyTooLong >> redirect NewUserEntryR else do
             (titleHtml,bodyHtml) <- entry2Html formData
             currentTime <- liftIO getCurrentTime
             entryAction <- lookupPostParam "action"                   
@@ -368,7 +386,7 @@ postEditUserEntryR  entryId = do
     (userId, user) <- requireAuthPair
     ((res, _), _) <- runFormPost $ entryInputForm Nothing
     case res of 
-        FormSuccess formData->  do
+        FormSuccess formData-> if length (inputTitle formData) > titleMaxLength then setMessageI MsgTitleTooLong >> redirect (EditUserEntryR entryId) else if maybe 0 (length . unTextarea) (inputBody formData) > bodyMaxLength then setMessageI MsgBodyTooLong >> redirect (EditUserEntryR entryId) else do
 
             (titleHtml,bodyHtml) <- entry2Html formData
             currentTime <- liftIO getCurrentTime

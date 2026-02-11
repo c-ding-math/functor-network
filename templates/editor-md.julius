@@ -181,7 +181,7 @@ function orderedList() {
 function link() {
     var selectedText = editor.getSelectedText()
     , navTabs = $('<ul/>',{class:"nav nav-tabs", role:"tablist"})
-    , navTabTitle = $('<li/>',{class:"disabled"}).append($('<a/>',{html:"Insert Hyperlink"}))
+    , navTabTitle = $('<li/>',{class:"disabled"}).append($('<a/>',{html:"Insert Hyperlink", class:"tabs-title"}))
     , navTabUrl = $('<li/>',{role:"presentation", class:"active"}).append($('<a/>',{href:"#url", "aria-controls":"url", role:"tab", "data-toggle":"tab", html:"paste URL"}))
     , navTabFile = $('<li/>',{role:"presentation"}).append($('<a/>',{href:"#file", "aria-controls":"file", role:"tab", "data-toggle":"tab", html:"select file"}))
     , tabContent = $('<div/>',{class:"tab-content"})
@@ -243,7 +243,7 @@ function link() {
 
     modal.on('show.bs.modal', function() {
         modal.find('.modal-header').css({"border-bottom":"none", "padding-bottom":0});
-        modal.find('.modal-header ul>li:first-child>a').css({"font-weight":"bold", "color":"#333", "padding-left":0});
+        //modal.find('.modal-header ul>li:first-child>a').css({"font-weight":"bold", "color":"#333", "padding-left":0});
     });
 
     modal.on('hidden.bs.modal', function() {
@@ -259,7 +259,7 @@ function link() {
 function image() {
     var selectedText = editor.getSelectedText()
     , navTabs = $('<ul/>',{class:"nav nav-tabs", role:"tablist"})
-    , navTabTitle = $('<li/>',{class:"disabled"}).append($('<a/>',{html:"Add Image"}))
+    , navTabTitle = $('<li/>',{class:"disabled"}).append($('<a/>',{html:"Add Image", class:"tabs-title"}))
     , navTabUrl = $('<li/>',{role:"presentation", class:"active"}).append($('<a/>',{href:"#url", "aria-controls":"url", role:"tab", "data-toggle":"tab", html:"paste URL"}))
     , navTabFile = $('<li/>',{role:"presentation"}).append($('<a/>',{href:"#file", "aria-controls":"file", role:"tab", "data-toggle":"tab", html:"select file"}))
     , tabContent = $('<div/>',{class:"tab-content"})
@@ -345,7 +345,7 @@ function image() {
 
     modal.on('show.bs.modal', function() {
         modal.find('.modal-header').css({"border-bottom":"none", "padding-bottom":0});
-        modal.find('.modal-header ul>li:first-child>a').css({"font-weight":"bold", "color":"#333", "padding-left":0});
+        //modal.find('.modal-header ul>li:first-child>a').css({"font-weight":"bold", "color":"#333", "padding-left":0});
     });
 
     modal.on('hidden.bs.modal', function() {

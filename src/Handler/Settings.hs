@@ -38,6 +38,7 @@ data EmailSetting=EmailSetting{_email::Maybe Text}
 data DefaultFormatSetting=DefaultFormatSetting{_defaultFormat::Format}
 data DefaultPreambleSetting=DefaultPreambleSetting{_defaultPreamble::Maybe Textarea}
 data DefaultCitationSetting=DefaultCitationSetting{_defaultCitation::Maybe Textarea}
+data PaymentSetting=PaymentSetting{_payment::Maybe Text}
 
 nameSettingForm::User->Form NameSetting
 nameSettingForm user=renderBootstrap3 BootstrapBasicForm $ NameSetting
@@ -107,11 +108,15 @@ defaultCitationSettingForm::User->Form DefaultCitationSetting
 defaultCitationSettingForm user=renderBootstrap3 BootstrapBasicForm $ DefaultCitationSetting
     <$> aopt textareaField (bfs MsgDefaultCitation) (Just(userDefaultCitation user))
 
+paymentSettingForm::Maybe Payment -> Form PaymentSetting
+paymentSettingForm mPayment=renderBootstrap3 BootstrapBasicForm $ PaymentSetting
+    <$> aopt urlField (bfs MsgLinkToYourDonationPage) (Just (paymentIdent <$> mPayment))
+
 getSettingsR :: Handler Html
 getSettingsR = do 
     --urlRender<-getUrlRender
     (userId, user)<-requireAuthPair
-    (emails, googles, orcids) <- runDB $ do
+    (emails, googles, orcids, mPayment) <- runDB $ do
         --roleEntities<-selectList [RoleUserId==.userId,RoleType==.Administrator] []  
         --mSites<- mapM (get . roleSiteId . entityVal) roleEntities   
         --sites<-selectList[SiteUserId==.Just userId] [Desc SiteInserted]
@@ -119,7 +124,8 @@ getSettingsR = do
         googles<-selectList [ LoginPlugin==."google",LoginUserId==.Just userId, LoginVerified==.True] [Desc LoginInserted]
         orcids<-selectList [ LoginPlugin==."orcid",LoginUserId==.Just userId, LoginVerified==.True] [Desc LoginInserted]
         --mNotification <-selectFirst [NotificationEmailId<-.map entityKey emails] [Desc NotificationInserted]
-        return $ (emails, googles,orcids)
+        mPayment<-selectFirst [PaymentUserId==.userId] [Desc PaymentInserted]
+        return $ (emails, googles,orcids,entityVal <$> mPayment)
 
     (nameWidget, nameEnctype) <- generateFormPost $ nameSettingForm user
     --(aboutWidget, aboutEnctype) <- generateFormPost $ aboutSettingForm user
@@ -130,6 +136,7 @@ getSettingsR = do
     (emailWidget, emailEnctype) <- generateFormPost $ emailSettingForm user (emailAddress . entityVal <$> emails)
     (preambleWidget, preambleEnctype) <- generateFormPost $ defaultPreambleSettingForm user
     (citationWidget, citationEnctype) <- generateFormPost $ defaultCitationSettingForm user
+    (paymentWidget, paymentEnctype) <- generateFormPost $ paymentSettingForm mPayment
     
     defaultLayout $ do   
         --addStylesheetRemote "https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"     
@@ -241,8 +248,8 @@ getSettingsR = do
                   <div.panel-body>
                     <form .email-form method=post enctype=#{emailEnctype}>
                         ^{emailWidget}
-                        $#<p .text-muted>_{MsgNotifyMeViaEmail "noreply@functor.network"}
-                        <p .text-muted>Follow your new post and comment via the above email by default. To ensure that the notification can reach you, please add <code>noreply@functor.network</code> to the whitelist with your email provider.                  
+                        $#<p .text-muted>_{MsgNotifyMeViaEmail "notification@functor.network"}
+                        <p .text-muted>Follow your new post and comment via the above email by default. To ensure that the notification can reach you, please add <code>notification@functor.network</code> to the whitelist with your email provider.                  
                         <button .btn .btn-default type=submit name=setting value=email>_{MsgSave}
                         <a .btn .btn-default href=@{AuthR registerR}>_{MsgNewEmail}
                     <p>
@@ -264,6 +271,18 @@ getSettingsR = do
                         ^{citationWidget}
                         <button .btn .btn-default type=submit name=setting value=citation>_{MsgSave}
                     <p>
+            <section .data-setting>
+                <h2>_{MsgData}
+                <div.panel>
+                 <div.panel-body>
+                    <label>_{MsgData}
+                    <div>
+                        <a .btn .btn-default href=@{DataR}>_{MsgExportData}
+                    <p>
+                    <label>_{MsgFiles}
+                    <div>
+                        <a .btn .btn-default href=@{FilesR}>_{MsgManageFiles}
+                    <p>
             <section .account-setting>
                 <h2>_{MsgAccount}
                 <div.panel>
@@ -278,7 +297,20 @@ getSettingsR = do
                     <div>
                         <a .btn .btn-default href=@{AuthR setpassR}>_{MsgResetPassword}
                     <p>
-
+            <section .payment-setting>
+                <h2>_{MsgDonation}
+                <div.panel>
+                 <div.panel-body>
+                    <form .payment-form method=post enctype=#{paymentEnctype}>
+                        ^{paymentWidget}
+                        <p.text-muted>_{MsgPaymentDescription}
+                        <button .btn .btn-default type=submit name=setting value=payment>_{MsgSave}
+                    <p>
+                    <div>
+                        <label>Support us
+                        <p.text-muted>We're on a mission to grow our platform and bring it to more people. If you've enjoyed being part of it, your donation can help others like you discover and benefit from it too.
+                        <a .btn .btn-default href="https://ko-fi.com/functor_network">_{MsgDonate}
+                    
         |]
         toWidget [lucius|
             section+section{
@@ -305,7 +337,7 @@ getSettingsR = do
         |]
         toWidget [julius|
             $(function(){
-                var questionSvg = '<svg style="height:1em; vertical-align:middle;" class="bi bi-question-circle-fill" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM6.57 6.033H5.25C5.22 4.147 6.68 3.5 8.006 3.5c1.397 0 2.673.73 2.673 2.24 0 1.08-.635 1.594-1.244 2.057-.737.559-1.01.768-1.01 1.486v.355H7.117l-.007-.463c-.038-.927.495-1.498 1.168-1.987.59-.444.965-.736.965-1.371 0-.825-.628-1.168-1.314-1.168-.901 0-1.358.603-1.358 1.384zm1.251 6.443c-.584 0-1.009-.394-1.009-.927 0-.552.425-.94 1.01-.94.609 0 1.028.388 1.028.94 0 .533-.42.927-1.029.927z"/></svg><!-- Copyright (c) 2011-2024 The Bootstrap Authors, Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE) -->';
+                var questionSvg = '<svg style="height:1em; vertical-align:middle;" class="bi bi-question-circle-fill" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM6.57 6.033H5.25C5.22 4.147 6.68 3.5 8.006 3.5c1.397 0 2.673.73 2.673 2.24 0 1.08-.635 1.594-1.244 2.057-.737.559-1.01.768-1.01 1.486v.355H7.117l-.007-.463c-.038-.927.495-1.498 1.168-1.987.59-.444.965-.736.965-1.371 0-.825-.628-1.168-1.314-1.168-.901 0-1.358.603-1.358 1.384zm1.251 6.443c-.584 0-1.009-.394-1.009-.927 0-.552.425-.94 1.01-.94.609 0 1.028.388 1.028.94 0 .533-.42.927-1.029.927z"/></svg>';
                 $(".format-form select").siblings("label").wrap("<div/>");
                 $(".format-form select").after($("<a/>",{class:"text-muted", href: '@{EditHelpR "format"}', target: "_blank", html: questionSvg}).css("padding-left","0.5em").css("padding-right","0.5em")).css("display","inline-block");
 
@@ -468,7 +500,23 @@ postSettingsR = do
                     setMessageI $ MsgChangeSaved
                     redirect $ SettingsR
                 _ -> notFound
-
+        Just "payment"-> do
+            mPaymentEntity <- runDB $ selectFirst [PaymentUserId==.userId] [Desc PaymentInserted]
+            let mPayment = entityVal <$> mPaymentEntity
+            ((result,_), _) <- runFormPost $ paymentSettingForm mPayment
+            case result of
+                FormSuccess res -> do
+                    _<-runDB $ do 
+                        deleteWhere [PaymentUserId==.userId]
+                        case _payment res of
+                            Just payment -> do
+                                currentTime <- liftIO getCurrentTime
+                                _<-insert $ Payment{paymentUserId=userId, paymentPlugin="link", paymentIdent=payment, paymentInserted=currentTime, paymentToken=Nothing, paymentVerified=False}
+                                return ()
+                            Nothing -> return ()
+                    setMessageI $ MsgChangeSaved
+                    redirect $ SettingsR
+                _ -> notFound
         Just x->invalidArgs [x]
         _->notFound
 
