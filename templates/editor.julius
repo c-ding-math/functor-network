@@ -328,3 +328,46 @@ function newModal(options) {
     } 
     return modal;
 }
+
+
+function dropFile(file){
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(file);
+    const files = dataTransfer.files;
+    const fileInput = document.getElementById('file-input-for-editor');
+    $(fileInput).closest(".modal").find('a[href="#file-tab"]').tab("show");
+    fileInput.files = files;
+}
+
+$(document).ready(function(){
+const editorDropZone = document.querySelector('.ace_editor');
+
+['dragover', 'drop'].forEach(eventName => {
+    editorDropZone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+    });
+});
+
+editorDropZone.addEventListener('drop', (e) => {
+    const eFiles = e.dataTransfer.files;
+    if (eFiles.length>0) {
+        image();
+        dropFile(eFiles[0]);   
+    }
+
+});
+editorDropZone.addEventListener('paste', (e) => {
+    const items = e.clipboardData.items;
+    if(!items.length){
+        return;
+    }
+    if (items[0].kind === 'file') {
+        e.preventDefault(); 
+        const file = items[0].getAsFile();
+        image();
+        dropFile(file);
+    }
+});
+
+});

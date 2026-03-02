@@ -33,7 +33,7 @@ getCategoriesR authorId = do
             <div .page-header>       
                 $if isAuthor
                     <div .pull-right>         
-                        <a .btn.btn-default .new-entry href=#>_{MsgNewCategory}
+                        <a .btn.btn-primary .new-entry href=#>_{MsgNewCategory}
                 <h1>_{MsgCategories}
             $if null categoryAndEntryListList
                 $if isAuthor

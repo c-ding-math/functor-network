@@ -97,7 +97,7 @@ treeWidget entryId = do
                                 <div .text-right>
                                     <a .btn.btn-primary target=_blabk href=@{CategoriesR userId}>_{MsgCreateACategory}
                         $else   
-                            <a.text-lowercase.text-muted.pull-right target=_blabk href=@{CategoriesR userId}>_{MsgNewCategory} 
+                            <a.text-lowercase.pull-right target=_blabk href=@{CategoriesR userId}>_{MsgNewCategory} 
                             <label>_{MsgSelectCategories}     
                             <div .list-group> 
                                 $forall Entity categoryId category <- categories
