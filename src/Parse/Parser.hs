@@ -21,16 +21,17 @@ module Parse.Parser (
 ) where
 
 
-import System.Process
-import System.Exit
-import Text.HTML.TagSoup 
+import System.Process.Typed
+--import System.Exit
+import Text.HTML.TagSoup
 import Parse.KillOldProcesses(killOldProcesses)
 --import Control.Concurrent 
 import Text.HTML.Scalpel
 import System.FilePath.Posix
 import Text.RE.Replace
 import Text.RE.TDFA
-import Yesod.Form.Fields 
+import Yesod.Form.Fields
+import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Text
 import Data.Text.IO
 import Data.Maybe
@@ -38,7 +39,7 @@ import System.Timeout
 import GHC.Generics
 import Data.Aeson
 import System.Directory
-import qualified Import 
+import qualified Import
 import Text.Shakespeare.Text
 import Text.Blaze.Html.Renderer.String (renderHtml)
 
@@ -54,33 +55,33 @@ instance FromJSON EditorData where
 
 
 -- | parse
-parse :: Maybe FilePath -> FilePath -> (FilePath -> a -> IO (CreateProcess, FilePath)) -> a -> IO Text
+parse :: Maybe FilePath -> FilePath -> (FilePath -> a -> IO (ProcessConfig () () (), FilePath)) -> a -> IO Text
 parse mFileName tmpDir parser docData = do
 
     createDirectoryIfMissing True tmpDir
 
     (process, output) <- parser tmpDir docData
-    maybeResult <- timeout ((timeLimit+1)*1000000) $ Import.catch (readCreateProcessWithExitCode (process {cwd = Just tmpDir, create_group = True}) "") (\e -> return (ExitFailure 1, "", show (e :: Import.IOException))) -- readCreateProcessWithExitCode can still throw an exception when using the pdf parser: hGetContents: invalid argument (invalid byte sequence).
+    let processConfig = (setWorkingDir tmpDir . setCreateGroup True) process
+    maybeResult <- timeout ((timeLimit+1)*1000000) $ readProcess processConfig
+    --Import.catch (readProcess processConfig process) (\e -> return (ExitFailure 1, "", BL8.pack (show (e :: Import.IOException)))) -- readCreateProcessWithExitCode can still throw an exception when using the pdf parser: hGetContents: invalid argument (invalid byte sequence).
     renderedText <- case maybeResult of
         Just (exitCode, stdout, stderr) -> case exitCode of
-            ExitSuccess -> 
+            ExitSuccess ->
                 if takeExtension output == ".pdf"
                     then return $ pack output
-                    else do 
+                    else do
                         outputText <- Import.catch (Data.Text.IO.readFile $ tmpDir</>output) (\e -> return $ pack $ show (e :: Import.IOException))
                         let isInlineParser = takeBaseName output == "simple"
                         return $ if isInlineParser
-                            then case scrapeStringLike outputText (innerHTML $ "p") of
-                                Just x -> x 
-                                Nothing -> outputText
+                            then fromMaybe outputText (scrapeStringLike outputText (innerHTML "p"))
                             else outputText
-                        
-            _ -> do 
-                let errorInfo = (stdout ++ stderr) ?=~/ [edBlockSensitive|Error at .*:///|]
+
+            _ -> do
+                let errorInfo = BL8.unpack (stdout <> stderr) ?=~/ [edBlockSensitive|Error at .*:///|]
                 let errorString = "Error! " ++ errorInfo ++"."
                 renderError errorString
         Nothing -> do
-            killOldProcesses timeLimit "latex"
+            -- killOldProcesses timeLimit "latex"
             let errorString = "Error! " ++ "It takes too long to render the document. Please check whether there is an infinite loop in your LaTeX code."
             renderError errorString
     case mFileName of
@@ -91,9 +92,9 @@ parse mFileName tmpDir parser docData = do
             return ()
     removeDirectoryRecursive tmpDir
     return $ renderedText
-  where 
+  where
         timeLimit = 60
-        renderError errorString = return $ 
+        renderError errorString = return $
             renderTags [
                     TagOpen "div" [("class", "alert-danger parser-message")],
                     TagText $ pack errorString,
@@ -103,7 +104,7 @@ parse mFileName tmpDir parser docData = do
 downloadPdfFileName :: FilePath
 downloadPdfFileName = "download.pdf"
 
-htmlToPdf :: FilePath -> Import.Html -> IO (CreateProcess, FilePath)
+htmlToPdf :: FilePath -> Import.Html -> IO (ProcessConfig () () (), FilePath)
 htmlToPdf direcotry htmlContent = do
     let input = "html.html"
     Data.Text.IO.writeFile (direcotry</>input) $ pack $ renderHtml htmlContent
@@ -112,7 +113,7 @@ htmlToPdf direcotry htmlContent = do
     --return (proc "pandoc" ["--pdf-engine=weasyprint", "-s", "-t", "html", "-o", output, input], output)
     --handleProcess False "pandoc" ["--sandbox", "-F", "pandoc-security", "-F", "pandoc-theorem", "-C", "-o", output] input output
 
-mdToPdf :: FilePath -> EditorData -> IO (CreateProcess, FilePath)
+mdToPdf :: FilePath -> EditorData -> IO (ProcessConfig () () (), FilePath)
 mdToPdf direcotry docData = do
     let input = "md.md"
     Data.Text.IO.writeFile (direcotry</>"yaml.yaml") $ textareaToYaml $ editorPreamble docData
@@ -121,8 +122,8 @@ mdToPdf direcotry docData = do
     let output = downloadPdfFileName
     return (proc "pandoc" ["--sandbox", "--metadata-file", "yaml.yaml", "-C", "--bibliography=" ++ "bib.bib", "-F", "pandoc-security", "-F", "pandoc-theorem", "-o", output, input], output)
     --handleProcess False "pandoc" ["--sandbox", "-F", "pandoc-security", "--metadata-file", "yaml.yaml", "-F", "pandoc-theorem", "-C", "--bibliography=" ++ "bib.bib", "-o", output] input output
-  
-texToPdf :: FilePath -> EditorData -> IO (CreateProcess, FilePath)
+
+texToPdf :: FilePath -> EditorData -> IO (ProcessConfig () () (), FilePath)
 texToPdf direcotry docData'=do
     let output = downloadPdfFileName
     let input = takeBaseName output ++ ".tex"
@@ -144,7 +145,7 @@ texToPdf direcotry docData'=do
     return (proc "latexmk" ["-pdf", "-halt-on-error", "-interaction=nonstopmode", input], output)
     --handleProcess False "latexmk" [] input output
 
-mdToHtml :: FilePath -> EditorData -> IO (CreateProcess, FilePath)
+mdToHtml :: FilePath -> EditorData -> IO (ProcessConfig () () (), FilePath)
 mdToHtml direcotry docData=do
     let input = "md.md"
     Data.Text.IO.writeFile (direcotry</>"yaml.yaml") $ textareaToYaml $ editorPreamble docData
@@ -152,19 +153,19 @@ mdToHtml direcotry docData=do
     Data.Text.IO.writeFile (direcotry</>input) $ unMaybeTextarea $ editorContent docData
     Data.Text.IO.writeFile (direcotry</>"lean.xml") leanXml
     let output = "output.html"
-    return (proc "pandoc" ["--sandbox", "--metadata-file", "yaml.yaml", "-C", "--bibliography=" ++ "bib.bib" , "-F", "pandoc-table", "-F", "pandoc-security", "-F","pandoc-theorem", "-F", "math-filter", "--syntax-definition=lean.xml", "-o", output, input], output)
-    --handleProcess False "pandoc" ["--sandbox","-F", "pandoc-table", "-F", "pandoc-security", "--metadata-file", "yaml.yaml", "-F","pandoc-theorem", "-F", "math-filter", "-C", "--bibliography=" ++ "bib.bib" , "-o", output] input output
+    return (proc "pandoc" ["--sandbox", "--metadata-file", "yaml.yaml", "-C", "--bibliography=" ++ "bib.bib" , "-F", "pandoc-table", "-F", "pandoc-security", "-F","pandoc-theorem", "-F", "pandoc-tex", "--syntax-definition=lean.xml", "-o", output, input], output)
+    --handleProcess False "pandoc" ["--sandbox","-F", "pandoc-table", "-F", "pandoc-security", "--metadata-file", "yaml.yaml", "-F","pandoc-theorem", "-F", "pandoc-tex", "-C", "--bibliography=" ++ "bib.bib" , "-o", output] input output
 
-mdToHtmlSimple :: FilePath -> Text -> IO (CreateProcess, FilePath)
+mdToHtmlSimple :: FilePath -> Text -> IO (ProcessConfig () () (), FilePath)
 mdToHtmlSimple direcotry title=do
     let input = "md.md"
     Data.Text.IO.writeFile (direcotry</>input) $ title
     let output = "simple.html" -- temporary solution.
-    return (proc "pandoc" ["--sandbox", "-F", "pandoc-security", "-F", "math-filter", "-o", output, input], output)
-    --handleProcess True "pandoc" ["--sandbox", "-F", "pandoc-security", "-F", "math-filter", "-o", output] input output
+    return (proc "pandoc" ["--sandbox", "-F", "pandoc-security", "-F", "pandoc-tex", "-o", output, input], output)
+    --handleProcess True "pandoc" ["--sandbox", "-F", "pandoc-security", "-F", "pandoc-tex", "-o", output] input output
     --return $ "<div style='width:520px'>"<>pack errorString<>"</div>"
 
-texToHtml:: FilePath -> EditorData -> IO (CreateProcess, FilePath)
+texToHtml:: FilePath -> EditorData -> IO (ProcessConfig () () (), FilePath)
 texToHtml direcotry docData'=do
     let input = "tex.tex"
     let docData = preProcessEditorData docData'
@@ -173,18 +174,18 @@ texToHtml direcotry docData'=do
     Data.Text.IO.writeFile (direcotry</>input) $ unMaybeTextarea $ editorContent docData
     Data.Text.IO.writeFile (direcotry</>"lean.xml") leanXml
     let output = "output.html"
-    return (proc "pandoc" ["--sandbox", "--metadata-file", "yaml.yaml", "-C", "--bibliography=" ++ "bib.bib", "-F", "pandoc-table", "-F", "pandoc-security", "-F", "math-filter", "-f", "latex+raw_tex", "--syntax-definition=lean.xml", "-o", output, input], output)
-    --handleProcess False "pandoc" ["--sandbox", "-F", "pandoc-table", "-F", "pandoc-security", "--metadata-file", "yaml.yaml", "-F", "math-filter", "-C", "--bibliography=" ++ "bib.bib", "-f", "latex+raw_tex", "-o", output] input output
+    return (proc "pandoc" ["--sandbox", "--metadata-file", "yaml.yaml", "-C", "--bibliography=" ++ "bib.bib", "-F", "pandoc-table", "-F", "pandoc-security", "-F", "pandoc-tex", "-f", "latex+raw_tex", "--syntax-definition=lean.xml", "-o", output, input], output)
+    --handleProcess False "pandoc" ["--sandbox", "-F", "pandoc-table", "-F", "pandoc-security", "--metadata-file", "yaml.yaml", "-F", "pandoc-tex", "-C", "--bibliography=" ++ "bib.bib", "-f", "latex+raw_tex", "-o", output] input output
 
-texToHtmlSimple :: FilePath -> Text -> IO (CreateProcess, FilePath)
+texToHtmlSimple :: FilePath -> Text -> IO (ProcessConfig () () (), FilePath)
 texToHtmlSimple direcotry title=do
     let input = "tex.tex"
     let output = "simple.html" -- temporary solution
     Data.Text.IO.writeFile (direcotry</>input) $ title
-    return (proc "pandoc" ["--sandbox", "-F", "pandoc-security", "-F", "math-filter", "-f", "latex+raw_tex", "-o", output, input], output)
-    --handleProcess True "pandoc" ["--sandbox", "-F", "pandoc-security", "-F", "math-filter", "-f", "latex+raw_tex", "-o", output] input output
+    return (proc "pandoc" ["--sandbox", "-F", "pandoc-security", "-F", "pandoc-tex", "-f", "latex+raw_tex", "-o", output, input], output)
+    --handleProcess True "pandoc" ["--sandbox", "-F", "pandoc-security", "-F", "pandoc-tex", "-f", "latex+raw_tex", "-o", output] input output
 
-texToSvg :: FilePath -> EditorData -> IO (CreateProcess, FilePath)
+texToSvg :: FilePath -> EditorData -> IO (ProcessConfig () () (), FilePath)
 texToSvg direcotry docData = do
     let input = "content.tex"
     let output = "output.svg"
@@ -198,7 +199,7 @@ scaleHeader :: Int -> Text -> Text
 scaleHeader n title|n<=6 =
     replaceAllCaptures SUB help $ title *=~ [re|([0-9]*\.[0-9]*)px|]
     where
-        headerScale = [2.6,2.15,1.7,1.25,1.0,0.85] 
+        headerScale = [2.6,2.15,1.7,1.25,1.0,0.85]
         help _ loc cap = case locationCapture loc of
             1-> Just $ pack $ show $ (headerScale!!(n-1)) * (read (unpack (capturedText cap)) :: Double)
             _ -> Nothing
