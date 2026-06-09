@@ -182,13 +182,13 @@ function link() {
     var selectedText = editor.getSelectedText()
     , navTabs = $('<ul/>',{class:"nav nav-tabs", role:"tablist"})
     , navTabTitle = $('<li/>',{class:"disabled"}).append($('<a/>',{html:"Insert Hyperlink", class:"tabs-title"}))
-    , navTabUrl = $('<li/>',{role:"presentation", class:"active"}).append($('<a/>',{href:"#url", "aria-controls":"url", role:"tab", "data-toggle":"tab", html:"paste URL"}))
-    , navTabFile = $('<li/>',{role:"presentation"}).append($('<a/>',{href:"#file", "aria-controls":"file", role:"tab", "data-toggle":"tab", html:"select file"}))
+    , navTabUrl = $('<li/>',{role:"presentation", class:"active"}).append($('<a/>',{href:"#url-tab", "aria-controls":"url", role:"tab", "data-toggle":"tab", html:"paste URL"}))
+    , navTabFile = $('<li/>',{role:"presentation"}).append($('<a/>',{href:"#file-tab", "aria-controls":"file", role:"tab", "data-toggle":"tab", html:"select file"}))
     , tabContent = $('<div/>',{class:"tab-content"})
-    , tabPaneUrl = $('<div/>',{class:"tab-pane active", role:"tabpanel", id:"url"})
-    , tabPaneFile = $('<div/>',{class:"tab-pane", role:"tabpanel", id:"file"})
+    , tabPaneUrl = $('<div/>',{class:"tab-pane active", role:"tabpanel", id:"url-tab"})
+    , tabPaneFile = $('<div/>',{class:"tab-pane", role:"tabpanel", id:"file-tab"})
     , inputUrl = $('<input/>',{type:"text", class:"form-control", placeholder:"URL", value:"https://"})
-    , formFile = $('<form/>',{enctype:"multipart/form-data"}).append($('<input/>',{type:"hidden", name:"_token", value:#{csrftoken}})).append($('<div/>',{class:"form-group required"}).append('<label for="file-input">File</label><input type="file" name="f1" id="file-input" class="form-control required">'))
+    , formFile = $('<form/>',{enctype:"multipart/form-data"}).append($('<input/>',{type:"hidden", name:"_token", value:#{csrftoken}})).append($('<div/>',{class:"form-group required"}).append('<label for="file-input-for-editor">File</label><input type="file" name="f1" id="file-input-for-editor" class="form-control required">'))
     , buttonUrl = $('<button/>',{class:"btn btn-primary", type:"button", html:"Continue"}).click(function() {
         var url = inputUrl.val();
         if (selectedText === "") {
@@ -260,14 +260,14 @@ function image() {
     var selectedText = editor.getSelectedText()
     , navTabs = $('<ul/>',{class:"nav nav-tabs", role:"tablist"})
     , navTabTitle = $('<li/>',{class:"disabled"}).append($('<a/>',{html:"Add Image", class:"tabs-title"}))
-    , navTabUrl = $('<li/>',{role:"presentation", class:"active"}).append($('<a/>',{href:"#url", "aria-controls":"url", role:"tab", "data-toggle":"tab", html:"paste URL"}))
-    , navTabFile = $('<li/>',{role:"presentation"}).append($('<a/>',{href:"#file", "aria-controls":"file", role:"tab", "data-toggle":"tab", html:"select file"}))
+    , navTabUrl = $('<li/>',{role:"presentation", class:"active"}).append($('<a/>',{href:"#url-tab", "aria-controls":"url", role:"tab", "data-toggle":"tab", html:"paste URL"}))
+    , navTabFile = $('<li/>',{role:"presentation"}).append($('<a/>',{href:"#file-tab", "aria-controls":"file", role:"tab", "data-toggle":"tab", html:"select file"}))
     , tabContent = $('<div/>',{class:"tab-content"})
-    , tabPaneUrl = $('<div/>',{class:"tab-pane active", role:"tabpanel", id:"url"})
-    , tabPaneFile = $('<div/>',{class:"tab-pane", role:"tabpanel", id:"file"})
+    , tabPaneUrl = $('<div/>',{class:"tab-pane active", role:"tabpanel", id:"url-tab"})
+    , tabPaneFile = $('<div/>',{class:"tab-pane", role:"tabpanel", id:"file-tab"})
     , inputUrl = $('<input/>',{type:"text", class:"form-control", placeholder:"URL", value:"https://"})
-    , formFile = $('<form/>',{enctype:"multipart/form-data"}).append($('<input/>',{type:"hidden", name:"_token", value:#{csrftoken}})).append($('<div/>',{class:"form-group required"}).append('<label for="file-input">File</label><input type="file" name="f1" id="file-input" class="form-control required">'))
-    , imageWidth ='<label>Image width</label><input type="text" class="form-control" placeholder="e.g., 100px" value="" name="width">'
+    , formFile = $('<form/>',{enctype:"multipart/form-data"}).append($('<input/>',{type:"hidden", name:"_token", value:#{csrftoken}})).append($('<div/>',{class:"form-group required"}).append('<label for="file-input-for-editor">File</label><input type="file" name="f1" id="file-input-for-editor" class="form-control required">'))
+    , imageWidth ='<label>Image width</label><input type="text" class="form-control" placeholder="e.g., 500px" value="" name="width">'
     , imageHeight ='<label>Image height</label><input type="text" class="form-control" placeholder="e.g., 100px" value="" name="height">'
     , imageSize = '<div class="form-group" style="display:flex;">'+'<div style="flex:1;margin-right:0.5em;">'+imageWidth+'</div>'+'<div style="flex:1;margin-left:0.5em;">'+imageHeight+'</div>'+'</div>'
     , buttonUrl = $('<button/>',{class:"btn btn-primary", type:"button", html:"Continue"}).click(function() {

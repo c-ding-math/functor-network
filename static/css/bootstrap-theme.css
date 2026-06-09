@@ -344,6 +344,9 @@ div.csl-right-inline {
 div.csl-indent {
     margin-left: 2em;
 }
+.hanging-indent div.csl-entry .math {
+    text-indent: initial;
+}
 
 
 .or{
