@@ -64,7 +64,8 @@ dependencies:
 - tagsoup==0.14.*
 - yesod-newsfeed==1.7.*
 - yesod-sitemap==1.6.*
-- typed-process==0.2.*
+- typed-process==0.2.13.0
+- stm==2.5.*
 
 
 # The library contains all of our application code. The executable

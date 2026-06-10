@@ -19,6 +19,7 @@ import Parse.Parser(scaleHeader, htmlToPdf, unMaybeTextarea, parse, downloadPdfF
 import Text.Hamlet          (hamletFile)
 import qualified Data.Text.Encoding as TE
 import qualified Data.CaseInsensitive as CI
+import Data.Maybe
 
 type InputFormat=Text
 type OutputFormat=Text
@@ -32,7 +33,7 @@ postParseR inputFormat outputFormat = do
         let busyMessage::Text
             busyMessage= "Busy..."
         return $ RepPlain $ toContent $ busyMessage
-    else do  
+    else do
 
         docData<- requireCheckJsonBody ::Handler EditorData
         let lengthLimit = case maybeUserId of
@@ -40,15 +41,15 @@ postParseR inputFormat outputFormat = do
                 Just _  -> 100000
             lengthLimitMessage::Text
             lengthLimitMessage = case maybeUserId of
-                Nothing -> pack $ "Up to " ++ show lengthLimit ++ " characters for non-logged-in users." 
+                Nothing -> pack $ "Up to " ++ show lengthLimit ++ " characters for non-logged-in users."
                 Just _  -> pack $ "Up to " ++ show lengthLimit ++ " characters."
         if length (unMaybeTextarea (editorContent docData)) + length (unMaybeTextarea (editorPreamble docData)) + length (unMaybeTextarea (editorCitation docData)) < lengthLimit
             then do
                 let parser = case (inputFormat,outputFormat) of
                         ("tex","svg") -> texToSvg
                         ("tex","html") -> texToHtml
-                        _ -> mdToHtml     
-                preview<-liftIO $ parse Nothing userDir parser docData  
+                        _ -> mdToHtml
+                preview<-liftIO $ parse Nothing userDir parser docData
                 return $ RepPlain $ toContent $ case preview of
                     "\n"->""
                     x->x
@@ -61,7 +62,7 @@ getDownloadR _ entryId = do
     pdfPath <- entryPdfPath entryId
     entry <- runDB $ get404 entryId
     mUserId <- maybeAuthId
-    if (entryStatus entry == Publish) || (Just (entryUserId entry) == mUserId) 
+    if (entryStatus entry == Publish) || (Just (entryUserId entry) == mUserId)
         then do
             {-_<-runDB $ do
                 currentTime <- liftIO getCurrentTime
@@ -144,7 +145,7 @@ cacheEntryPdf entryId = do
             return ()
 -}
     --urlRender <- getUrlRender
-    (entryAuthor, entry)<- runDB $ do 
+    (entryAuthor, entry)<- runDB $ do
         entry <- get404 entryId
         author <- get404 $ entryUserId entry
         return (author, entry)
@@ -189,17 +190,17 @@ printLayout widget = do
         addStylesheet $ StaticR css_bootstrap_min_css
         addStylesheet $ StaticR css_bootstrap_theme_css
         addScript $ StaticR js_bootstrap_min_js
-        addScript $ StaticR js_bootstrap_theme_js  
-    
+        addScript $ StaticR js_bootstrap_theme_js
+
         $(widgetFile "print-layout")
     withUrlRenderer $(hamletFile "templates/print-layout-wrapper.hamlet")
 
 -- | cache entry
-cacheEntry :: Entity Entry -> Handler ()
-cacheEntry (Entity entryId entry) = do
+cacheEntryHtml :: Entity Entry -> Handler ()
+cacheEntryHtml (Entity entryId entry) = do
     entryCacheDir <- entryCacheDirectory entryId
     tempDir <- userTemporaryDirectory
-    let (titleParser, bodyParser) = case (entryFormat entry) of
+    let (titleParser, bodyParser) = case entryFormat entry of
             Format "tex" -> (texToHtmlSimple, texToHtml)
             _ -> (mdToHtmlSimple, mdToHtml)
     let docData = EditorData {
@@ -225,7 +226,7 @@ cacheEntry (Entity entryId entry) = do
         _<-parse (Just (entryCacheDir </> "title.html")) tempDir titleParser $ entryTitle entry
         _<-parse (Just (entryCacheDir </> "body.html")) tempDir bodyParser docData
         return ()
-            
+
 cacheDirectory :: Handler FilePath
 cacheDirectory = do
     app <- getYesod
@@ -249,7 +250,7 @@ userTemporaryDirectory :: Handler FilePath
 userTemporaryDirectory = do
     randomString<-liftIO $ fmap (take 10 . randomRs ('a','z')) newStdGen
     tempDir <- liftIO $ getTemporaryDirectory >>= \dir -> return $ dir </> "functor-network"
-    
+
     maybeUserId<-maybeAuthId
     case maybeUserId of
         Nothing-> do
@@ -288,10 +289,8 @@ editorWidget inputFormat = do
     addScript $ StaticR editor_src_min_ext_language_tools_js
     --urlRender <- getUrlRender
 
-    mcsrftoken <- fmap reqToken getRequest                                                                                                                  
-    let csrftoken = case mcsrftoken of                                                                                                                      
-                        Nothing -> "NO_TOKEN"                                                                                                               
-                        Just t  -> t   
+    mcsrftoken <- fmap reqToken getRequest
+    let csrftoken = Data.Maybe.fromMaybe "NO_TOKEN" mcsrftoken
     let parserRoute =case inputFormat of
             Format "tex"->ParseR "tex" "html"
             _->ParseR "md" "html"
