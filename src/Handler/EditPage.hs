@@ -8,7 +8,7 @@ module Handler.EditPage where
 import Import
 import Yesod.Form.Bootstrap3
 import Handler.Parse
-import Parse.Parser (parse,mdToHtml,texToHtml,EditorData(..))
+--import Parse.Parser (parse,mdToHtml,texToHtml,EditorData(..))
 --import qualified Data.Text as T
 --import System.Directory
 

@@ -8,7 +8,7 @@ import Text.Shakespeare.Text
 import Yesod.Form.Bootstrap3
 import Handler.EditComment(getChildIds,CommentInput(..))
 import Handler.UserEntry(menuWidget)
-import Parse.Parser
+--import Parse.Parser
 import Handler.Parse
 import Handler.NewEntrySubscription(entrySubscriptionNotification,insertDefaultEntrySubscription)
 import Handler.EditComment(deleteEditCommentR)
@@ -89,7 +89,7 @@ getFeedbackR = do
                         then selectList [EntryType==.Feedback,EntryStatus==.Draft] [Asc EntryInserted]
                         else do
                             userComments <- selectList [EntryUserId==.userId,EntryType==.Feedback,EntryStatus==.Draft] []
-                            childCommentIds <- mapM getChildIds $ map entityKey userComments
+                            childCommentIds <- mapM (getChildIds . entityKey) userComments
                             let commentIds = map entityKey userComments ++ concat childCommentIds
                             selectList [EntryId <-. commentIds] [Asc EntryInserted]
 
@@ -124,11 +124,7 @@ getFeedbackR = do
                 Nothing ->  generateFormPost $ feedbackForm $ Just $ FeedbackInput "Feedback" $ Textarea ""
                 Just (Entity _ user) -> generateFormPost $ newCommentForm $ Just $ CommentInput (userDefaultPreamble user) format (Textarea "") (userDefaultCitation user)
 
-            mFeedbackDescriptionHtml <- case mFeedbackDescription of
-                Just (Entity feedbackDescriptionId _) -> do 
-                    bodyHtml <- entryBodyHtmlCache feedbackDescriptionId
-                    return $ Just bodyHtml
-                Nothing -> return Nothing
+            feedbackDescriptionHtml <- entryBodyHtmlCache entryId
             commentListData <- forM commentListData' $ \(Entity commentId comment, commentAuthorMeta, parentCommentMeta) -> do
                 commentBodyHtml <- entryBodyHtmlCache commentId
                 return (Entity commentId comment, commentAuthorMeta, parentCommentMeta, commentBodyHtml)
@@ -139,8 +135,8 @@ getFeedbackR = do
             <h1>_{MsgFeedback}
             <div .entry-body>
               <div .entry-content-wrapper>
-                $maybe bodyHtml<-mFeedbackDescriptionHtml
-                    #{preEscapedToMarkup bodyHtml}
+                $maybe _ <- entryBody entry
+                    #{preEscapedToMarkup feedbackDescriptionHtml}
                 $nothing
                     <div style="width:519.3906239999999px;">
                         <p>_{MsgComingSoon}

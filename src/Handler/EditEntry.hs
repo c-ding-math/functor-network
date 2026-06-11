@@ -18,7 +18,7 @@ getEditEntryR entryId = do
     -- get next entry id
     autoProcess <- lookupGetParam "auto"
     entryIds' <- runDB $ selectKeysList [] [Asc EntryId]
-    entryIds <- return $ filter (> entryId) entryIds'
+    let entryIds = filter (> entryId) entryIds'
     let mNextEntryId = minimumMay entryIds
 
     entry<-runDB $ get404 entryId

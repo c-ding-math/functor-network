@@ -21,7 +21,7 @@ module Application
     ) where
 
 import Control.Monad.Logger                 (liftLoc, runLoggingT)
-import Database.Persist.Sqlite              (createSqlitePool, runSqlPool,
+import Database.Persist.Sqlite              (createSqlitePool, runSqlPool, --runMigrationUnsafe,
                                              sqlDatabase, sqlPoolSize)
 import Import
 import Language.Haskell.TH.Syntax           (qLocation)
@@ -86,6 +86,7 @@ import Handler.UserFeed
 import Handler.Sitemap
 import Handler.Data
 import Handler.Like
+import Handler.Cache
 --import Handler.Redirect
 
 -- This line actually creates our YesodDispatch instance. It is the second half

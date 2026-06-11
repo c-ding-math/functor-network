@@ -204,7 +204,7 @@ entryBodyHtmlCache entryId = do
     let bodyCachePath = entryCacheDir </> "body.html"
     liftIO $ do
         bodyHtmlExists <- doesFileExist bodyCachePath
-        if bodyHtmlExists then TIO.readFile bodyCachePath else return $ msgRender MsgPostCacheMissing
+        if bodyHtmlExists then TIO.readFile bodyCachePath else return $ "<div style='width:519.3906239999999px;'>"<>msgRender MsgPostCacheMissing<>"</div>"
 
 cacheEntryHtml :: Entity Entry -> Handler ()
 cacheEntryHtml (Entity entryId entry) = do

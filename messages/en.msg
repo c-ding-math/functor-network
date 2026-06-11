@@ -245,3 +245,4 @@ TitleTooLong: Title too long
 BodyTooLong: Maximum body length exceeded. Please shorten your post.
 
 PostCacheMissing: Oops, cache missing! Please ping the author to republish this post.
+Submit: Submit

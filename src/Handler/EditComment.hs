@@ -7,7 +7,7 @@ import Import
 import Yesod.Form.Bootstrap3
 import Handler.Parse
 import Handler.NewEntrySubscription(entrySubscriptionNotification,insertDefaultEntrySubscription)
-import Parse.Parser(parse,mdToHtml,texToHtml,EditorData(..))
+--import Parse.Parser(parse,mdToHtml,texToHtml,EditorData(..))
 import Handler.Tree(getRootEntryId)
 --import Text.Shakespeare.Text
 
