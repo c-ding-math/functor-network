@@ -17,7 +17,7 @@ module Handler.EditUserEntry (
 import Import
 import Yesod.Form.Bootstrap3
 import Handler.EditComment(deleteEntryRecursive)
-import Handler.Parse(editorWidget,userTemporaryDirectory,cacheEntryPdf)
+import Handler.Parse(editorWidget,userTemporaryDirectory,cacheEntry)
 import Handler.NewEntrySubscription(insertDefaultEntrySubscription)
 import Handler.NewUserSubscription(userSubscriptionNotification)
 import Parse.Parser(parse,mdToHtml,mdToHtmlSimple,texToHtml,texToHtmlSimple,EditorData(..))
@@ -304,7 +304,7 @@ postNewUserEntryR = do
     ((res, _), _) <- runFormPost $ entryInputForm Nothing
     case res of 
         FormSuccess formData-> if length (inputTitle formData) > titleMaxLength then setMessageI MsgTitleTooLong >> redirect NewUserEntryR else if maybe 0 (length . unTextarea) (inputBody formData) > bodyMaxLength then setMessageI MsgBodyTooLong >> redirect NewUserEntryR else do
-            (titleHtml,bodyHtml) <- entry2Html formData
+            --(titleHtml,bodyHtml) <- entry2Html formData
             currentTime <- liftIO getCurrentTime
             entryAction <- lookupPostParam "action"                   
             urlRenderParams <- getUrlRenderParams
@@ -322,13 +322,13 @@ postNewUserEntryR = do
                             , entryFormat=inputFormat formData
                             , entryBody=inputBody formData
                             , entryCitation=inputCitation formData
-                            , entryTitleHtml=titleHtml
-                            , entryBodyHtml=bodyHtml
-                            , entryFeatured=isFeatured bodyHtml
+                            --, entryTitleHtml=titleHtml
+                            --, entryBodyHtml=bodyHtml
+                            , entryFeatured=isFeatured (inputBody formData)
                             }
                         insertDefaultEntrySubscription entryId
                         return entryId
-                    cacheEntryPdf entryId
+                    cacheEntry entryId
                     subscribers <- runDB $ selectList [UserSubscriptionUserId ==. userId, UserSubscriptionVerified ==. True] []
                     forM_ subscribers $ \(Entity subscriptionId subscription) -> do
                         
@@ -357,13 +357,13 @@ postNewUserEntryR = do
                             , entryFormat=inputFormat formData
                             , entryBody=inputBody formData
                             , entryCitation=inputCitation formData
-                            , entryTitleHtml=titleHtml
-                            , entryBodyHtml=bodyHtml
-                            , entryFeatured=isFeatured bodyHtml
+                            --, entryTitleHtml=titleHtml
+                            --,  entryBodyHtml=bodyHtml
+                            , entryFeatured=isFeatured (inputBody formData)
                             }
                         insertDefaultEntrySubscription entryId
                         return entryId
-                    cacheEntryPdf entryId
+                    cacheEntry entryId
                     setMessage $ [hamlet|
                                     Your post, #
                                     <a .alert-link href=@{UserEntryR userId entryId}>#{inputTitle formData}
@@ -379,7 +379,7 @@ postNewUserEntryR = do
                 $forall error <- errors
                     <p>#{error}
                 |]
-            redirect $ NewUserEntryR
+            redirect NewUserEntryR
 
 postEditUserEntryR :: EntryId -> Handler Html
 postEditUserEntryR  entryId = do
@@ -388,7 +388,7 @@ postEditUserEntryR  entryId = do
     case res of 
         FormSuccess formData-> if length (inputTitle formData) > titleMaxLength then setMessageI MsgTitleTooLong >> redirect (EditUserEntryR entryId) else if maybe 0 (length . unTextarea) (inputBody formData) > bodyMaxLength then setMessageI MsgBodyTooLong >> redirect (EditUserEntryR entryId) else do
 
-            (titleHtml,bodyHtml) <- entry2Html formData
+            --(titleHtml,bodyHtml) <- entry2Html formData
             currentTime <- liftIO getCurrentTime
             urlRenderParams<- getUrlRenderParams
             entryAction <- lookupPostParam "action"  
@@ -416,11 +416,11 @@ postEditUserEntryR  entryId = do
                         ,EntryFormat=.inputFormat formData
                         ,EntryBody=.inputBody formData
                         ,EntryCitation=.inputCitation formData
-                        ,EntryTitleHtml=.titleHtml
-                        ,EntryBodyHtml=.bodyHtml
-                        ,EntryFeatured=.isFeatured bodyHtml
+                        --,EntryTitleHtml=.titleHtml
+                        --,EntryBodyHtml=.bodyHtml
+                        ,EntryFeatured=.isFeatured (inputBody formData)
                         ] 
-                    cacheEntryPdf entryId
+                    cacheEntry entryId
                     setMessage $ [hamlet|
                                     Your post, #
                                     <a .alert-link href=@{UserEntryR userId entryId}>#{inputTitle formData}
@@ -443,11 +443,11 @@ postEditUserEntryR  entryId = do
                             ,EntryFormat=.inputFormat formData
                             ,EntryBody=.inputBody formData
                             ,EntryCitation=.inputCitation formData
-                            ,EntryTitleHtml=.titleHtml
-                            ,EntryBodyHtml=.bodyHtml
-                            ,EntryFeatured=.isFeatured bodyHtml
+                            --,EntryTitleHtml=.titleHtml
+                            --,EntryBodyHtml=.bodyHtml
+                            ,EntryFeatured=.isFeatured (inputBody formData)
                             ] 
-                    cacheEntryPdf entryId    
+                    cacheEntry entryId    
                     setMessage $ [hamlet|
                                     Your post, #
                                     <a .alert-link href=@{UserEntryR userId entryId}>#{inputTitle formData}
@@ -465,5 +465,7 @@ postEditUserEntryR  entryId = do
                 |]
             redirect $ EditUserEntryR entryId
 
-isFeatured :: Text -> Bool
-isFeatured html = not $ any (`isInfixOf` html) ["lost proof","parser-message","filter-information"]
+isFeatured :: Maybe Textarea -> Bool
+isFeatured mtextarea = case mtextarea of
+    Nothing -> False
+    Just textarea -> not $ any (`isInfixOf` unTextarea textarea) ["lost proof"]

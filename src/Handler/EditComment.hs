@@ -5,7 +5,7 @@ module Handler.EditComment where
 
 import Import
 import Yesod.Form.Bootstrap3
-import Handler.Parse(userTemporaryDirectory,purgeEntryPdf)
+import Handler.Parse
 import Handler.NewEntrySubscription(entrySubscriptionNotification,insertDefaultEntrySubscription)
 import Parse.Parser(parse,mdToHtml,texToHtml,EditorData(..))
 import Handler.Tree(getRootEntryId)
@@ -36,7 +36,7 @@ newCommentForm mCommentData =  renderBootstrap3 BootstrapBasicForm $ CommentInpu
     <*> areq (selectFieldList inputFormats) formatSettings (inputFormat <$> mCommentData)
     <*> areq textareaField editorSettings (body <$> mCommentData)
     <*> aopt textareaField citationSettings (citation <$> mCommentData)
-    where   
+    where
             inputFormats = [(MsgMarkdownWithLaTeX, Format "md"), (MsgPureLaTeX, Format "tex")]
             formatSettings =  FieldSettings
                 { fsLabel = SomeMessage MsgComment
@@ -67,7 +67,7 @@ newCommentForm mCommentData =  renderBootstrap3 BootstrapBasicForm $ CommentInpu
                 , fsTooltip = Nothing
                 , fsId = Nothing
                 , fsName = Just "citation"
-                , fsAttrs =[("class", "hidden")]             
+                , fsAttrs =[("class", "hidden")]
                 }
 
 postEditCommentR :: EntryId -> Handler ()
@@ -75,60 +75,60 @@ postEditCommentR entryId = do
     Entity userId _ <- requireAuth
     (rootEntryId, rootEntryAuthorId) <- runDB $ do
         rootEntryId <- getRootEntryId entryId
-        rootEntryAuthorId <- entryUserId <$> get404 rootEntryId  
-   
-        return (rootEntryId, rootEntryAuthorId)  
+        rootEntryAuthorId <- entryUserId <$> get404 rootEntryId
+
+        return (rootEntryId, rootEntryAuthorId)
 
     urlRenderParams <- getUrlRenderParams
-    
+
     ((res, _), _) <- runFormPost $ newCommentForm $ Nothing
     case res of
         FormSuccess newCommentFormData -> do
-            let editorData=EditorData{
+            {-let editorData=EditorData{
                     editorPreamble=preamble newCommentFormData
                     ,editorContent=Just $ body newCommentFormData
                     ,editorCitation=citation newCommentFormData
                 }
-            currentTime <- liftIO getCurrentTime
+            
             let parser=  case inputFormat newCommentFormData of
                         Format "tex" -> texToHtml
                         _ -> mdToHtml
             userDir<-userTemporaryDirectory
+
+            --bodyHtml <- liftIO $ parse Nothing userDir parser editorData-}
             let title = "Comment"
-                
-            bodyHtml <- liftIO $ parse Nothing userDir parser editorData
-            let commentData=Entry 
+            currentTime <- liftIO getCurrentTime
+            let commentData=Entry
                         {entryUserId=userId
                         ,entryType=Comment
                         ,entryFormat=inputFormat newCommentFormData
                         ,entryTitle=title
-                        ,entryTitleHtml=title
-                        ,entryPreamble=(preamble newCommentFormData)
+                        --,entryTitleHtml=title
+                        ,entryPreamble=preamble newCommentFormData
                         ,entryBody=Just $ body newCommentFormData
-                        ,entryBodyHtml=bodyHtml
+                        --,entryBodyHtml=bodyHtml
                         ,entryCitation=citation newCommentFormData
                         ,entryInserted=currentTime
                         ,entryUpdated=currentTime
                         ,entryStatus=Publish
                         ,entryFeatured=False
                         }
-                
+
             commentId <- runDB $ do
                 commentId<-insert commentData
                 insert_ $ EntryTree commentId entryId currentTime
                 insertDefaultEntrySubscription commentId
                 return commentId
-
-            --rootEntry <- runDB $ get404 rootEntryId
+            cacheEntry commentId
             subscribers <- runDB $ selectList [EntrySubscriptionEntryId ==. entryId, EntrySubscriptionVerified ==. True] []
             forM_ subscribers $ \(Entity subscriptionId subscription) -> do
-                
+
                 let unsubscribeUrl= urlRenderParams (EditEntrySubscriptionR subscriptionId) $ case entrySubscriptionKey subscription of
-                        Just key -> [("key", key)] 
+                        Just key -> [("key", key)]
                         Nothing -> []
                     entryUrl= urlRenderParams (UserEntryR rootEntryAuthorId rootEntryId) [] <> "#entry-" <> toPathPiece commentId
                 sendAppEmail (entrySubscriptionEmail subscription) $ entrySubscriptionNotification unsubscribeUrl entryUrl commentData
-                        
+
 
             setMessage $ [hamlet|
                             Your comment has been published. #
@@ -145,11 +145,11 @@ postEditCommentR entryId = do
 
 deleteEntryRecursive :: EntryId -> ReaderT SqlBackend (HandlerFor App) ()
 deleteEntryRecursive entryId = do
-    children<-getChildIds entryId 
-    _<-liftHandler $ mapM purgeEntryPdf $ entryId:children
+    children<-getChildIds entryId
+    _<-liftHandler $ mapM purgeEntry $ entryId:children
     deleteWhere [EntryId <-. children++[entryId]]
     return ()
-    
+
 getChildIds :: EntryId -> ReaderT SqlBackend (HandlerFor App) [EntryId]
 getChildIds entryId = do
     tree<-selectList [EntryTreeParent==.entryId] []

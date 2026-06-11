@@ -49,8 +49,8 @@ postNewCategoryR = do
                             , entryFormat=Format "tex"
                             , entryBody=Nothing
                             , entryCitation=Nothing
-                            , entryTitleHtml=titleHtml
-                            , entryBodyHtml=""
+                            --, entryTitleHtml=titleHtml
+                            --, entryBodyHtml=""
                             , entryFeatured=False
                             }
             
@@ -68,7 +68,8 @@ postEditCategoryR entryId = do
             userDir<-userTemporaryDirectory
             titleHtml <-liftIO $ parse Nothing userDir texToHtmlSimple title
             currentTime <- liftIO getCurrentTime
-            runDB $ update entryId [EntryTitle=.title, EntryTitleHtml=.titleHtml, EntryUpdated=.currentTime]
+            runDB $ update entryId [EntryTitle=.title, --EntryTitleHtml=.titleHtml,
+                                    EntryUpdated=.currentTime]
             
             return $ object ["id" .= entryId, "title" .= titleHtml]
         FormFailure msgs -> return $ object ["errors" .= msgs]

@@ -7,7 +7,7 @@ module Handler.EditPage where
 
 import Import
 import Yesod.Form.Bootstrap3
-import Handler.Parse(editorWidget,userTemporaryDirectory)
+import Handler.Parse
 import Parse.Parser (parse,mdToHtml,texToHtml,EditorData(..))
 --import qualified Data.Text as T
 --import System.Directory
@@ -15,7 +15,7 @@ import Parse.Parser (parse,mdToHtml,texToHtml,EditorData(..))
 data EntryInput=EntryInput
     { preamble:: Maybe Textarea
     , inputFormat:: Format
-    , body::Maybe Textarea 
+    , body::Maybe Textarea
     , citation:: Maybe Textarea}
 
 pageForm::Maybe EntryInput -> Html -> MForm Handler (FormResult EntryInput, Widget)
@@ -23,9 +23,9 @@ pageForm inputs=renderBootstrap3 BootstrapBasicForm $ EntryInput
     <$> aopt textareaField preambleSettings (preamble <$> inputs)
     <*> areq (selectFieldList inputFormats) "Content" (inputFormat <$> inputs)
     <*> aopt textareaField editorSettings  (body  <$> inputs)
-    <*> aopt textareaField citationSettings (citation  <$> inputs)  
+    <*> aopt textareaField citationSettings (citation  <$> inputs)
     where
-        inputFormats = [("Markdown", Format "md"), ("LaTeX", Format "tex")]::[(Text, Format)] 
+        inputFormats = [("Markdown", Format "md"), ("LaTeX", Format "tex")]::[(Text, Format)]
         editorSettings = FieldSettings
             { fsLabel = ""
             , fsTooltip = Nothing
@@ -44,7 +44,7 @@ pageForm inputs=renderBootstrap3 BootstrapBasicForm $ EntryInput
             , fsId = Nothing
             , fsName = Just "citation"
             , fsAttrs =[("class", "hidden")]}
-       
+
 getEditPageR :: Text -> Handler Html
 getEditPageR title = do
     (userId, user)<- requireAuthPair
@@ -57,10 +57,10 @@ getEditPageR title = do
             (_,Just entry) -> entryFormat $ entityVal entry
             _ -> Format "md"
 
-    (entryWidget, entryEnctype) <- case entityVal <$> mEntry of  
+    (entryWidget, entryEnctype) <- case entityVal <$> mEntry of
         Just entry-> do
             generateFormPost $ pageForm $ Just $ EntryInput (entryPreamble entry) format (entryBody entry) (entryCitation entry)
-        Nothing->do 
+        Nothing->do
 
             generateFormPost $ pageForm $ Just $ EntryInput (userDefaultPreamble user) format Nothing (userDefaultCitation user)
     defaultLayout $ do
@@ -74,8 +74,8 @@ getEditPageR title = do
         <button .btn .btn-default type=submit name=action value=draft>_{MsgSave}
         $maybe _ <- mEntry
             <button .btn .btn-default .delete type=submit name=action value=delete>_{MsgDelete}
-        |]            
-        toWidget        
+        |]
+        toWidget
             [julius|
                 $(document).ready(function(){
                     $('.btn.delete').click(function(){
@@ -83,7 +83,7 @@ getEditPageR title = do
                     });
                 });
             |]
-        
+
         editorWidget format
 
 
@@ -92,80 +92,83 @@ postEditPageR title = do
     userId <- requireAuthId
     mEntry<-runDB $ selectFirst [EntryTitle==.title,EntryType==.Page,EntryUserId==.userId] [Desc EntryInserted]
     ((res, _), _) <- runFormPost $ pageForm Nothing
-    case res of 
+    case res of
         FormSuccess formData->  do
-            let editorData::EditorData
+            {-let editorData::EditorData
                 editorData =  EditorData{
                             editorPreamble=preamble formData
                             ,editorContent=body formData
                             ,editorCitation=citation formData
-                        } 
-            entryAction <- lookupPostParam "action"        
+                        }
+                        -}
+            entryAction <- lookupPostParam "action"
             currentTime <- liftIO getCurrentTime
-            let parser=case inputFormat formData of
+            {-let parser=case inputFormat formData of
                     Format "tex"->texToHtml
                     _->mdToHtml
-            userDir<-userTemporaryDirectory
-            bodyHtml<- liftIO $ parse Nothing userDir parser editorData
+            --userDir<-userTemporaryDirectory
+            --bodyHtml<- liftIO $ parse Nothing userDir parser editorData-}
             urlRenderParams<- getUrlRenderParams
             case entryAction of
-                Just "delete"->case mEntry of 
+                Just "delete"->case mEntry of
                     Just (Entity entryId _)->do
+                        purgeEntry entryId
                         runDB $ delete entryId
                         setMessage $ [hamlet|Your page, #{title}, has been deleted.|] urlRenderParams
                         redirect $ EditPageR title
                     Nothing->do
                         setMessageI MsgPageNotFound
                         redirect $ EditPageR title
-                Just "publish"-> case mEntry of 
+                Just "publish"-> case mEntry of
                     Nothing -> do
-                        _<-runDB $ insert $ Entry   
+                        entryId<-runDB $ insert $ Entry
                             {entryUserId=userId
                             ,entryType=Page
-                            ,entryFormat=(inputFormat formData)
+                            ,entryFormat=inputFormat formData
                             ,entryTitle=title
-                            ,entryPreamble=(preamble formData)
-                            ,entryBody=(body formData)
-                            ,entryCitation=(citation formData)
+                            ,entryPreamble=preamble formData
+                            ,entryBody=body formData
+                            ,entryCitation=citation formData
                             ,entryInserted=currentTime
                             ,entryUpdated=currentTime
                             ,entryStatus=Publish
-                            ,entryTitleHtml=title
-                            ,entryBodyHtml=bodyHtml
+                            --,entryTitleHtml=title
+                            --,entryBodyHtml=bodyHtml
                             ,entryFeatured=False
                             }
-
+                        cacheEntry entryId
                         setMessage $ [hamlet|
                                         Your page, #
                                         <a .alert-link href=@{PageR title}>#{title}
                                         , has been updated. #
                                         <a .alert-link.pull-right href=@{PageR title}>View
                                      |] urlRenderParams
-                           
+
                         redirect $ EditPageR title
                     Just (Entity entryId _) -> do
                         runDB $ update entryId
                             [EntryUserId=.userId
                             ,EntryStatus=.Publish
-                            ,EntryPreamble=.(preamble formData)
-                            ,EntryFormat=.(inputFormat formData)
-                            ,EntryBody=.(body formData)
-                            ,EntryCitation=.(citation formData)
+                            ,EntryPreamble=.preamble formData
+                            ,EntryFormat=.inputFormat formData
+                            ,EntryBody=.body formData
+                            ,EntryCitation=.citation formData
                             ,EntryUpdated=.currentTime
-                            ,EntryBodyHtml=.bodyHtml
+                            --,EntryBodyHtml=.bodyHtml
                             ]
+                        cacheEntry entryId
                         setMessage $ [hamlet|
                                         Your page, #
                                         <a .alert-link href=@{PageR title}>#{title}
                                         , has been updated. #
                                         <a .alert-link.pull-right href=@{PageR title}>View
                                      |] urlRenderParams
-                        
+
                         redirect $ EditPageR title
 
-                Just "draft"-> case mEntry of 
+                Just "draft"-> case mEntry of
                         Nothing -> do
-                            _<-runDB $ insert $ Entry   
+                            entryId <-runDB $ insert $ Entry
                                 {entryUserId=userId
                                 ,entryType=Page
                                 ,entryFormat=(inputFormat formData)
@@ -176,42 +179,42 @@ postEditPageR title = do
                                 ,entryInserted=currentTime
                                 ,entryUpdated=currentTime
                                 ,entryStatus=Draft
-                                ,entryTitleHtml=title
-                                ,entryBodyHtml=bodyHtml
+                                --,entryTitleHtml=title
+                                --,entryBodyHtml=bodyHtml
                                 ,entryFeatured=False
                                 }
-
+                            cacheEntry entryId
                             setMessage $ [hamlet|
                                             Your page, #
                                             <a .alert-link href=@{PageR title}>#{title}
                                             , has been saved. #
                                             <a .alert-link.pull-right href=@{PageR title}>View
                                          |] urlRenderParams
-                            
+
                             redirect $ EditPageR title
 
                         Just (Entity entryId _) -> do
                             runDB $ update entryId
                                 [EntryUserId=.userId
                                 ,EntryStatus=.Draft
-                                ,EntryPreamble=.(preamble formData)
-                                ,EntryFormat=.(inputFormat formData)
-                                ,EntryBody=.(body formData)
-                                ,EntryCitation=.(citation formData)
+                                ,EntryPreamble=.preamble formData
+                                ,EntryFormat=.inputFormat formData
+                                ,EntryBody=.body formData
+                                ,EntryCitation=.citation formData
                                 ,EntryUpdated=.currentTime
-                                ,EntryBodyHtml=.bodyHtml
+                                --,EntryBodyHtml=.bodyHtml
                                 ]
-
+                            cacheEntry entryId
                             setMessage $ [hamlet|
                                             Your page, #
                                             <a .alert-link href=@{PageR title}>#{title}
                                             , has been saved. #
                                             <a .alert-link.pull-right href=@{PageR title}>View
                                          |] urlRenderParams
-                            
+
                             redirect $ EditPageR title
 
-                _-> do 
+                _-> do
                     setMessageI  MsgInvalidAction
                     redirect $ EditPageR title
         FormFailure errors -> do

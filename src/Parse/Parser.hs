@@ -24,7 +24,6 @@ module Parse.Parser (
 import System.Process.Typed
 --import System.Exit
 import Text.HTML.TagSoup
---import Parse.KillOldProcesses(killOldProcesses)
 import Text.HTML.Scalpel
 import System.FilePath.Posix
 import Text.RE.Replace
@@ -77,8 +76,7 @@ parse mFileName tmpDir parser docData = do
     createDirectoryIfMissing True tmpDir
 
     (process, output) <- parser tmpDir docData
-    (exitCode, stdout, stderr) <- readProcessWithTimeout timeLimit $ setWorkingDir tmpDir process
-    --Import.catch (readProcess processConfig process) (\e -> return (ExitFailure 1, "", BL8.pack (show (e :: Import.IOException)))) -- readCreateProcessWithExitCode can still throw an exception when using the pdf parser: hGetContents: invalid argument (invalid byte sequence).
+    (exitCode, stdout, stderr) <- Import.catch (readProcessWithTimeout timeLimit $ setWorkingDir tmpDir process) (\e -> return (ExitFailure (-10000), "", BL8.pack (show (e :: Import.IOException))))
     --renderedText <- case Just maybeResult of
     renderedText <- case exitCode of
             ExitSuccess ->
@@ -240,7 +238,7 @@ textareaToYaml (Just textarea)= "header-includes: |\n" <> (yamlBlock (unTextarea
     removeDocumentClass tex= tex *=~/ [edBlockSensitive|\\documentclass[^\{]*\{[^\}]*\}///|]
     removeMinted::Text->Text
     removeMinted tex = (tex *=~/ [edBlockSensitive|\\usepackage[^\{]*\{[[:blank:]]*minted[[:blank:]]*\}///|]) *=~/ [edBlockSensitive|\\usemintedstyle[^\{]*\{[^\}]*\}///|]
-    yamlBlock tex= Data.Text.unlines $ (\x-> " " <> x) <$> ["```{=latex}"] ++ Data.Text.lines (removeMinted $ removeDocumentClass tex) ++ ["```"]
+    yamlBlock tex= Data.Text.unlines $ (" " <>) <$> ["```{=latex}"] ++ Data.Text.lines (removeMinted $ removeDocumentClass tex) ++ ["```"]
 textareaToYaml _ =""
 
 unMaybeTextarea :: Maybe Textarea -> Text

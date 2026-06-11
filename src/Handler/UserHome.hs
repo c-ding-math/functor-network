@@ -9,6 +9,7 @@ import Data.Time
 import Handler.Tree(getRootEntryId)
 import Handler.NewUserSubscription (subscribeToUserWidget)
 import Handler.UserEntry(shareWidget)
+import Handler.Parse
 
 getUserHomeR :: UserId -> Handler Html
 getUserHomeR authorId = do
@@ -23,8 +24,7 @@ getUserHomeR authorId = do
         let chartX = [formatTime defaultTimeLocale "%b" (addMonth n currentTime) | n <- [-11..0]]
         chartYPost <- mapM (\n -> do
                 let time = addMonth n firstDayNextMonth
-                y <- count [EntryUserId ==. authorId, EntryType ==. UserPost, EntryStatus ==. Publish, EntryInserted <=. time]
-                return y) [-11..0]
+                count [EntryUserId ==. authorId, EntryType ==. UserPost, EntryStatus ==. Publish, EntryInserted <=. time]) [-11..0]
         chartYComment <- mapM (\n -> do
                 let time = addMonth n firstDayNextMonth
                 comments <- selectList [EntryUserId ==. authorId, EntryType ==. Comment, EntryStatus ==. Publish, EntryInserted <=. time] []
@@ -36,8 +36,11 @@ getUserHomeR authorId = do
                 return (length comments')) [-11..0]
         let postChartData = zip chartX chartYPost
         let commentChartData = zip chartX chartYComment
-        
+
         return (author, mAbout, postChartData, commentChartData)
+    aboutHtml <- case mAbout of
+        Just about -> entryBodyHtmlCache (entityKey about)
+        Nothing -> return ""
     defaultLayout $ do
         setTitle $ toHtml $ userName author
         [whamlet|
@@ -67,7 +70,7 @@ getUserHomeR authorId = do
                     <div .entry-content-wrapper>
                         $maybe about <- mAbout
                             $if isJust (entryBody (entityVal about))
-                                #{preEscapedToMarkup (entryBodyHtml (entityVal about))}
+                                #{preEscapedToMarkup aboutHtml}
                             $else
                                 <div style="width:519.3906239999999px;">
                                     <p>_{MsgNoAbout}
@@ -235,9 +238,9 @@ addMonth n utcTime=
 
 -- | Get the first day of the next month at 00:00:00 UTC
 firstDayNextMonthUTC :: UTCTime -> UTCTime
-firstDayNextMonthUTC now = 
+firstDayNextMonthUTC now =
   let today = utctDay now
       (year, month, _) = toGregorian today
       (newYear, newMonth) = if month == 12 then (year + 1, 1) else (year, month + 1)
       firstDay = fromGregorian newYear newMonth 1
-  in UTCTime firstDay 0  
+  in UTCTime firstDay 0

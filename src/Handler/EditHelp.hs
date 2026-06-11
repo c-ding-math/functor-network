@@ -4,7 +4,8 @@ module Handler.EditHelp where
 
 import Import
 import Yesod.Form.Bootstrap3
-import Handler.Parse(editorWidget)
+import Handler.Parse
+--import Data.Maybe (maybeToList)
 
 data EntryInput=EntryInput
     { inputFormat::Format
@@ -57,6 +58,11 @@ getEditHelpR "syntax" = do
                 maybeSyntax<-runDB $ selectFirst [EntryTitle==."Markdown Help",EntryType==.Page,EntryStatus==.Draft] [Desc EntryInserted]
                 maybeDemo <-runDB $ selectFirst [EntryTitle==."a sample post written in markdown",EntryType==.Page,EntryStatus==.Publish] [Desc EntryInserted]
                 return (maybeSyntax, maybeDemo, Format "md", "Markdown Help"::Text)
+    maybeSyntaxHtml <- case maybeSyntax of
+        Just (Entity entryId _) -> do 
+            bodyHtml <- entryBodyHtmlCache entryId
+            return $ Just bodyHtml
+        Nothing -> return Nothing
     entryWidget <- case maybeDemo of
         Just (Entity _ entry) -> do
             (entryWidget, _) <- generateFormPost $ entryForm $ Just $ EntryInput (entryFormat entry) (entryPreamble entry) (entryBody entry) (entryCitation entry) 
@@ -71,8 +77,8 @@ getEditHelpR "syntax" = do
   <h1>#{title}
   <div .entry-body>
     <div .entry-content-wrapper>
-        $maybe (Entity _ entry)<-maybeSyntax
-            #{preEscapedToMarkup(entryBodyHtml entry)}
+        $maybe bodyHtml <- maybeSyntaxHtml
+            #{preEscapedToMarkup bodyHtml}
         $nothing
             <div style="width:519.3906239999999px;">
                 <p>_{MsgComingSoon}
@@ -95,7 +101,11 @@ getEditHelpR "editor" = do
                 maybeSyntax<-runDB $ selectFirst [EntryTitle==."Markdown Editor Help",EntryType==.Page,EntryStatus==.Draft] [Desc EntryInserted]
                 maybeDemo <-runDB $ selectFirst [EntryTitle==."a sample post written in markdown",EntryType==.Page,EntryStatus==.Publish] [Desc EntryInserted]
                 return (maybeSyntax, maybeDemo, Format "md")
-    
+    maybeSyntaxHtml <- case maybeSyntax of
+        Just (Entity entryId _) -> do 
+            bodyHtml <- entryBodyHtmlCache entryId
+            return $ Just bodyHtml
+        Nothing -> return Nothing
     entryWidget <- case maybeDemo of
         Just (Entity _ entry) -> do
             (entryWidget, _) <- generateFormPost $ entryForm $ Just $ EntryInput (entryFormat entry) (entryPreamble entry) (entryBody entry) (entryCitation entry) 
@@ -110,8 +120,8 @@ getEditHelpR "editor" = do
   <h1>#{title}
   <div .entry-body>
     <div .entry-content-wrapper>
-        $maybe (Entity _ entry)<-maybeSyntax
-            #{preEscapedToMarkup(entryBodyHtml entry)}
+        $maybe bodyHtml <- maybeSyntaxHtml
+            #{preEscapedToMarkup bodyHtml}
         $nothing
             <div style="width:519.3906239999999px;">
                 <p>_{MsgComingSoon}
@@ -125,6 +135,11 @@ getEditHelpR "editor" = do
 getEditHelpR "format" = do
     let title="Format Comparison" :: Text
     mFormat <- runDB $ selectFirst [EntryTitle==.title,EntryType==.Page,EntryStatus==.Draft] [Desc EntryInserted]
+    maybeFormatHtml <- case mFormat of
+        Just (Entity entryId _) -> do 
+            bodyHtml <- entryBodyHtmlCache entryId
+            return $ Just bodyHtml
+        Nothing -> return Nothing
     defaultLayout $ do
         setTitle "Edit Help"
         [whamlet|
@@ -132,8 +147,8 @@ getEditHelpR "format" = do
                 <h1>#{title}
                 <div .entry-body>
                     <div .entry-content-wrapper>
-                        $maybe (Entity _ entry)<-mFormat
-                            #{preEscapedToMarkup (entryBodyHtml entry)}
+                        $maybe bodyHtml <- maybeFormatHtml
+                            #{preEscapedToMarkup bodyHtml}
                         $nothing
                             <div style="width:519.3906239999999px;">
                                 <p>_{MsgComingSoon}
@@ -142,6 +157,11 @@ getEditHelpR "format" = do
 getEditHelpR "shortcuts" = do
     let title="Shortcuts" :: Text
     mShortcuts <- runDB $ selectFirst [EntryTitle==.title,EntryType==.Page,EntryStatus==.Draft] [Desc EntryInserted]
+    maybeShortcutsHtml <- case mShortcuts of
+        Just (Entity entryId _) -> do 
+            bodyHtml <- entryBodyHtmlCache entryId
+            return $ Just bodyHtml
+        Nothing -> return Nothing
     defaultLayout $ do
         setTitle "Edit Help"
         [whamlet|
@@ -149,8 +169,8 @@ getEditHelpR "shortcuts" = do
                 <h1>#{title}
                 <div .entry-body>
                     <div .entry-content-wrapper>
-                        $maybe (Entity _ entry)<-mShortcuts
-                            #{preEscapedToMarkup (entryBodyHtml entry)}
+                        $maybe bodyHtml <- maybeShortcutsHtml
+                            #{preEscapedToMarkup bodyHtml}
                         $nothing
                             <div style="width:519.3906239999999px;">
                                 <p>_{MsgComingSoon}

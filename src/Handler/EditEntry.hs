@@ -8,7 +8,7 @@ module Handler.EditEntry where
 import Import
 --import Control.Monad (when)
 import Handler.EditComment(deleteEntryRecursive)
-import Handler.Parse(editorWidget,cacheEntryPdf,purgeEntryPdf)
+import Handler.Parse(editorWidget,cacheEntry,purgeEntry)
 import Handler.EditUserEntry(EntryInput(..),entryInputForm,entry2Html)
 --import Database.Persist.Sql
 
@@ -21,8 +21,8 @@ getEditEntryR entryId = do
     entryIds <- return $ filter (> entryId) entryIds'
     let mNextEntryId = minimumMay entryIds
 
-    entry<-runDB $ get404 entryId   
- 
+    entry<-runDB $ get404 entryId
+
     formatParam <- lookupGetParam "format"
     let format = case formatParam of
             Just "tex" -> Format "tex"
@@ -54,7 +54,7 @@ getEditEntryR entryId = do
         <button .btn .btn-default .delete type=submit name=action value=delete>_{MsgDelete}
         <button .btn .btn-default .auto-save .hidden type=submit name=action value=autosave>auto save
         |]
-        if autoProcess == Just "true" 
+        if autoProcess == Just "true"
           then
             toWidget [julius|
                 $(document).ready(function(){
@@ -62,10 +62,10 @@ getEditEntryR entryId = do
                             $('.btn.auto-save').click();
                     //}, 100);
                 });
-            |]     
-          else    
-            toWidget [julius||]  
-        toWidget        
+            |]
+          else
+            toWidget [julius||]
+        toWidget
             [julius|
                 $(document).ready(function(){
                     $('.btn.delete').click(function(){
@@ -88,33 +88,34 @@ getEditEntryR entryId = do
 postEditEntryR :: EntryId -> Handler Html
 postEditEntryR  entryId = do
     ((res, _), _) <- runFormPost $ entryInputForm Nothing
-    case res of 
+    case res of
         FormSuccess formData->  do
 
-            (titleHtml,bodyHtml) <- entry2Html formData
+            --(titleHtml,bodyHtml) <- entry2Html formData
             --currentTime <- liftIO getCurrentTime
             urlRenderParams<- getUrlRenderParams
-            entryAction <- lookupPostParam "action"  
+            entryAction <- lookupPostParam "action"
             case entryAction of
                 Just "delete"->  do
                     runDB $ deleteEntryRecursive entryId
-                    purgeEntryPdf entryId
-                    setMessage $ [shamlet|The post, #{inputTitle formData}, has been deleted.|] --getUrlRenderParams
+                    -- purgeEntry entryId
+                    setMessage [shamlet|The post, #{inputTitle formData}, has been deleted.|] --getUrlRenderParams
 
-                _-> do 
+                _-> do
                     entry<-runDB $ get404 entryId
                     let authorId=entryUserId entry
-                    runDB  $ do                         
-                        update entryId                    
+                    runDB  $ do
+                        update entryId
                             [EntryTitle=.inputTitle formData
                             ,EntryPreamble=.inputPreamble formData
                             ,EntryFormat=.inputFormat formData
                             ,EntryBody=.inputBody formData
                             ,EntryCitation=.inputCitation formData
-                            ,EntryTitleHtml=.titleHtml
-                            ,EntryBodyHtml=.bodyHtml
-                            ] 
-                    when (entryType entry == UserPost) $ cacheEntryPdf entryId   
+                            --,EntryTitleHtml=.titleHtml
+                            --,EntryBodyHtml=.bodyHtml
+                            ]
+                    --when (entryType entry == UserPost) $ 
+                    cacheEntry entryId
                     setMessage $ [hamlet|
                                     The post, #
                                     <a .alert-link href=@{UserEntryR authorId entryId}>#{inputTitle formData}
@@ -125,15 +126,15 @@ postEditEntryR  entryId = do
                 Just "delete"-> redirect  HomeR
                 Just "autosave"-> do
                         entryIds' <- runDB $ selectKeysList [] [Asc EntryId]
-                        entryIds <- return $ filter (> entryId) entryIds'
+                        let entryIds = filter (> entryId) entryIds'
                         let mNextEntryId = minimumMay entryIds
                         case mNextEntryId of
                             Just nextEntryId -> redirect (EditEntryR nextEntryId, [("auto", "true")])
-                            Nothing -> redirect $ EditEntryR entryId 
-                        
+                            Nothing -> redirect $ EditEntryR entryId
+
                 _-> redirect  $ EditEntryR entryId
 
-        FormMissing -> do          
+        FormMissing -> do
             setMessageI MsgFormMissing
             redirect $ EditEntryR entryId
         FormFailure errors -> do

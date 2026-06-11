@@ -3,6 +3,7 @@
 module Handler.Page where
 
 import Import
+import Handler.Parse
 
 getPageR :: Text -> Handler Html
 getPageR text = do
@@ -10,13 +11,15 @@ getPageR text = do
     mEntry<- runDB $ selectFirst [EntryTitle==.text,EntryType==.Page,EntryStatus==.Publish] [Desc EntryInserted]
     case mEntry of
         Nothing -> notFound
-        Just (Entity _ entry) -> defaultLayout $ do 
+        Just (Entity entryId entry) -> do
+            bodyHtml <- entryBodyHtmlCache entryId
+            defaultLayout $ do 
                 setTitle $ toHtml text
                 [whamlet|
 <article .entry :entryStatus entry == Draft:.draft>
     <h1>#{text}
     <div .entry-body>
-      <div .entry-content-wrapper>#{preEscapedToMarkup (entryBodyHtml entry)}
+      <div .entry-content-wrapper>#{preEscapedToMarkup bodyHtml}
     <!--  <ul .entry-menu>
         <li>
             <a href=@{EditPageR text}>_{MsgEdit}-->

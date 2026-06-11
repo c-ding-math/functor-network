@@ -8,7 +8,7 @@ import Import
 --import Control.Monad (when)
 import Yesod.Form.Bootstrap3
 --import Handler.EditComment(deleteEntryRecursive)
-import Handler.Parse(editorWidget,cacheEntryPdf)
+import Handler.Parse(editorWidget,cacheEntry)
 import Handler.EditUserEntry(EntryInput(..),entry2Html)
 
 
@@ -24,8 +24,8 @@ maintainEntryForm entry = renderBootstrap3 BootstrapBasicForm $ Entry
     <*> aopt textareaField preambleSettings (Just (entryPreamble entry))
     <*> aopt textareaField editorSettings (Just (entryBody entry))
     <*> aopt textareaField citationSettings (Just (entryCitation entry))
-    <*> areq textField (bfs ("titleHtml" :: Text)) (Just (entryTitleHtml entry))
-    <*> areq textField (bfs ("bodyHtml" :: Text)) (Just (entryBodyHtml entry))
+    -- <*> areq textField (bfs ("titleHtml" :: Text)) (Just (entryTitleHtml entry))
+    -- <*> areq textField (bfs ("bodyHtml" :: Text)) (Just (entryBodyHtml entry))
     <*> areq checkBoxField featuredSettings (Just (entryFeatured entry)) where
         {-inputFormats = [(MsgMarkdownWithLaTeX, Format "md"), (MsgPureLaTeX, Format "tex")]
         formatSettings =  FieldSettings
@@ -110,18 +110,19 @@ postMaintainEntryR entryId = do
                     , inputBody = entryBody entry'
                     , inputCitation = entryCitation entry'
                     }
-            (titleHtml,bodyHtml) <- entry2Html editorData
+            --(titleHtml,bodyHtml) <- entry2Html editorData
             runDB $ update entryId
                 [ EntryTitle =. entryTitle entry'
                 , EntryFormat =. entryFormat entry'
                 , EntryPreamble =. entryPreamble entry'
                 , EntryBody =. entryBody entry'
                 , EntryCitation =. entryCitation entry'
-                , EntryTitleHtml =. titleHtml
-                , EntryBodyHtml =. bodyHtml
+                --, EntryTitleHtml =. titleHtml
+                --, EntryBodyHtml =. bodyHtml
                 , EntryFeatured =. entryFeatured entry'
                 ]
-            when (entryType entry == UserPost) $ cacheEntryPdf entryId
+            --when (entryType entry == UserPost) $ 
+            cacheEntry entryId
             redirect $ MaintainEntryR entryId
         _ -> defaultLayout $ do
             setTitleI MsgMaintain
