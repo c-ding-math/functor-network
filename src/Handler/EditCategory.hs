@@ -79,4 +79,5 @@ postEditCategoryR entryId = do
 deleteEditCategoryR :: EntryId -> Handler Value
 deleteEditCategoryR entryId = do
     runDB $ delete entryId
+    purgeEntry entryId
     return $ object ["deleted" .= True]
