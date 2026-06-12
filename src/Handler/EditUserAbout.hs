@@ -6,7 +6,7 @@ module Handler.EditUserAbout where
 import Import
 import Yesod.Form.Bootstrap3
 import Handler.Parse
-import Handler.EditUserEntry(EntryInput(..),entry2Html)
+import Handler.EditUserEntry(EntryInput(..))
 import Handler.Files (uploadForm)
 
 data NameSetting=NameSetting{_name::Text}

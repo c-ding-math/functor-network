@@ -10,7 +10,7 @@ import Import
 import System.Directory
 import System.FilePath
 import System.Random
-import Parse.Parser(scaleHeader, htmlToPdf, unMaybeTextarea, parse, downloadPdfFileName, preProcessEditorData, texToPdf, texToHtml, texToHtmlSimple, mdToPdf, mdToHtml, mdToHtmlSimple, texToSvg, EditorData(..))
+import Parse.Parser--(scaleHeader, htmlToPdf, unMaybeTextarea, parse, downloadPdfFileName, preProcessEditorData, texToPdf, texToHtml, texToHtmlSimple, mdToPdf, mdToHtml, mdToHtmlSimple, texToSvg, EditorData(..))
 import qualified Data.Text.IO as TIO
 import qualified Data.Text as T
 --import Codec.Archive.Zip

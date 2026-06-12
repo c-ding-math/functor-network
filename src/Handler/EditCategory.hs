@@ -5,8 +5,7 @@ module Handler.EditCategory where
 
 import Import
 import Yesod.Form.Bootstrap3
-import Parse.Parser(parse,texToHtmlSimple)
-import Handler.Parse(userTemporaryDirectory)
+import Handler.Parse
 
 data CategoryInput = CategoryInput
     { categoryTitle :: Text
@@ -34,8 +33,8 @@ postNewCategoryR = do
     case result of
         FormSuccess categoryInput -> do
             let title = categoryTitle categoryInput
-            userDir<-userTemporaryDirectory
-            titleHtml <-liftIO $ parse Nothing userDir texToHtmlSimple title
+            {-userDir<-userTemporaryDirectory
+            titleHtml <-liftIO $ parse Nothing userDir texToHtmlSimple title-}
             currentTime <- liftIO getCurrentTime
 
             categoryId <- runDB $ insert $ Entry
@@ -53,7 +52,8 @@ postNewCategoryR = do
                             --, entryBodyHtml=""
                             , entryFeatured=False
                             }
-            
+            cacheEntry categoryId
+            titleHtml <- entryTitleHtmlCache categoryId
             return $ object ["id" .= categoryId, "title" .= titleHtml]
         FormFailure msgs -> return $ object ["errors" .= msgs]
         _ -> return $ object ["error" .= ("Invalid form"::Text)]
@@ -65,12 +65,13 @@ postEditCategoryR entryId = do
     case result of
         FormSuccess categoryInput -> do
             let title = categoryTitle categoryInput
-            userDir<-userTemporaryDirectory
-            titleHtml <-liftIO $ parse Nothing userDir texToHtmlSimple title
+            {-userDir<-userTemporaryDirectory
+            titleHtml <-liftIO $ parse Nothing userDir texToHtmlSimple title-}
             currentTime <- liftIO getCurrentTime
             runDB $ update entryId [EntryTitle=.title, --EntryTitleHtml=.titleHtml,
                                     EntryUpdated=.currentTime]
-            
+            cacheEntry entryId
+            titleHtml <- entryTitleHtmlCache entryId
             return $ object ["id" .= entryId, "title" .= titleHtml]
         FormFailure msgs -> return $ object ["errors" .= msgs]
         _ -> return $ object ["error" .= ("Invalid form"::Text)]

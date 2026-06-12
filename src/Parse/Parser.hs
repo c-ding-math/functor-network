@@ -32,6 +32,10 @@ import Yesod.Form.Fields
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Text
 import Data.Text.IO
+import qualified Data.Text.Read as TR
+import qualified Data.Text.Lazy.Builder as TB
+import qualified Data.Text.Lazy.Builder.RealFloat as TB
+import qualified Data.Text.Lazy as TL
 import Data.Maybe
 --import System.Timeout
 import GHC.Generics
@@ -211,9 +215,13 @@ scaleHeader :: Int -> Text -> Text
 scaleHeader n title|n<=6 =
     replaceAllCaptures SUB help $ title *=~ [re|([0-9]*\.[0-9]*)px|]
     where
-        headerScale = [2.6,2.15,1.7,1.25,1.0,0.85]
+        factors = [2.6,2.15,1.7,1.25,1.0,0.85]
+        scale :: Double -> Text -> Text
+        scale factor txt = case TR.double txt of
+            Right (num, _) -> TL.toStrict $ TB.toLazyText $ TB.formatRealFloat TB.Fixed (Just 12) (factor * num)
+            Left _ -> txt
         help _ loc cap = case locationCapture loc of
-            1-> Just $ pack $ show $ (headerScale!!(n-1)) * (read (unpack (capturedText cap)) :: Double)
+            1-> Just $ scale (factors!!(n-1)) (capturedText cap)
             _ -> Nothing
 scaleHeader _ title = title
 

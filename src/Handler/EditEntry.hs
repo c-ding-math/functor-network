@@ -8,8 +8,8 @@ module Handler.EditEntry where
 import Import
 --import Control.Monad (when)
 import Handler.EditComment(deleteEntryRecursive)
-import Handler.Parse(editorWidget,cacheEntry,purgeEntry)
-import Handler.EditUserEntry(EntryInput(..),entryInputForm,entry2Html)
+import Handler.Parse--(editorWidget,cacheEntry,purgeEntry)
+import Handler.EditUserEntry(EntryInput(..),entryInputForm)
 --import Database.Persist.Sql
 
 getEditEntryR :: EntryId -> Handler Html
