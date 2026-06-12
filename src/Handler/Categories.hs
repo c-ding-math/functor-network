@@ -135,12 +135,18 @@ getCategoriesR authorId = do
                         type: $(this).attr('method'),
                         url: $(this).attr('action'),
                         data: $(this).serialize(),
+                        beforeSend: {
+                            $(this).find('button').prop('disabled', true);
+                        },
                         success: function(data) {
                             if (data.errors) {
                                 alert(data.errors);
                             } else {
                                 location.reload();
                             }
+                        },
+                        complete: {
+                            $(this).find('button').prop('disabled', false);
                         }
                     });
                     return false;
