@@ -5,14 +5,13 @@ module Handler.UserEntry where
 
 import Import
 --import Yesod.Form.Bootstrap3
-import Handler.Parse(editorWidget,doesEntryPdfExist)
+import Handler.Parse
 import Parse.Parser(scaleHeader)
 import Handler.Tree(treeWidget)
 import Handler.Vote(voteWidget,likeWidget)
 --import Handler.Download(downloadWidget)
 import Handler.EditComment(getChildIds,newCommentForm,CommentInput(..))
 import Handler.NewEntrySubscription(subscribeToEntryWidget)
---import Data.Text(strip)
 
 getUserEntryR :: UserId ->  EntryId -> Handler Html
 getUserEntryR authorId entryId = do    
@@ -20,7 +19,7 @@ getUserEntryR authorId entryId = do
     maybeUser<-maybeAuth
     pdfExists<-doesEntryPdfExist entryId
 
-    (maybePayment,entry,entryAuthor,entryCategoryEntities, entryVoteList, commentListData)<-runDB $ do
+    (maybePayment,entry,entryAuthor,entryCategoryEntities, entryVoteList, commentListData')<-runDB $ do
         entry<-get404 entryId
         maybePayment <- selectFirst [PaymentUserId ==. authorId] [Desc PaymentInserted]
         if (entryUserId entry==authorId) && (entryStatus entry==Publish || isAdministrator maybeUserId entry) && (entryType entry==UserPost)
@@ -64,12 +63,17 @@ getUserEntryR authorId entryId = do
         Nothing ->  generateFormPost $ newCommentForm Nothing
         Just (Entity _ user) -> generateFormPost $ newCommentForm $ Just $ CommentInput (userDefaultPreamble user) format (Textarea "") (userDefaultCitation user)
 
+    entryTitleHtml<-entryTitleHtmlCache entryId
+    entryBodyHtml<-entryBodyHtmlCache entryId
+    commentListData <- forM commentListData' $ \(Entity commentId comment, (commentAuthorId, commentAuthorName), mParentCommentMeta, commentVoteList) -> do
+        commentBodyHtml <- entryBodyHtmlCache commentId
+        return (Entity commentId comment, (commentAuthorId, commentAuthorName), mParentCommentMeta, commentVoteList, commentBodyHtml)
     defaultLayout $ do
         setTitle $ toHtml $ entryTitle entry
 
         [whamlet|
 <article .entry :entryStatus entry == Draft:.draft #entry-#{toPathPiece entryId}>
-  <h1 .entry-title>#{preEscapedToMarkup(scaleHeader 1 (entryTitleHtml entry))}
+  <h1 .entry-title>#{preEscapedToMarkup(scaleHeader 1 entryTitleHtml)}
     $maybe Entity _ payment <- maybePayment
         <a#like-button.btn.btn-primary.pull-right type=button data-action=@{LikeR entryId} href=#{paymentIdent payment} data-toggle=modal data-target=#like-modal>_{MsgLike}
   <div .entry-meta>
@@ -97,7 +101,7 @@ getUserEntryR authorId entryId = do
   <div .entry-body>
     <div .entry-content-wrapper>
         $if (entryBody entry) /= Nothing
-            #{preEscapedToMarkup(entryBodyHtml entry)}
+            #{preEscapedToMarkup entryBodyHtml}
         $else
             <div style="width:519.3906239999999px;">
                 <p>_{MsgComingSoon}
@@ -135,7 +139,7 @@ getUserEntryR authorId entryId = do
         <p style="display:none">_{MsgNoComment}
     $else
         <h3>_{MsgComments}
-        $forall (Entity commentId comment,(commentAuthorId, commentAuthorName),mParentCommentMeta,commentVoteList)<-commentListData
+        $forall (Entity commentId comment,(commentAuthorId, commentAuthorName),mParentCommentMeta,commentVoteList,commentBodyHtml)<-commentListData
             <article .comment id=entry-#{toPathPiece commentId}> 
                 <div .entry-meta>
                   <ul .list-inline>
@@ -152,7 +156,7 @@ getUserEntryR authorId entryId = do
 
                 <div .entry-body>
                     <div .entry-content-wrapper>
-                        #{preEscapedToMarkup (entryBodyHtml comment)}  
+                        #{preEscapedToMarkup commentBodyHtml}  
                 <div.menu>
                     <ul.list-inline.text-lowercase>                
                         <li .reply>

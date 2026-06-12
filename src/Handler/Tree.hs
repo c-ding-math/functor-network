@@ -8,6 +8,7 @@ import qualified Data.List as DL
 import Yesod.Form.Bootstrap3
 import Text.Shakespeare.Text (stext)
 import qualified Prelude
+import Handler.Parse
 
 data Parents = Parents
     { _ids :: Maybe [EntryId]
@@ -20,7 +21,7 @@ treeForm userId mSelectedList = renderBootstrap3 BootstrapBasicForm $ Parents
         options = optionsPersistKey [EntryUserId ==. userId, EntryType ==. Category] [Desc EntryInserted] entryTitle
 
 postTreeR :: EntryId -> Handler Html
-postTreeR node = do 
+postTreeR node = do
     userId <- requireAuthId
     entry <- runDB $ get404 node
     ((result, _), _) <- runFormPost $ treeForm userId Nothing
@@ -46,12 +47,12 @@ postTreeR node = do
                         Right _ -> when ((entryStatus entry == Publish)||(entryUserId entry == userId)) $ do
                                 subscribers <- selectList [EntrySubscriptionEntryId ==. parentId, EntrySubscriptionVerified ==. True] []
                                 forM_ subscribers $ \(Entity subscriptionId subscription) -> do
-                                    
+
                                     let unsubscribeUrl= urlRenderParams (EditEntrySubscriptionR subscriptionId) $ case entrySubscriptionKey subscription of
-                                            Just key -> [("key", key)] 
+                                            Just key -> [("key", key)]
                                             Nothing -> []
                                         entryUrl= urlRenderParams (CategoriesR (entryUserId parent)) [] <> "#entry-" <> toPathPiece parentId
-                                    lift $ sendAppEmail (entrySubscriptionEmail subscription) $ categorySubscriptionNotification unsubscribeUrl entryUrl (entryTitle entry) (entryTitle parent)                        
+                                    lift $ sendAppEmail (entrySubscriptionEmail subscription) $ categorySubscriptionNotification unsubscribeUrl entryUrl (entryTitle entry) (entryTitle parent)
                     return $ Entity parentId parent
             setMessage $ [hamlet|
                 Post categorized in 
@@ -62,9 +63,9 @@ postTreeR node = do
                             <a href=@{CategoriesR userId}#entry-#{toPathPiece categoryId}>#{entryTitle category}
                                 $if categoryId /= entityKey (Prelude.last categoryEntities)
                                     , 
-                |] urlRenderParams 
-            
-            
+                |] urlRenderParams
+
+
         FormMissing -> do
             setMessageI MsgFormMissing
         FormFailure _ -> do
@@ -77,11 +78,14 @@ treeWidget entryId = do
     case maybeUserId of
         Just userId -> do
             (widget, enctype, categories) <- handlerToWidget $ do
-                (parentIds, categories) <- runDB $ do
+                (parentIds, categories') <- runDB $ do
                     categories <- selectList [EntryUserId ==. userId, EntryType ==. Category] [Desc EntryInserted]
                     entryTreeEntities <- selectList [EntryTreeNode ==. entryId] []
-                    return (DL.intersect (map entityKey categories) (map (entryTreeParent . entityVal) entryTreeEntities), categories)
+                    return (map entityKey categories `DL.intersect` map (entryTreeParent . entityVal) entryTreeEntities, categories)
                 (widget, enctype) <- generateFormPost $ treeForm userId $ Just $ Parents $ Just parentIds
+                categories <- forM categories' $ \category -> do
+                    titleHtml <- entryTitleHtmlCache $ entityKey category
+                    return (category, titleHtml)
                 return (widget, enctype, categories)
             [whamlet|
         <div .modal.fade>
@@ -100,8 +104,8 @@ treeWidget entryId = do
                             <a.text-lowercase.pull-right target=_blabk href=@{CategoriesR userId}>_{MsgNewCategory} 
                             <label>_{MsgSelectCategories}     
                             <div .list-group> 
-                                $forall Entity categoryId category <- categories
-                                    <a.list-group-item href=# data-id=#{toPathPiece categoryId}>#{preEscapedToMarkup $ entryTitleHtml category}
+                                $forall (Entity categoryId _, titleHtml) <- categories
+                                    <a.list-group-item href=# data-id=#{toPathPiece categoryId}>#{preEscapedToMarkup titleHtml}
 
                             <form .hidden #category-form method=post action="" enctype=#{enctype}>
                                 ^{widget}

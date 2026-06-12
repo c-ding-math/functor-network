@@ -27,8 +27,8 @@
     <div .bs-docs-section>
         
             <h1>Features
-            $maybe Entity _ features <- maybeFeatures
-                #{preEscapedToMarkup (entryBodyHtml features)}
+            $maybe bodyHtml <- maybeFeatures
+                #{preEscapedToMarkup bodyHtml}
             $nothing
                 <p>
                     _{MsgComingSoon}
@@ -36,8 +36,8 @@
     <div .bs-docs-section>
         
             <h1>Comparison
-            $maybe Entity _ comparison <- maybeComparison
-                #{preEscapedToMarkup (entryBodyHtml comparison)}
+            $maybe bodyHtml <- maybeComparison
+                #{preEscapedToMarkup bodyHtml}
             $nothing
                 <p>
                     _{MsgComingSoon}
@@ -45,8 +45,8 @@
     <div .bs-docs-section>      
         
             <h1>Screenshots
-            $maybe Entity _ screenshots <- maybeScreenshots
-                #{preEscapedToMarkup (entryBodyHtml screenshots)}
+            $maybe bodyHtml <- maybeScreenshots
+                #{preEscapedToMarkup bodyHtml}
             $nothing
                 <p>
                     _{MsgComingSoon}

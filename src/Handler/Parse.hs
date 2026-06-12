@@ -11,14 +11,15 @@ import System.Directory
 import System.FilePath
 import System.Random
 import Parse.Parser(scaleHeader, htmlToPdf, unMaybeTextarea, parse, downloadPdfFileName, preProcessEditorData, texToPdf, texToHtml, texToHtmlSimple, mdToPdf, mdToHtml, mdToHtmlSimple, texToSvg, EditorData(..))
---import Data.Text.IO
---import qualified Data.Text as T
+import qualified Data.Text.IO as TIO
+import qualified Data.Text as T
 --import Codec.Archive.Zip
 --import qualified Prelude
 --import System.Environment (getExecutablePath)
 import Text.Hamlet          (hamletFile)
 import qualified Data.Text.Encoding as TE
 import qualified Data.CaseInsensitive as CI
+import Data.Maybe
 
 type InputFormat=Text
 type OutputFormat=Text
@@ -32,7 +33,7 @@ postParseR inputFormat outputFormat = do
         let busyMessage::Text
             busyMessage= "Busy..."
         return $ RepPlain $ toContent $ busyMessage
-    else do  
+    else do
 
         docData<- requireCheckJsonBody ::Handler EditorData
         let lengthLimit = case maybeUserId of
@@ -40,15 +41,15 @@ postParseR inputFormat outputFormat = do
                 Just _  -> 100000
             lengthLimitMessage::Text
             lengthLimitMessage = case maybeUserId of
-                Nothing -> pack $ "Up to " ++ show lengthLimit ++ " characters for non-logged-in users." 
+                Nothing -> pack $ "Up to " ++ show lengthLimit ++ " characters for non-logged-in users."
                 Just _  -> pack $ "Up to " ++ show lengthLimit ++ " characters."
         if length (unMaybeTextarea (editorContent docData)) + length (unMaybeTextarea (editorPreamble docData)) + length (unMaybeTextarea (editorCitation docData)) < lengthLimit
             then do
                 let parser = case (inputFormat,outputFormat) of
                         ("tex","svg") -> texToSvg
                         ("tex","html") -> texToHtml
-                        _ -> mdToHtml     
-                preview<-liftIO $ parse Nothing userDir parser docData  
+                        _ -> mdToHtml
+                preview<-liftIO $ parse Nothing userDir parser docData
                 return $ RepPlain $ toContent $ case preview of
                     "\n"->""
                     x->x
@@ -61,7 +62,7 @@ getDownloadR _ entryId = do
     pdfPath <- entryPdfPath entryId
     entry <- runDB $ get404 entryId
     mUserId <- maybeAuthId
-    if (entryStatus entry == Publish) || (Just (entryUserId entry) == mUserId) 
+    if (entryStatus entry == Publish) || (Just (entryUserId entry) == mUserId)
         then do
             {-_<-runDB $ do
                 currentTime <- liftIO getCurrentTime
@@ -91,15 +92,8 @@ doesEntryPdfExist entryId = do
     pdfPath <- entryPdfPath entryId
     liftIO $ doesFileExist pdfPath
 
-purgeEntryPdf :: EntryId -> Handler ()
-purgeEntryPdf entryId = do
-    pdfPath <- entryPdfPath entryId
-    liftIO $ do
-        removeFile pdfPath `Import.catch` ((\_ -> return ())::IOException -> IO ())
-        return ()
-
-cacheEntryPdf :: EntryId -> Handler ()
-cacheEntryPdf entryId = do
+cacheEntryPdf :: User -> Entity Entry -> T.Text -> T.Text -> Handler ()
+cacheEntryPdf entryAuthor (Entity entryId entry) titleHtml bodyHtml = do
 {-        urlRender <- getUrlRender
         --userId<-requireAuthId 
         (author, entry)<- runDB $ do 
@@ -144,10 +138,10 @@ cacheEntryPdf entryId = do
             return ()
 -}
     --urlRender <- getUrlRender
-    (entryAuthor, entry)<- runDB $ do 
+    {-(entryAuthor, entry)<- runDB $ do
         entry <- get404 entryId
         author <- get404 $ entryUserId entry
-        return (author, entry)
+        return (author, entry)-}
 
     html <- printLayout $ do
                 [whamlet|
@@ -155,7 +149,7 @@ cacheEntryPdf entryId = do
 
   <div .entry-meta>
     <a .stretch-link href=@{UserEntryR (entryUserId entry) entryId}>
-        <h1 .entry-title>#{preEscapedToMarkup(scaleHeader 1 (entryTitleHtml entry))}
+        <h1 .entry-title>#{preEscapedToMarkup(scaleHeader 1 titleHtml)}
     <ul.list-inline>
       <li .by>
         
@@ -169,7 +163,7 @@ cacheEntryPdf entryId = do
   <div .entry-body>
       
         $if (entryBody entry) /= Nothing
-            #{preEscapedToMarkup(entryBodyHtml entry)}
+            #{preEscapedToMarkup bodyHtml}
         $else
             <div style="width:519.3906239999999px;">
                 <p>Coming soon...
@@ -189,17 +183,34 @@ printLayout widget = do
         addStylesheet $ StaticR css_bootstrap_min_css
         addStylesheet $ StaticR css_bootstrap_theme_css
         addScript $ StaticR js_bootstrap_min_js
-        addScript $ StaticR js_bootstrap_theme_js  
-    
+        addScript $ StaticR js_bootstrap_theme_js
+
         $(widgetFile "print-layout")
     withUrlRenderer $(hamletFile "templates/print-layout-wrapper.hamlet")
 
 -- | cache entry
-cacheEntry :: Entity Entry -> Handler ()
-cacheEntry (Entity entryId entry) = do
+entryTitleHtmlCache :: EntryId -> Handler T.Text
+entryTitleHtmlCache entryId = do
+    msgRender <- getMessageRender
+    entryCacheDir <- entryCacheDirectory entryId
+    let titleCachePath = entryCacheDir </> "title.html"
+    liftIO $ do
+        titleHtmlExists <- doesFileExist titleCachePath
+        if titleHtmlExists then TIO.readFile titleCachePath else return $ msgRender MsgPostCacheMissing
+entryBodyHtmlCache :: EntryId -> Handler T.Text
+entryBodyHtmlCache entryId = do
+    msgRender <- getMessageRender
+    entryCacheDir <- entryCacheDirectory entryId
+    let bodyCachePath = entryCacheDir </> "body.html"
+    liftIO $ do
+        bodyHtmlExists <- doesFileExist bodyCachePath
+        if bodyHtmlExists then TIO.readFile bodyCachePath else return $ "<div style='width:519.3906239999999px;'>"<>msgRender MsgPostCacheMissing<>"</div>"
+
+cacheEntryHtml :: Entity Entry -> Handler ()
+cacheEntryHtml (Entity entryId entry) = do
     entryCacheDir <- entryCacheDirectory entryId
     tempDir <- userTemporaryDirectory
-    let (titleParser, bodyParser) = case (entryFormat entry) of
+    let (titleParser, bodyParser) = case entryFormat entry of
             Format "tex" -> (texToHtmlSimple, texToHtml)
             _ -> (mdToHtmlSimple, mdToHtml)
     let docData = EditorData {
@@ -207,25 +218,22 @@ cacheEntry (Entity entryId entry) = do
         editorPreamble = entryPreamble entry,
         editorCitation = entryCitation entry
     }
-    --parse (Just (entryCacheDir </> "post.pdf")) tempDir pdfParser docData  
-
-    {-let sourcePath = entryCacheDir </> "source"
-    createDirectoryIfMissing True sourcePath
-    let fileExtension = case (entryFormat entry) of
-            Format "tex" -> "tex"
-            _ -> "md"
-    Data.Text.IO.writeFile (sourcePath </> "content" <.> fileExtension) $ maybeTextareaToText $ entryBody entry
-    Data.Text.IO.writeFile (sourcePath </> "preamble.tex") $ maybeTextareaToText $ entryPreamble entry
-    Data.Text.IO.writeFile (sourcePath </> "citation.bib") $ maybeTextareaToText $ entryCitation entry
-    createArchive (entryCacheDir </> "download.zip") (packDirRecur Deflate mkEntrySelector entryCacheDir)
-    removeDirectoryRecursive sourcePath-}
     liftIO $ do
-        removeFile (entryCacheDir </> "title.html") `Import.catch` ((\_ -> return ())::IOException -> IO ())
-        removeFile (entryCacheDir </> "body.html") `Import.catch` ((\_ -> return ())::IOException -> IO ())
-        _<-parse (Just (entryCacheDir </> "title.html")) tempDir titleParser $ entryTitle entry
-        _<-parse (Just (entryCacheDir </> "body.html")) tempDir bodyParser docData
-        return ()
-            
+        titleHtml <- parse Nothing tempDir titleParser $ entryTitle entry
+        bodyHtml <- parse Nothing tempDir bodyParser docData
+        createDirectoryIfMissing True entryCacheDir
+        TIO.writeFile (entryCacheDir </> "title.html") titleHtml
+        TIO.writeFile (entryCacheDir </> "body.html") bodyHtml
+        
+cacheEntry :: EntryId -> Handler ()
+cacheEntry entryId = do
+    entry <- runDB $ get404 entryId
+    author <- runDB $ get404 $ entryUserId entry
+    cacheEntryHtml (Entity entryId entry)
+    titleHtml <- entryTitleHtmlCache entryId
+    bodyHtml <- entryBodyHtmlCache entryId
+    cacheEntryPdf author (Entity entryId entry) titleHtml bodyHtml
+
 cacheDirectory :: Handler FilePath
 cacheDirectory = do
     app <- getYesod
@@ -233,7 +241,12 @@ cacheDirectory = do
     return cacheDir
 
 entryCacheDirectory :: EntryId -> Handler FilePath
-entryCacheDirectory entryId = cacheDirectory >>= return . (</> (unpack $ toPathPiece entryId))
+entryCacheDirectory entryId = cacheDirectory >>= return . (</> "entry" </> (unpack $ toPathPiece entryId))
+
+purgeEntry :: EntryId -> Handler ()
+purgeEntry entryId = do
+    entryCacheDir <- entryCacheDirectory entryId
+    liftIO $ removeDirectoryRecursive entryCacheDir `Import.catch` ((\_ -> return ())::IOException -> IO ())
 
 {-- | get App root directory
 appWorkingDirectory :: IO FilePath
@@ -249,7 +262,7 @@ userTemporaryDirectory :: Handler FilePath
 userTemporaryDirectory = do
     randomString<-liftIO $ fmap (take 10 . randomRs ('a','z')) newStdGen
     tempDir <- liftIO $ getTemporaryDirectory >>= \dir -> return $ dir </> "functor-network"
-    
+
     maybeUserId<-maybeAuthId
     case maybeUserId of
         Nothing-> do
@@ -268,19 +281,6 @@ countActiveSubdirectories dir = doesDirectoryExist dir >>= \exisitence ->
         return $ length subdirs
     else return 0
 
-{-isActiveDirectory :: FilePath -> IO Bool
-isActiveDirectory dir = doesDirectoryExist dir >>= \exisitence ->
-    if exisitence then do
-        accessTime <- getAccessTime dir
-        currentTime <- getCurrentTime
-        let timeDiff = diffUTCTime currentTime accessTime
-        if timeDiff < 60 * 60 
-            then return True 
-            else do --should not happen
-                removeDirectoryRecursive dir 
-                return False
-    else return False-}
-
 editorWidget :: Format -> Widget
 editorWidget inputFormat = do
     maybeUserId <- maybeAuthId
@@ -288,10 +288,8 @@ editorWidget inputFormat = do
     addScript $ StaticR editor_src_min_ext_language_tools_js
     --urlRender <- getUrlRender
 
-    mcsrftoken <- fmap reqToken getRequest                                                                                                                  
-    let csrftoken = case mcsrftoken of                                                                                                                      
-                        Nothing -> "NO_TOKEN"                                                                                                               
-                        Just t  -> t   
+    mcsrftoken <- fmap reqToken getRequest
+    let csrftoken = Data.Maybe.fromMaybe "NO_TOKEN" mcsrftoken
     let parserRoute =case inputFormat of
             Format "tex"->ParseR "tex" "html"
             _->ParseR "md" "html"

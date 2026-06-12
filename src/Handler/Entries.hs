@@ -7,6 +7,7 @@ module Handler.Entries where
 
 import Import
 import Parse.Parser (scaleHeader)
+import Handler.Parse
 import Yesod.Form.Bootstrap3
 import Data.Text (toLower)
 
@@ -82,11 +83,12 @@ entryListWidget style entryList = do
                 selectList [EntryId <-. entryCategoryIds] [Desc EntryInserted]
             return (authors, categoryLists)-}
         authors <- runDB $ mapM (get404 . entryUserId . entityVal) entryList
-        return $ zip entryList authors
+        titleHtmls <- mapM (entryTitleHtmlCache . entityKey) entryList
+        return $ zip3 entryList titleHtmls authors
 
     [whamlet|
 <ul .list-group .entry-list .#{style}>
-    $forall (Entity entryId entry, author)<- listData
+    $forall (Entity entryId entry, titleHtml, author)<- listData
         <li .list-group-item .entry-item :entryStatus entry == Draft:.draft>
             <div .entry-meta>
                 <ul.list-inline>
@@ -111,5 +113,5 @@ entryListWidget style entryList = do
                                             updated #{utcToDateTime (entryUpdated entry)}
 
             <a.stretched-link href=@{UserEntryR (entryUserId entry) entryId}>
-                <h3 .entry-title>#{preEscapedToMarkup(scaleHeader 3 (entryTitleHtml entry))}
+                <h3 .entry-title>#{preEscapedToMarkup(scaleHeader 3 titleHtml)}
     |]

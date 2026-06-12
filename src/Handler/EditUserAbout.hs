@@ -5,7 +5,7 @@ module Handler.EditUserAbout where
 
 import Import
 import Yesod.Form.Bootstrap3
-import Handler.Parse(editorWidget)
+import Handler.Parse
 import Handler.EditUserEntry(EntryInput(..),entry2Html)
 import Handler.Files (uploadForm)
 
@@ -13,15 +13,15 @@ data NameSetting=NameSetting{_name::Text}
 data AvatarSetting=AvatarSetting{_avatar::Maybe Text}
 nameSettingForm::User->Form NameSetting
 nameSettingForm user=renderBootstrap3 BootstrapBasicForm $ NameSetting
-    <$> areq nameField (bfs MsgName) (Just(userName user))
-    where 
+    <$> areq nameField (bfs MsgName) (Just (userName user))
+    where
         maxNameLength=64
         nameField = check validateName textField
         validateName name = if length name <= maxNameLength then Right name else Left $ MsgTooLongByCharCount (length name - maxNameLength)
 
 avatarSettingForm::User->Form AvatarSetting
 avatarSettingForm user=renderBootstrap3 BootstrapBasicForm $ AvatarSetting
-    <$> aopt urlField (bfs MsgAvatar) (Just(userAvatar user))
+    <$> aopt urlField (bfs MsgAvatar) (Just (userAvatar user))
 
 entryInputForm:: Maybe EntryInput -> Html -> MForm Handler (FormResult EntryInput, Widget)
 entryInputForm mEntryInput=renderBootstrap3 BootstrapBasicForm $ EntryInput
@@ -29,7 +29,7 @@ entryInputForm mEntryInput=renderBootstrap3 BootstrapBasicForm $ EntryInput
     <*> areq (selectFieldList inputFormats) formatSettings (inputFormat <$> mEntryInput)
     <*> aopt textareaField preambleSettings (inputPreamble <$> mEntryInput)
     <*> aopt textareaField editorSettings (inputBody <$> mEntryInput)
-    <*> aopt textareaField citationSettings (inputCitation <$> mEntryInput) where  
+    <*> aopt textareaField citationSettings (inputCitation <$> mEntryInput) where
         inputFormats = [(MsgMarkdownWithLaTeX, Format "md"), (MsgPureLaTeX, Format "tex")]
         formatSettings =  FieldSettings
             { fsLabel = SomeMessage MsgAbout
@@ -55,7 +55,7 @@ entryInputForm mEntryInput=renderBootstrap3 BootstrapBasicForm $ EntryInput
             , fsId = Nothing
             , fsName = Just "citation"
             , fsAttrs =[("class", "hidden")]}
-        titleSetting=FieldSettings 
+        titleSetting=FieldSettings
             { fsLabel = ""
             , fsTooltip = Nothing
             , fsId = Nothing
@@ -79,10 +79,10 @@ getEditUserAboutR = do
             (_,Just entry) -> entryFormat $ entityVal entry
             _ -> userDefaultFormat user
 
-    (entryWidget, entryEnctype) <- case entityVal <$> mEntry of  
+    (entryWidget, entryEnctype) <- case entityVal <$> mEntry of
         Just entry-> do
             generateFormPost $ entryInputForm $ Just $ EntryInput (entryTitle entry) format (entryPreamble entry) (entryBody entry) (entryCitation entry)
-        Nothing-> do 
+        Nothing-> do
             generateFormPost $ entryInputForm $ Just $ EntryInput "About" format (userDefaultPreamble user) (Just (Textarea $ msgRender MsgNoAbout)) (userDefaultCitation user)
     defaultLayout $ do
         setTitle "About"
@@ -174,7 +174,7 @@ postEditUserAboutR = do
   Just "avatar" -> do
         ((result,_), _) <- runFormPost $ avatarSettingForm user
         case result of
-            FormSuccess res -> do 
+            FormSuccess res -> do
                 _<-runDB $ update userId [UserAvatar =. _avatar res]
                 setMessage $ [hamlet|
                     Profile updated. #
@@ -191,12 +191,12 @@ postEditUserAboutR = do
   Just "name"-> do
             ((result,_), _) <- runFormPost $ nameSettingForm user
             case result of
-                FormSuccess res -> do 
+                FormSuccess res -> do
                     _<-runDB $ update userId [UserName =. _name res]
                     setMessage $ [hamlet|
                         Profile updated. #
                         <a .alert-link.pull-right href=@{UserHomeR userId}>View
-                        |] urlRenderParams               
+                        |] urlRenderParams
                 FormFailure errors -> do
                     msgRender <- getMessageRender
                     setMessage [shamlet|
@@ -205,20 +205,20 @@ postEditUserAboutR = do
                         |]
                 _ -> setMessageI MsgFormMissing
             redirect $ EditUserAboutR
-  _ -> do  
+  _ -> do
     ((res, _), _) <- runFormPost $ entryInputForm Nothing
     mEntry<-runDB $ selectFirst [EntryType==.UserPage, EntryUserId==.userId] [Desc EntryInserted]
     case res of
         FormSuccess formData -> do
-         if inputBody formData == Nothing
+         if isNothing (inputBody formData)
           then do
             setMessage $ [hamlet|
                     Please fill in some content. #
                     
                     |] urlRenderParams
-            
+
           else do
-            (titleHtml,bodyHtml)<-entry2Html formData
+            --(titleHtml,bodyHtml)<-entry2Html formData
             currentTime <- liftIO getCurrentTime
             case mEntry of
                 Just (Entity entryId _) -> do
@@ -230,11 +230,12 @@ postEditUserAboutR = do
                         ,EntryFormat=.inputFormat formData
                         ,EntryBody=.inputBody formData
                         ,EntryCitation=.inputCitation formData
-                        ,EntryTitleHtml=.titleHtml
-                        ,EntryBodyHtml=.bodyHtml
-                        ] 
+                        --,EntryTitleHtml=.titleHtml
+                        --,EntryBodyHtml=.bodyHtml
+                        ]
+                    cacheEntry entryId
                 Nothing -> do
-                    _<-runDB $ insert $ Entry
+                    entryId<-runDB $ insert $ Entry
                         { entryUserId=userId
                         , entryType=UserPage
                         , entryStatus=Draft
@@ -245,22 +246,22 @@ postEditUserAboutR = do
                         , entryFormat=inputFormat formData
                         , entryBody=inputBody formData
                         , entryCitation=inputCitation formData
-                        , entryTitleHtml=titleHtml
-                        , entryBodyHtml=bodyHtml
+                        --, entryTitleHtml=titleHtml
+                        --, entryBodyHtml=bodyHtml
                         , entryFeatured=False
                         }
-                    return ()
+                    cacheEntry entryId
             setMessage $ [hamlet|
                     Profile updated. #
                     <a .alert-link.pull-right href=@{UserHomeR userId}>View
                     |] urlRenderParams
-            
+
         FormFailure errors -> do
             setMessage [shamlet|
                 $forall error <- errors
                     <p>#{error}
                 |]
-            
+
         FormMissing -> do
             setMessageI MsgFormMissing
-    redirect $ EditUserAboutR
+    redirect EditUserAboutR

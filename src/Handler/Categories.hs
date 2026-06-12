@@ -8,6 +8,7 @@ import Import
 import Handler.EditCategory (categoryForm, CategoryInput(..))
 import Handler.Entries (entryListWidget)
 import Parse.Parser (scaleHeader)
+import Handler.Parse
 import Handler.NewEntrySubscription(subscribeToEntryWidget)
 
 
@@ -15,7 +16,7 @@ getCategoriesR :: UserId ->  Handler Html
 getCategoriesR authorId = do 
     mCurrentUserId <- maybeAuthId
     let isAuthor = mCurrentUserId == Just authorId
-    categoryAndEntryListList <- runDB $ do
+    categoryAndEntryListList' <- runDB $ do
         categoryList <- selectList [EntryUserId ==. authorId, EntryType ==. Category] [Desc EntryInserted]
         entryListList <- forM categoryList $ \category -> do
             entryTrees <- selectList [EntryTreeParent ==. entityKey category] []
@@ -25,8 +26,10 @@ getCategoriesR authorId = do
                 Nothing -> selectList [EntryId <-. entryIds, EntryStatus ==. Publish] [Desc EntryInserted]
         return $ zip categoryList entryListList
     (newCategoryWidget, enctype) <- generateFormPost $ categoryForm Nothing
-    editCategoryFormList <- mapM (\(category, _) -> generateFormPost $ categoryForm $ Just $ CategoryInput $ entryTitle $ entityVal category) categoryAndEntryListList
-    
+    editCategoryFormList <- mapM (\(category, _) -> generateFormPost $ categoryForm $ Just $ CategoryInput $ entryTitle $ entityVal category) categoryAndEntryListList'
+    categoryAndEntryListList <- forM categoryAndEntryListList' $ \(category, entryList) -> do
+        categoryTitleHtml <- entryTitleHtmlCache $ entityKey category
+        return (category, categoryTitleHtml, entryList)
     defaultLayout $ do
         setTitleI MsgCategories 
         [whamlet|
@@ -65,10 +68,10 @@ getCategoriesR authorId = do
                                     ^{newCategoryWidget}
                                     <button .btn.btn-primary type=submit>_{MsgCreateCategory}
                                     <a .btn.btn-default.cancel href=#>_{MsgCancel}
-                    $forall ((category, entryList), (formWidget, enctype)) <- zip categoryAndEntryListList editCategoryFormList
+                    $forall ((category, categotyTitleHtml, entryList), (formWidget, enctype)) <- zip categoryAndEntryListList editCategoryFormList
                         <li>
                             <div .category #entry-#{toPathPiece (entityKey category)}> 
-                                <h4 .entry-title style="display:inline;">#{preEscapedToMarkup $ scaleHeader 4 $ entryTitleHtml $ entityVal category}
+                                <h4 .entry-title style="display:inline;">#{preEscapedToMarkup $ scaleHeader 4 $ categotyTitleHtml}
                                 <span style="display:inline-block;margin-left:2em;">
                                     <ul.list-inline.text-lowercase>
                                         <li .subscribe>

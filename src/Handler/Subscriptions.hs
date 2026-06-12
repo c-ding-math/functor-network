@@ -8,6 +8,7 @@ module Handler.Subscriptions where
 import Import
 import Yesod.Form.Bootstrap3 (BootstrapFormLayout (..), renderBootstrap3)
 import Handler.EditComment(commentLink)
+import Handler.Parse
 
 getSubscriptionsR :: EmailId -> Handler Html
 getSubscriptionsR emailId = do
@@ -18,7 +19,7 @@ getSubscriptionsR emailId = do
             getSubscriptions $ emailAddress email
         else do
             permissionDeniedI MsgPermissionDenied
-    
+
 unsubscribeForm :: Form (Maybe Text)
 unsubscribeForm = renderBootstrap3 BootstrapBasicForm $ aopt hiddenField keySettings Nothing
     where
@@ -53,11 +54,10 @@ getSubscriptions address = do
     entryLinkList <- runDB $ do
         mapM (\(Entity entryId entry) -> do
             case entryType entry of
-                Comment -> do
-                    theLink <- commentLink entryId
-                    return theLink
+                Comment -> commentLink entryId
                 _ -> return ("","")
             ) entryList
+    entryTitleHtmlList <- forM entryList $ \(Entity entryId _) -> entryTitleHtmlCache entryId
     (unsubscribeFormWidget, unsubscribeFormEnctype) <- generateFormPost unsubscribeForm
     defaultLayout $ do
         setTitleI MsgEmailSubscriptions
@@ -91,10 +91,10 @@ getSubscriptions address = do
                 <p>_{MsgNoSubscription}
             $else
                 <ul>
-                    $forall (Entity subscriptionId subscription, Entity entryId entry)<- zip entrySubscriptionList entryList
+                    $forall (Entity subscriptionId subscription, Entity entryId entry, entryTitleHtml)<- zip3 entrySubscriptionList entryList entryTitleHtmlList
                       $if entryType entry == Category
                         <li>
-                            <a href=@{CategoriesR (entryUserId entry)}#entry-#{toPathPiece entryId}>#{preEscapedToMarkup $ entryTitleHtml entry}
+                            <a href=@{CategoriesR (entryUserId entry)}#entry-#{toPathPiece entryId}>#{preEscapedToMarkup entryTitleHtml}
                             $maybe key <- entrySubscriptionKey subscription
                               <span.menu>
                                 <ul.list-inline.text-lowercase>
@@ -112,11 +112,11 @@ getSubscriptions address = do
                 <p>_{MsgNoSubscription}
             $else
                 <ul>
-                    $forall (Entity subscriptionId subscription, Entity entryId entry)<- zip entrySubscriptionList entryList
+                    $forall (Entity subscriptionId subscription, Entity entryId entry, entryTitleHtml)<- zip3 entrySubscriptionList entryList entryTitleHtmlList
                       $if entryType entry == UserPost
                         <li>
                           
-                            <a href=@{UserEntryR (entryUserId entry) entryId}>#{preEscapedToMarkup $ entryTitleHtml entry}
+                            <a href=@{UserEntryR (entryUserId entry) entryId}>#{preEscapedToMarkup entryTitleHtml}
                             $maybe key <- entrySubscriptionKey subscription
                               <span.menu>
                                 <ul.list-inline.text-lowercase>
@@ -155,11 +155,11 @@ getSubscriptions address = do
                 <p>_{MsgNoSubscription}
             $else
                 <ul>
-                    $forall (Entity subscriptionId subscription, Entity entryId entry)<- zip entrySubscriptionList entryList
+                    $forall (Entity subscriptionId subscription, Entity entryId entry, entryTitleHtml)<- zip3 entrySubscriptionList entryList entryTitleHtmlList
                       $if entryType entry == Feedback
                         <li>
                           
-                            <a href=@{FeedbackR}#entry-#{toPathPiece entryId}>#{preEscapedToMarkup $ entryTitleHtml entry}
+                            <a href=@{FeedbackR}#entry-#{toPathPiece entryId}>#{preEscapedToMarkup entryTitleHtml}
                             $maybe key <- entrySubscriptionKey subscription
                               <span.menu>
                                 <ul.list-inline.text-lowercase>

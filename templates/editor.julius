@@ -191,9 +191,11 @@ function render() {
         //data: options.previewParserVar+'='+encodeURIComponent(parsedData),
         beforeSend: function() {
             previewArea.css("opacity", "0.5");
-            informationArea.empty();
+            informationArea.css("opacity", "0.5");
         },
         success: function(data) {
+            informationArea.empty();
+            informationArea.css("opacity", "1");
             previewArea.html(data);
             previewArea.find(".alert-danger.parser-message").each(function(){
                 $(this).append(" <span>Unable to correct the error? " + 

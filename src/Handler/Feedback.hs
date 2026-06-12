@@ -8,9 +8,8 @@ import Text.Shakespeare.Text
 import Yesod.Form.Bootstrap3
 import Handler.EditComment(getChildIds,CommentInput(..))
 import Handler.UserEntry(menuWidget)
-import Parse.Parser(mdToHtml,texToHtml,EditorData(..))
-import Parse.Parser(parse)
-import Handler.Parse(editorWidget,userTemporaryDirectory)
+--import Parse.Parser
+import Handler.Parse
 import Handler.NewEntrySubscription(entrySubscriptionNotification,insertDefaultEntrySubscription)
 import Handler.EditComment(deleteEditCommentR)
 
@@ -22,7 +21,7 @@ data FeedbackInput = FeedbackInput
 feedbackForm :: Maybe FeedbackInput ->  Form FeedbackInput
 feedbackForm feedback = renderBootstrap3 BootstrapBasicForm $ FeedbackInput
     <$> areq textField subjectSettings (subject <$> feedback)
-    <*> areq textareaField editorSettings (content <$> feedback) where  
+    <*> areq textareaField editorSettings (content <$> feedback) where
         subjectSettings = FieldSettings
             { fsLabel = "Subject"
             , fsTooltip = Nothing
@@ -35,14 +34,14 @@ feedbackForm feedback = renderBootstrap3 BootstrapBasicForm $ FeedbackInput
             , fsId = Nothing
             , fsName = Just "content"
             , fsAttrs =[ ("class", "editor form-control"), ("placeholder", "Your content goes here.")]}
-            
+
 newCommentForm :: Maybe CommentInput -> Form CommentInput
 newCommentForm mCommentData =  renderBootstrap3 BootstrapBasicForm $ CommentInput
     <$> aopt textareaField preambleSettings (preamble <$> mCommentData)
     <*> areq (selectFieldList inputFormats) formatSettings (inputFormat <$> mCommentData)
     <*> areq textareaField editorSettings (body <$> mCommentData)
     <*> aopt textareaField citationSettings (citation <$> mCommentData)
-    where   
+    where
             inputFormats = [(MsgMarkdownWithLaTeX, Format "md"), (MsgPureLaTeX, Format "tex")]
             formatSettings =  FieldSettings
                 { fsLabel = SomeMessage MsgFeedback
@@ -73,7 +72,7 @@ newCommentForm mCommentData =  renderBootstrap3 BootstrapBasicForm $ CommentInpu
                 , fsTooltip = Nothing
                 , fsId = Nothing
                 , fsName = Just "citation"
-                , fsAttrs =[("class", "hidden")]             
+                , fsAttrs =[("class", "hidden")]
                 }
 
 getFeedbackR :: Handler Html
@@ -83,17 +82,17 @@ getFeedbackR = do
         Nothing -> notFound
         Just (Entity entryId entry) -> do
             maybeUserId <- maybeAuthId
-            
-            commentListData <- case maybeUserId of
+
+            commentListData' <- case maybeUserId of
                 Just userId -> runDB $ do
                     commentEntities <- if isAdministrator (Just userId) entry
                         then selectList [EntryType==.Feedback,EntryStatus==.Draft] [Asc EntryInserted]
-                        else do    
+                        else do
                             userComments <- selectList [EntryUserId==.userId,EntryType==.Feedback,EntryStatus==.Draft] []
-                            childCommentIds <- mapM getChildIds $ map entityKey userComments
+                            childCommentIds <- mapM (getChildIds . entityKey) userComments
                             let commentIds = map entityKey userComments ++ concat childCommentIds
                             selectList [EntryId <-. commentIds] [Asc EntryInserted]
-                            
+
                     commentAuthors <- mapM (\(Entity _ comment) -> do
                         commentAuthor<-get404 $ entryUserId comment
                         return (entryUserId comment, userName commentAuthor)
@@ -125,6 +124,10 @@ getFeedbackR = do
                 Nothing ->  generateFormPost $ feedbackForm $ Just $ FeedbackInput "Feedback" $ Textarea ""
                 Just (Entity _ user) -> generateFormPost $ newCommentForm $ Just $ CommentInput (userDefaultPreamble user) format (Textarea "") (userDefaultCitation user)
 
+            feedbackDescriptionHtml <- entryBodyHtmlCache entryId
+            commentListData <- forM commentListData' $ \(Entity commentId comment, commentAuthorMeta, parentCommentMeta) -> do
+                commentBodyHtml <- entryBodyHtmlCache commentId
+                return (Entity commentId comment, commentAuthorMeta, parentCommentMeta, commentBodyHtml)
             defaultLayout $ do
                 setTitleI MsgFeedback
                 [whamlet|
@@ -132,8 +135,8 @@ getFeedbackR = do
             <h1>_{MsgFeedback}
             <div .entry-body>
               <div .entry-content-wrapper>
-                $maybe (Entity _ entry)<-mFeedbackDescription
-                    #{preEscapedToMarkup(entryBodyHtml entry)}
+                $maybe _ <- entryBody entry
+                    #{preEscapedToMarkup feedbackDescriptionHtml}
                 $nothing
                     <div style="width:519.3906239999999px;">
                         <p>_{MsgComingSoon}
@@ -154,7 +157,7 @@ getFeedbackR = do
                 <p style="display:none">_{MsgNoComment}
             $else
                 <h3>_{MsgYourFeedback}
-                $forall (Entity commentId comment,(commentAuthorId, commentAuthorName),mParentCommentMeta)<-commentListData
+                $forall (Entity commentId comment,(commentAuthorId, commentAuthorName),mParentCommentMeta,commentBodyHtml)<-commentListData
                     <article .comment id=entry-#{toPathPiece commentId}> 
                         <div .entry-meta>
                           <ul .list-inline>
@@ -170,7 +173,7 @@ getFeedbackR = do
                                 #{utcToDate (entryInserted comment)}
 
                         <div .entry-body>
-                            <div .entry-content-wrapper>#{preEscapedToMarkup (entryBodyHtml comment)}  
+                            <div .entry-content-wrapper>#{preEscapedToMarkup commentBodyHtml}  
                         <div.menu>
                             <ul.list-inline.text-lowercase>                
                                 <li .reply>
@@ -189,11 +192,11 @@ getFeedbackR = do
 
                 |]
 
-                if (isJust maybeUserId) 
+                if (isJust maybeUserId)
                     then do
                         editorWidget format
                         menuWidget
-                    else 
+                    else
                         toWidget [julius|
                             //$(document).ready(function(){
                                 // Spam prevention
@@ -209,7 +212,7 @@ getFeedbackR = do
                                     }
                                 });
                             |]
-        
+
 postFeedbackR :: Handler Html
 postFeedbackR = do
     mFeedbackEntry <- runDB $  selectFirst [EntryTitle==."Feedback",EntryType==.Page,EntryStatus==.Draft] [Desc EntryInserted]
@@ -223,7 +226,7 @@ postFeedbackR = do
                     case result of
                         FormSuccess feedback -> do
                             --request <- waiRequest
-                            
+
                             let feedbackEmailAddress ="feedback@functor.network"
                                 emailSubject = subject feedback
                                 emailText = [stext|#{unTextarea(content feedback)}|]
@@ -256,58 +259,59 @@ postFeedbackR = do
 
 postEditFeedbackR :: EntryId -> Handler Html
 postEditFeedbackR entryId = do
-    
+
     Entity userId _ <- requireAuth
     urlRenderParams <- getUrlRenderParams
-    
+
     ((res, _), _) <- runFormPost $ newCommentForm $ Nothing
     case res of
         FormSuccess newCommentFormData -> do
-            let editorData=EditorData{
+            {-let editorData=EditorData{
                     editorPreamble=preamble newCommentFormData
                     ,editorContent=Just $ body newCommentFormData
                     ,editorCitation=citation newCommentFormData
                 }
-            currentTime <- liftIO getCurrentTime
+            
             let parser=  case inputFormat newCommentFormData of
                         Format "tex" -> texToHtml
                         _ -> mdToHtml
             userDir<-userTemporaryDirectory
+
+            --bodyHtml <- liftIO $ parse Nothing userDir parser editorData-}
             let title = "Feedback"
-                
-            bodyHtml <- liftIO $ parse Nothing userDir parser editorData
-            let commentData=Entry 
+            currentTime <- liftIO getCurrentTime
+            let commentData=Entry
                         {entryUserId=userId
                         ,entryType=Feedback
                         ,entryFormat=inputFormat newCommentFormData
                         ,entryTitle=title
-                        ,entryTitleHtml=title
-                        ,entryPreamble=(preamble newCommentFormData)
+                        --,entryTitleHtml=title
+                        ,entryPreamble=preamble newCommentFormData
                         ,entryBody=Just $ body newCommentFormData
-                        ,entryBodyHtml=bodyHtml
+                        --,entryBodyHtml=bodyHtml
                         ,entryCitation=citation newCommentFormData
                         ,entryInserted=currentTime
                         ,entryUpdated=currentTime
                         ,entryStatus=Draft
                         ,entryFeatured=False
                         }
-                
+
             commentId <- runDB $ do
                 _ <- get404 entryId
                 commentId<-insert commentData
                 insert_ $ EntryTree commentId entryId currentTime
                 insertDefaultEntrySubscription commentId
                 return commentId
-
+            cacheEntry commentId
             subscribers <- runDB $ selectList [EntrySubscriptionEntryId ==. entryId, EntrySubscriptionVerified ==. True] []
             forM_ subscribers $ \(Entity subscriptionId subscription) -> do
-                
+
                 let unsubscribeUrl= urlRenderParams (EditEntrySubscriptionR subscriptionId) $ case entrySubscriptionKey subscription of
-                        Just key -> [("key", key)] 
+                        Just key -> [("key", key)]
                         Nothing -> []
                     entryUrl= urlRenderParams (FeedbackR) [] <> "#entry-" <> toPathPiece commentId
                 sendAppEmail (entrySubscriptionEmail subscription) $ entrySubscriptionNotification unsubscribeUrl entryUrl commentData
-                        
+
 
             setMessage $ [hamlet|
                             Your feedback has been saved. #

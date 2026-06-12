@@ -62,7 +62,9 @@
 /pages PagesR GET
 /tool/#Text ToolR GET POST
 /slug SlugR GET POST
+/cache CacheR GET POST
 
 !/#Text PageR GET
 --!/user/#UserId/#Text UserPageR GET !user
+
 

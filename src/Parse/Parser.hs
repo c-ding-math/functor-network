@@ -24,8 +24,6 @@ module Parse.Parser (
 import System.Process.Typed
 --import System.Exit
 import Text.HTML.TagSoup
-import Parse.KillOldProcesses(killOldProcesses)
---import Control.Concurrent 
 import Text.HTML.Scalpel
 import System.FilePath.Posix
 import Text.RE.Replace
@@ -35,13 +33,17 @@ import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Text
 import Data.Text.IO
 import Data.Maybe
-import System.Timeout
+--import System.Timeout
 import GHC.Generics
 import Data.Aeson
 import System.Directory
 import qualified Import
 import Text.Shakespeare.Text
 import Text.Blaze.Html.Renderer.String (renderHtml)
+import Control.Concurrent.STM
+import Control.Concurrent
+import System.Posix.Signals
+import Data.Foldable
 
 
 data EditorData=EditorData{
@@ -53,7 +55,20 @@ data EditorData=EditorData{
 instance ToJSON EditorData where
 instance FromJSON EditorData where
 
-
+readProcessWithTimeout :: Import.MonadIO m => Int -> ProcessConfig stdin stdoutIgnored stderrIgnored -> m (ExitCode, BL8.ByteString, BL8.ByteString)
+readProcessWithTimeout timeLimit process = Import.liftIO $
+    withProcessTerm ((setStdout byteStringOutput . setStderr byteStringOutput . setCreateGroup True) process) $ \p -> do
+        eResult <- Import.race (threadDelay (timeLimit * 1000000)) (atomically $ (,,)
+            <$> waitExitCodeSTM p
+            <*> getStdout p
+            <*> getStderr p)
+        case eResult of
+            Right x -> return x
+            Left _ -> do
+                mPid <- getPid p
+                Data.Foldable.forM_ mPid (signalProcessGroup sigTERM)
+                exitCode <- waitExitCode p
+                return (exitCode, "", BL8.pack $ "Timeout: process took more than " ++ show timeLimit ++ " seconds to complete.")
 -- | parse
 parse :: Maybe FilePath -> FilePath -> (FilePath -> a -> IO (ProcessConfig () () (), FilePath)) -> a -> IO Text
 parse mFileName tmpDir parser docData = do
@@ -61,11 +76,9 @@ parse mFileName tmpDir parser docData = do
     createDirectoryIfMissing True tmpDir
 
     (process, output) <- parser tmpDir docData
-    let processConfig = (setWorkingDir tmpDir . setCreateGroup True) process
-    maybeResult <- timeout ((timeLimit+1)*1000000) $ readProcess processConfig
-    --Import.catch (readProcess processConfig process) (\e -> return (ExitFailure 1, "", BL8.pack (show (e :: Import.IOException)))) -- readCreateProcessWithExitCode can still throw an exception when using the pdf parser: hGetContents: invalid argument (invalid byte sequence).
-    renderedText <- case maybeResult of
-        Just (exitCode, stdout, stderr) -> case exitCode of
+    (exitCode, stdout, stderr) <- Import.catch (readProcessWithTimeout timeLimit $ setWorkingDir tmpDir process) (\e -> return (ExitFailure (-10000), "", BL8.pack (show (e :: Import.IOException))))
+    --renderedText <- case Just maybeResult of
+    renderedText <- case exitCode of
             ExitSuccess ->
                 if takeExtension output == ".pdf"
                     then return $ pack output
@@ -75,23 +88,22 @@ parse mFileName tmpDir parser docData = do
                         return $ if isInlineParser
                             then fromMaybe outputText (scrapeStringLike outputText (innerHTML "p"))
                             else outputText
-
+            ExitFailure (-15) -> do -- -15: SIGTERM ; -9: SIGKILL
+                --let errorString = "Error! Timeout: process took more than " ++ show timeLimit ++ " seconds to complete."
+                renderError $ BL8.unpack stderr
             _ -> do
                 let errorInfo = BL8.unpack (stdout <> stderr) ?=~/ [edBlockSensitive|Error at .*:///|]
                 let errorString = "Error! " ++ errorInfo ++"."
                 renderError errorString
-        Nothing -> do
-            -- killOldProcesses timeLimit "latex"
-            let errorString = "Error! " ++ "It takes too long to render the document. Please check whether there is an infinite loop in your LaTeX code."
-            renderError errorString
+
     case mFileName of
         Nothing -> return ()
         Just cache -> do
             createDirectoryIfMissing True (takeDirectory cache)
-            Import.catch (copyFile (tmpDir</>output) cache) ((const (return ())) :: Import.IOException -> IO ())
+            Import.catch (copyFile (tmpDir</>output) cache) (const (return ()) :: Import.IOException -> IO ())
             return ()
     removeDirectoryRecursive tmpDir
-    return $ renderedText
+    return renderedText
   where
         timeLimit = 60
         renderError errorString = return $
@@ -226,7 +238,7 @@ textareaToYaml (Just textarea)= "header-includes: |\n" <> (yamlBlock (unTextarea
     removeDocumentClass tex= tex *=~/ [edBlockSensitive|\\documentclass[^\{]*\{[^\}]*\}///|]
     removeMinted::Text->Text
     removeMinted tex = (tex *=~/ [edBlockSensitive|\\usepackage[^\{]*\{[[:blank:]]*minted[[:blank:]]*\}///|]) *=~/ [edBlockSensitive|\\usemintedstyle[^\{]*\{[^\}]*\}///|]
-    yamlBlock tex= Data.Text.unlines $ (\x-> " " <> x) <$> ["```{=latex}"] ++ Data.Text.lines (removeMinted $ removeDocumentClass tex) ++ ["```"]
+    yamlBlock tex= Data.Text.unlines $ (" " <>) <$> ["```{=latex}"] ++ Data.Text.lines (removeMinted $ removeDocumentClass tex) ++ ["```"]
 textareaToYaml _ =""
 
 unMaybeTextarea :: Maybe Textarea -> Text
