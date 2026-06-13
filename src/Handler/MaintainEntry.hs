@@ -9,7 +9,7 @@ import Import
 import Yesod.Form.Bootstrap3
 --import Handler.EditComment(deleteEntryRecursive)
 import Handler.Parse(editorWidget,cacheEntry)
-import Handler.EditUserEntry(EntryInput(..),entry2Html)
+--import Handler.EditUserEntry(EntryInput(..),entry2Html)
 
 
 maintainEntryForm :: Entry -> Form Entry
@@ -103,14 +103,14 @@ postMaintainEntryR entryId = do
     ((result, _), _) <- runFormPost $ maintainEntryForm entry
     case result of
         FormSuccess entry' -> do
-            let editorData = EntryInput
+            {-let editorData = EntryInput
                     { inputTitle = entryTitle entry'
                     , inputFormat = entryFormat entry'
                     , inputPreamble = entryPreamble entry'
                     , inputBody = entryBody entry'
                     , inputCitation = entryCitation entry'
                     }
-            --(titleHtml,bodyHtml) <- entry2Html editorData
+            (titleHtml,bodyHtml) <- entry2Html editorData-}
             runDB $ update entryId
                 [ EntryTitle =. entryTitle entry'
                 , EntryFormat =. entryFormat entry'

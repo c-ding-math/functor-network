@@ -6,7 +6,7 @@
 
 module Handler.EditUserEntry (
     EntryInput(..),
-    entry2Html,
+    --entry2Html,
     entryInputForm,
     getNewUserEntryR,
     getEditUserEntryR,
@@ -20,7 +20,7 @@ import Handler.EditComment(deleteEntryRecursive)
 import Handler.Parse(editorWidget,userTemporaryDirectory,cacheEntry)
 import Handler.NewEntrySubscription(insertDefaultEntrySubscription)
 import Handler.NewUserSubscription(userSubscriptionNotification)
-import Parse.Parser(parse,mdToHtml,mdToHtmlSimple,texToHtml,texToHtmlSimple,EditorData(..))
+--import Parse.Parser(parse,mdToHtml,mdToHtmlSimple,texToHtml,texToHtmlSimple,EditorData(..))
 import Text.Julius (RawJS (..))
 --import Text.Shakespeare.Text
 
@@ -38,7 +38,7 @@ data EntryInput=EntryInput
     , inputCitation::Maybe Textarea
     }
 
-entry2Html::EntryInput->Handler (Text,Text)
+{-entry2Html::EntryInput->Handler (Text,Text)
 entry2Html formData=do
     let editorData::EditorData
         editorData = EditorData
@@ -53,7 +53,7 @@ entry2Html formData=do
     titleHtml <-liftIO $ parse Nothing userDir parserSimple (inputTitle formData)
     bodyHtml <- liftIO $ parse Nothing userDir parser editorData
     return (titleHtml,bodyHtml)
-
+-}
 entryInputForm:: Maybe EntryInput -> Html -> MForm Handler (FormResult EntryInput, Widget)
 entryInputForm mEntryInput=renderBootstrap3 BootstrapBasicForm $ EntryInput
     <$> areq textField titleSettings (inputTitle <$> mEntryInput)

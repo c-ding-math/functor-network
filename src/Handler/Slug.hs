@@ -27,7 +27,7 @@ getSlugR = do
 
 postSlugR :: Handler Html
 postSlugR = do 
-    ((result, widget), enctype) <- runFormPost $ theForm
+    ((result, _), _) <- runFormPost $ theForm
     let content = case result of
             FormSuccess slug -> slug
             _ -> "nothing"

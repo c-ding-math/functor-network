@@ -46,7 +46,7 @@ getCategoriesR authorId = do
                                 <form .category-form .form-inline method=post action=@{NewCategoryR} enctype=#{enctype}>
                                     ^{newCategoryWidget}
                                     <button .btn.btn-primary type=submit>_{MsgCreateCategory}
-                                    <a .btn.btn-default.cancel href=#>_{MsgCancel}
+                                    <button type=button .btn.btn-default.cancel href=#>_{MsgCancel}
                     <p>_{MsgNoCategory} #
                         <a .new-entry href=#>_{MsgCreateACategory}        
                 $else
@@ -67,7 +67,7 @@ getCategoriesR authorId = do
                                 <form .category-form .form-inline method=post action=@{NewCategoryR} enctype=#{enctype}>
                                     ^{newCategoryWidget}
                                     <button .btn.btn-primary type=submit>_{MsgCreateCategory}
-                                    <a .btn.btn-default.cancel href=#>_{MsgCancel}
+                                    <button type=button .btn.btn-default.cancel href=#>_{MsgCancel}
                     $forall ((category, categotyTitleHtml, entryList), (formWidget, enctype)) <- zip categoryAndEntryListList editCategoryFormList
                         <li>
                             <div .category #entry-#{toPathPiece (entityKey category)}> 
@@ -131,16 +131,23 @@ getCategoriesR authorId = do
                     return false;
                 });
                 $('.category-form, .edit-category-form').submit(function() {
+                    form = $(this);
                     $.ajax({
                         type: $(this).attr('method'),
                         url: $(this).attr('action'),
                         data: $(this).serialize(),
+                        beforeSend: function() {
+                            form.find('button').prop('disabled', true);
+                        },
                         success: function(data) {
                             if (data.errors) {
                                 alert(data.errors);
                             } else {
                                 location.reload();
                             }
+                        },
+                        complete: function() {
+                            form.find('button').prop('disabled', false);
                         }
                     });
                     return false;
