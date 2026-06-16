@@ -62,6 +62,8 @@ data AppSettings = AppSettings
     -- ^ Copyright text to appear in the footer of the page
     , appAnalytics              :: Maybe Text
     -- ^ Google Analytics code
+    , appPromotionText          :: Text
+    , appPromotionLink          :: Text
 
     , appAuthDummyLogin         :: Bool
     -- ^ Indicate if auth dummy login should be enabled.
@@ -106,6 +108,8 @@ instance FromJSON AppSettings where
 
         appCopyright              <- o .:  "copyright"
         appAnalytics              <- o .:? "analytics"
+        appPromotionText          <- o .: "promotion-text"
+        appPromotionLink          <- o .: "promotion-link"
 
         appAuthDummyLogin         <- o .:? "auth-dummy-login"      .!= dev
         appEmailPassword          <- o .: "email-password"

@@ -297,7 +297,7 @@ getSettingsR = do
                     <div>
                         <a .btn .btn-default href=@{AuthR setpassR}>_{MsgResetPassword}
                     <p>
-            <section .payment-setting>
+<!--            <section .payment-setting>
                 <h2>_{MsgDonation}
                 <div.panel>
                  <div.panel-body>
@@ -310,7 +310,7 @@ getSettingsR = do
                         <label>Support us
                         <p.text-muted>We're on a mission to grow our platform and bring it to more people. If you've enjoyed being part of it, your donation can help others like you discover and benefit from it too.
                         <a .btn .btn-default href="https://ko-fi.com/functor_network">_{MsgDonate}
-                    
+-->                    
         |]
         toWidget [lucius|
             section+section{

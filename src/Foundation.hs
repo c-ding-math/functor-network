@@ -130,7 +130,7 @@ instance Yesod App where
     defaultLayout :: Widget -> Handler Html
     defaultLayout widget = do
         mMaintenance<-runDB $ selectFirst [] [Desc MaintenanceFrom]
-        --master <- getYesod
+        master <- getYesod
         mmsg <- getMessage
 
         --muser <- maybeAuthPair

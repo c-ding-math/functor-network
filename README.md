@@ -36,7 +36,7 @@ We make a comparison with other blog platform to clarify our features:
 | Markdown with math features      | Supported                                                  | Possibly supported but limited                             |
 | PDF export                       | Supported                                                  | Not supported                                              |
 | Syntax highlight for Lean        | Supported                                                  | Possibly supported                                              |
-| Design philosophy                | Clean and minimal — intentionally abstract                 | Often cluttered with unnecessary features                  |
+| Design philosophy                | Pure simplicity                | Often cluttered with unnecessary features                  |
 | Editor                           | Plain text editor with live preview — focuses on content   | WYSIWYG editor — may be problematic for math content       |
 
 
