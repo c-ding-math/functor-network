@@ -29,6 +29,7 @@ stanzas:
       # to. The primary hostname will be used for generating your application
       # root.
       - functor.network
+      - test.functor.network
 
     # Enable to force Keter to redirect to https
     # Can be added to any stanza

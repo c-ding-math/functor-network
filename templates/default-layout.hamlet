@@ -74,10 +74,12 @@ $else
             $forall MenuItem label route _ <- footerMiddleFilteredMenuItems
                 <li>
                     <a href=@{route}>#{label}-->
-        <ul .nav.navbar-nav.navbar-right>
+        <!--<ul .nav.navbar-nav.navbar-right>
             $forall MenuItem label (PageR link) _ <- footerRightFilteredMenuItems
                 <li>
-                        <a href=#{link}>#{preEscapedToMarkup label}
-
+                        <a href=#{link}>#{preEscapedToMarkup label}-->
+        <ul .nav.navbar-nav.navbar-right>
+            <li>
+                <a target="_blank" rel="noopener sponsored" href=#{appPromotionLink $ appSettings master}>#{preEscapedToMarkup $ appPromotionText $ appSettings master}
             <!--#{appCopyright $ appSettings master}-->
 

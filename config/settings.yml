@@ -40,6 +40,8 @@ database:
 
 copyright: Insert copyright statement here
 analytics: "_env:YESOD_ANALYTICS:UA-XXXXX-X"
+promotion-text: "_env:YESOD_PROMOTION_TEXT:Powered by Functor Network"
+promotion-link: "_env:YESOD_PROMOTION_LINK:https://functor.network"
 
 #Email config
 email-password: "_env:YESOD_EMAIL_PASSWORD:password"
