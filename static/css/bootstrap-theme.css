@@ -8,16 +8,27 @@ a {
 a:hover{
     text-decoration: none;
 }
-.btn a, .editor-toolbar a, .menu a {
+a.btn, .editor-toolbar a, .menu a, .nav a, a.navbar-brand, .text-muted a, .users a, .categories a {
     text-decoration: none;
 }
-
+.navbar-inverse .navbar-nav>li>a {
+    color: #ccc;
+}
 .container{
     min-width:520px;
     overflow: hidden;
 }
 .navbar-inverse{
     background-color: black;
+}
+.navbar-inverse .navbar-nav>li>a {
+    color: #ccc;
+}
+.navbar-brand {
+    font-weight: bold;
+}
+.navbar-inverse .navbar-brand {
+    color: white;
 }
 .navbar-brand img{
     width:25px;
@@ -209,11 +220,13 @@ ul.category-list>li::marker {
 a.text-muted:hover {
     color:#333;
 }
-
-ul.entry-list>li{
-    padding-top: 1em;
-    
+ul.entry-list .list-group-item {
+    border: none;
 }
+ul.entry-list{
+    padding-top: 1em;
+}
+
 ul.entry-list>li>*{
     min-width:520px;
     max-width:666px;
@@ -374,13 +387,16 @@ div.csl-indent {
     background-color: white;
 }
 @media screen and (min-width: 574px){
-    /*body, .or span, .modal-content{
+    body, .or span, .modal-content{
         background-color: #f5f5f5;
     }
     .entry-body, .editor-preview{
         background-color: white;
+        /*border: 1px solid #ccc;*/
+    }
+    .editor-preview{
         border: 1px solid #ccc;
-    }*/
+    }
     .entry-body {
         padding: 1em 0.5em 0.5em;
     }
@@ -478,9 +494,9 @@ html:has(.editor-full-screen){
 .form-control:focus, 
 .editor-focus{
     border-color: #333;
-    outline: -webkit-focus-ring-color auto 1px;
-    -webkit-box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
-    box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+    outline: 1px solid #333;/*-webkit-focus-ring-color auto 1px;*/
+    -webkit-box-shadow: none;/*inset 0 3px 5px rgba(0, 0, 0, 0.125);*/
+    box-shadow: none;/*inset 0 3px 5px rgba(0, 0, 0, 0.125);*/
 }
 /*@media screen and (max-width: 574px){
     .editor-full-screen{

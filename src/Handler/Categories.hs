@@ -71,7 +71,7 @@ getCategoriesR authorId = do
                     $forall ((category, categotyTitleHtml, entryList), (formWidget, enctype)) <- zip categoryAndEntryListList editCategoryFormList
                         <li>
                             <div .category #entry-#{toPathPiece (entityKey category)}> 
-                                <h4 .entry-title style="display:inline;">#{preEscapedToMarkup $ scaleHeader 4 $ categotyTitleHtml}
+                                <h3 .entry-title style="display:inline;">#{preEscapedToMarkup $ scaleHeader 3 $ categotyTitleHtml}
                                 <span style="display:inline-block;margin-left:2em;">
                                     <ul.list-inline.text-lowercase>
                                         <li .subscribe>

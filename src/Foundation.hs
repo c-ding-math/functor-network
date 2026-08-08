@@ -99,6 +99,20 @@ type Form x = Html -> MForm (HandlerFor App) (FormResult x, Widget)
 type DB a = forall (m :: Type -> Type).
     (MonadUnliftIO m) => ReaderT SqlBackend m a
 
+userEntryLayout :: UserId -> Widget -> Handler Html
+userEntryLayout authorId widget = do
+    maybeUserEntity <- maybeAuth
+    author <- runDB $ get404 authorId
+    mMaintenance<-runDB $ selectFirst [] [Desc MaintenanceFrom]
+    master <- getYesod
+    maybeMessage <- getMessage
+    pc <- widgetToPageContent $ do
+        addStylesheet $ StaticR css_bootstrap_min_css
+        addStylesheet $ StaticR css_bootstrap_theme_css
+        addScript $ StaticR js_bootstrap_min_js
+        addScript $ StaticR js_bootstrap_theme_js
+        $(widgetFile "user-entry")
+    withUrlRenderer $(hamletFile "templates/default-layout-wrapper.hamlet")
 -- Please see the documentation for the Yesod typeclass. There are a number
 -- of settings which can be configured by overriding methods here.
 instance Yesod App where
@@ -129,12 +143,12 @@ instance Yesod App where
 
     defaultLayout :: Widget -> Handler Html
     defaultLayout widget = do
+        maybeUserEntity <- maybeAuth
+        let muid = entityKey <$> maybeUserEntity
         mMaintenance<-runDB $ selectFirst [] [Desc MaintenanceFrom]
         master <- getYesod
         mmsg <- getMessage
 
-        --muser <- maybeAuthPair
-        muid <- maybeAuthId
         mcurrentRoute <- getCurrentRoute
         mAuthorEntity<-routeUserEntity mcurrentRoute
 

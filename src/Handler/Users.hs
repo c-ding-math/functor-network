@@ -37,7 +37,7 @@ $else
                     <a.stretched-link href=@{UserHomeR uid}>
                      <div.panel.panel-default>
                       <div.panel-body>  
-                        <h4 .entry-title>#{userName u}
+                        <h3 .entry-title>#{userName u}
                         <span .text-muted>#{m} published posts
                         <p .text-muted>joined on #{utcToDate (userInserted u)}
         |]
