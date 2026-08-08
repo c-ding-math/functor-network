@@ -215,7 +215,7 @@ scaleHeader :: Int -> Text -> Text
 scaleHeader n title|n<=6 =
     replaceAllCaptures SUB help $ title *=~ [re|([0-9]*\.[0-9]*)px|]
     where
-        factors = [2.6,2.15,1.7,1.25,1.0,0.85]
+        factors = [2.0,1.5,1.17,1.0,0.83,0.67]
         scale :: Double -> Text -> Text
         scale factor txt = case TR.double txt of
             Right (num, _) -> TL.toStrict $ TB.toLazyText $ TB.formatRealFloat TB.Fixed (Just 12) (factor * num)

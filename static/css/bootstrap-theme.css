@@ -1,4 +1,18 @@
 :root {
+    --link-color: #333;
+}
+
+a {
+    text-decoration: underline;
+}
+a:hover{
+    text-decoration: none;
+}
+a.btn, .editor-toolbar a, .menu a, .nav a, a.navbar-brand, a.text-muted, .users a, .categories a {
+    text-decoration: none;
+}
+.navbar-inverse .navbar-nav>li>a {
+    color: #ccc;
 }
 .container{
     min-width:520px;
@@ -7,10 +21,22 @@
 .navbar-inverse{
     background-color: black;
 }
+.navbar-inverse .navbar-nav>li>a {
+    color: #ccc;
+}
+.navbar-brand {
+    font-weight: bold;
+}
+.navbar-inverse .navbar-brand {
+    color: white;
+}
 .navbar-brand img{
     width:25px;
     height:25px;
     margin-right:8px;
+}
+.navbar-inverse .navbar-toggle {
+    border: none;
 }
 figure{
     text-align: center;
@@ -26,9 +52,11 @@ caption{
 
 .alert.alert-info {
     background-color: white;
+    border-color: lightgray;
+    color: var(--link-color);
 }
 .alert.alert-info a {
-    color: green;
+    color: var(--link-color);
     font-weight:inherit;
 }
 .tabs-title {
@@ -195,11 +223,13 @@ ul.category-list>li::marker {
 a.text-muted:hover {
     color:#333;
 }
-
-ul.entry-list>li{
-    padding-top: 1em;
-    
+ul.entry-list .list-group-item {
+    border: none;
 }
+ul.entry-list{
+    padding-top: 1em;
+}
+
 ul.entry-list>li>*{
     min-width:520px;
     max-width:666px;
@@ -365,6 +395,9 @@ div.csl-indent {
     }
     .entry-body, .editor-preview{
         background-color: white;
+        /*border: 1px solid #ccc;*/
+    }
+    .editor-preview{
         border: 1px solid #ccc;
     }
     .entry-body {
@@ -387,6 +420,7 @@ div.csl-indent {
 .editor-toolbar{
     min-width: max-content;
 }
+
 select[name="format"]{
     max-width: 13em;
     display: inline-block;
@@ -410,19 +444,12 @@ select[name="format"]{
     display:none;
 }
 
-.editor-focus{
-    border-color: #008000!important;
-    outline: 0;
-    -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 8px rgba(0, 128, 0, 0.6);
-    box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 8px rgba(0, 128, 0, 0.6);
-}
-
 .editor-toolbar>ul{
     margin:0;
 }
 .editor-toolbar>ul>li>a{
     display:inline-block;
-    padding:0.75em;
+    padding:0.6em 0.75em;
 }
 
 .ace_editor{
@@ -467,6 +494,13 @@ html:has(.editor-full-screen){
     border: 1px solid #ccc;
 }
 
+.form-control:focus, 
+.editor-focus{
+    border-color: #333;
+    outline: 1px solid #333;/*-webkit-focus-ring-color auto 1px;*/
+    -webkit-box-shadow: none;/*inset 0 3px 5px rgba(0, 0, 0, 0.125);*/
+    box-shadow: none;/*inset 0 3px 5px rgba(0, 0, 0, 0.125);*/
+}
 /*@media screen and (max-width: 574px){
     .editor-full-screen{
         grid-template-rows: auto 1fr 1fr;

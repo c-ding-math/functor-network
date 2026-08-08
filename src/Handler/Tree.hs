@@ -103,7 +103,7 @@ treeWidget entryId = do
                         $else   
                             <a.text-lowercase.pull-right target=_blabk href=@{CategoriesR userId}>_{MsgNewCategory} 
                             <label>_{MsgSelectCategories}     
-                            <div .list-group> 
+                            <div.categories.list-group> 
                                 $forall (Entity categoryId _, titleHtml) <- categories
                                     <a.list-group-item href=# data-id=#{toPathPiece categoryId}>#{preEscapedToMarkup titleHtml}
 
