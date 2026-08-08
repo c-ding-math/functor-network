@@ -382,7 +382,6 @@
     "@hr-border": "@gray-lighter"
   },
   "css": [
-    "print.less",
     "type.less",
     "code.less",
     "grid.less",
