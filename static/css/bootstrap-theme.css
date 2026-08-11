@@ -5,6 +5,7 @@
     --bg-subtle: #f5f5f5;
     --bg-card: #ffffff;
     --text-main: #333333;
+    --text-dark: #000000;
     --text-muted: #777777;
     --border-color: #ccc;
     --border-subtle: #e7e7e7;
@@ -31,6 +32,7 @@
         --bg-subtle: #18181b;
         --bg-card: #1e1e1e;
         --text-main: #e0e0e0;
+        --text-dark: #ffffff;
         --text-muted: #a1a1aa;
         --border-color: #3f3f46;
         --border-subtle: #27272a;
@@ -283,7 +285,7 @@ ul.entry-list>li>*{
     margin:auto;
 }
 ul.entry-list>li>a{
-    color: var(--text-main);
+    color: var(--text-dark);
     display: block;
 }
 ul.entry-list>li>a>.entry-title{
@@ -320,7 +322,7 @@ body {
 .entry-body .entry-content-wrapper, .editor-preview .entry-content-wrapper{
     width:min-content;
     margin:auto;
-    color:var(--text-main);
+    color:var(--text-dark);
 }
 .parser-message{
     padding: 0.5em 1em;
@@ -658,12 +660,17 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
         background-color: var(--bg-table-hover);
     }
 
-    /* Cards, Panels, Thumbnails, Wells, and List Groups */
-    .thumbnail, .panel, .panel-default > .panel-heading, .list-group-item, .well, .jumbotron {
-        background-color: var(--bg-card);
-        border-color: var(--border-color);
-        color: var(--text-main);
+    /* Force dark mode on specific hardcoded inner containers without touching transparent outer wrappers */
+    .thumbnail, .panel, .panel-default > .panel-heading, .list-group-item, .well, .jumbotron, .modal-content, .popover, .dropdown-menu, .entry-body, .editor-preview, .entry-content, .entry-content-wrapper, div.mark, .bg-white,
+    [style*="background-color: white"], [style*="background-color: #ffffff"], [style*="background-color: #fff"],
+    [style*="background: white"], [style*="background: #ffffff"], [style*="background: #fff"],
+    [style*="background-color:white"], [style*="background-color:#ffffff"], [style*="background-color:#fff"],
+    [style*="background:white"], [style*="background:#ffffff"], [style*="background:#fff"] {
+        background-color: var(--bg-card) !important;
+        border-color: var(--border-color) !important;
+        color: var(--text-main) !important;
     }
+
     .panel-footer {
         background-color: var(--bg-subtle);
         border-color: var(--border-color);
@@ -674,8 +681,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     a.list-group-item:hover, a.list-group-item:focus,
     button.list-group-item:hover, button.list-group-item:focus,
     .list-group-item:hover, .list-group-item:focus {
-        background-color: var(--bg-subtle);
-        color: var(--text-main);
+        background-color: var(--bg-subtle) !important;
+        color: var(--text-main) !important;
     }
 
     /* Buttons */
