@@ -90,11 +90,16 @@
     text-align: center !important;
     margin-bottom: 3em !important;
   }
-  .entry-meta .stretch-link{
+  .entry-meta h1{
     color: #000 !important;
-    margin-bottom: 1em !important;
-    margin-top: 1 !important;
+    margin: 1.5em auto 1em!important;
     max-width: 555px;
+  }
+  .entry-meta>ul>li.by{
+    color: #000!important;
+  }
+  .entry-meta a.text-muted {
+    text-decoration: underline!important;
   }
   .footnotes-end-of-document{
     max-width:555px;
