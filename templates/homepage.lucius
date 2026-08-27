@@ -2,13 +2,17 @@
 .jumbotron {
     margin-top: -111px;
     padding-top: 111px;
-    background-color: black;
+    background-color: #080808!important;
     color: #fff;
 }
 .jumbotron h2 {
     margin-top: 0;
     margin-bottom: 32px;
     /*font-family: Georgia, "Times New Roman", Times, serif;*/
+}
+
+.jumbotron .btn-default{
+    filter: invert(100%);
 }
 .bs-docs-section{
     padding-top: 2em;

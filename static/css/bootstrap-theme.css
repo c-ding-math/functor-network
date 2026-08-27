@@ -1,56 +1,32 @@
 :root {
     --link-color: #333;
     --link-hover-color: #0d0d0d;
-    --bg-body: #ffffff;
-    --bg-subtle: #f5f5f5;
-    --bg-card: #ffffff;
-    --text-main: #333333;
-    --text-dark: #000000;
-    --text-muted: #777777;
+    --bg-body: #f4f4f4;
+    --bg-element: #fff;
+    --text-primary: #333;
+    --text-muted: #666;
     --border-color: #ccc;
-    --border-subtle: #e7e7e7;
-    --border-or: #dce4ec;
-    --input-bg: #ffffff;
-    --navbar-inverse-bg: black;
-    --navbar-inverse-link: #ccc;
-    --navbar-inverse-brand: white;
-    --alert-info-bg: white;
-    --alert-info-border: lightgray;
-    --bg-table-striped: #f9f9f9;
-    --bg-table-hover: #f5f5f5;
-    --bs-body-color: #212529;
-    --bs-tertiary-bg: #f8f9fa;
-    --bs-secondary-bg: #e9ecef;
-    --bs-border-width: 1px;
+    --bg-input: #fff;
+    --bg-table-striped: #fff;
+    --bg-table-hover: #f4f4f4;
 }
 
 @media (prefers-color-scheme: dark) {
     :root {
-        --link-color: #8ab4f8;
-        --link-hover-color: #b3d0ff;
-        --bg-body: #121212;
-        --bg-subtle: #18181b;
-        --bg-card: #1e1e1e;
-        --text-main: #e0e0e0;
-        --text-dark: #ffffff;
-        --text-muted: #a1a1aa;
-        --border-color: #3f3f46;
-        --border-subtle: #27272a;
-        --border-or: #3f3f46;
-        --input-bg: #27272a;
-        --navbar-inverse-bg: #121212;
-        --navbar-inverse-link: #a1a1aa;
-        --navbar-inverse-brand: #e0e0e0;
-        --alert-info-bg: #1e1e1e;
-        --alert-info-border: #3f3f46;
-        --bg-table-striped: #1c1c1c;
-        --bg-table-hover: #2a2a2a;
-        --bs-body-color: #e0e0e0;
-        --bs-tertiary-bg: #27272a;
-        --bs-secondary-bg: #3f3f46;
+        --link-color: #ccc;
+        --link-hover-color: #f4f4f4;
+        --bg-body: #141414;
+        --bg-element: #242424;
+        --text-primary: #ccc;
+        --text-muted: #999;
+        --border-color: #555;
+        --bg-input: #242424;
+        --bg-table-striped: #242424;
+        --bg-table-hover: #282828;
     }
 }
-
+blockquote {border-left-color: var(--text-muted);}
+hr { border-top-color: var(--border-color); }
 a {
     text-decoration: underline;
 }
@@ -61,23 +37,20 @@ a.btn, .editor-toolbar a, .menu a, .nav a, a.navbar-brand, a.text-muted, .users 
     text-decoration: none;
 }
 .navbar-inverse .navbar-nav>li>a {
-    color: var(--navbar-inverse-link);
+    color: #ccc;
 }
 .container{
     min-width:520px;
     overflow: hidden;
 }
 .navbar-inverse{
-    background-color: var(--navbar-inverse-bg);
-}
-.navbar-inverse .navbar-nav>li>a {
-    color: var(--navbar-inverse-link);
+    background-color: #080808;
 }
 .navbar-brand {
     font-weight: bold;
 }
 .navbar-inverse .navbar-brand {
-    color: var(--navbar-inverse-brand);
+    color: #f4f4f4;
 }
 .navbar-brand img{
     width:25px;
@@ -87,6 +60,7 @@ a.btn, .editor-toolbar a, .menu a, .nav a, a.navbar-brand, a.text-muted, .users 
 .navbar-inverse .navbar-toggle {
     border: none;
 }
+.page-header { border:none; }
 figure{
     text-align: center;
 }
@@ -100,9 +74,9 @@ caption{
 }
 
 .alert.alert-info {
-    background-color: var(--alert-info-bg);
-    border-color: var(--alert-info-border);
-    color: var(--link-color);
+    background-color: var(--bg-element);
+    border-color: var(--border-color);
+    color: var(--text-primary);
 }
 .alert.alert-info a {
     color: var(--link-color);
@@ -110,7 +84,7 @@ caption{
 }
 .tabs-title {
     pointer-events:none;
-    color: var(--text-main) !important;
+    color: var(--text-primary) !important;
     font-weight:bold;
     padding-left: 0 !important;
 }
@@ -126,7 +100,7 @@ caption{
   margin-top:2.5em;
   background-color:transparent;
   border: none;
-  border-top: 1px solid var(--border-subtle);
+  border-top: 1px solid var(--border-color);
 }
 
 textarea{
@@ -270,7 +244,7 @@ ul.category-list>li::marker {
 }
 
 a.text-muted:hover {
-    color:var(--text-main);
+    color:var(--text-primary);
 }
 ul.entry-list .list-group-item {
     border: none;
@@ -285,7 +259,7 @@ ul.entry-list>li>*{
     margin:auto;
 }
 ul.entry-list>li>a{
-    color: var(--text-dark);
+    /*color: var(--text-dark);*/
     display: block;
 }
 ul.entry-list>li>a>.entry-title{
@@ -322,7 +296,7 @@ body {
 .entry-body .entry-content-wrapper, .editor-preview .entry-content-wrapper{
     width:min-content;
     margin:auto;
-    color:var(--text-dark);
+    /*color:var(--text-dark);*/
 }
 .parser-message{
     padding: 0.5em 1em;
@@ -427,23 +401,25 @@ div.csl-indent {
     text-indent: initial;
 }
 
-
 .or{
     text-align:center;
     margin:1em 0 1.5em;
-    border-bottom: 1px solid var(--border-or);
+    border-bottom: 1px solid var(--border-color);
     line-height: 1px;
 }
+
 .or span{
     padding:0 1em;
-    background-color: var(--bg-card);
+}
+body, .or span, .modal-content{
+    background-color: var(--bg-element);
 }
 @media screen and (min-width: 574px){
     body, .or span, .modal-content{
-        background-color: var(--bg-subtle);
+        background-color: var(--bg-body);
     }
     .entry-body, .editor-preview{
-        background-color: var(--bg-card);
+        background-color: var(--bg-element);
         /*border: 1px solid #ccc;*/
     }
     .editor-preview{
@@ -525,7 +501,7 @@ html:has(.editor-full-screen){
     left: 0;
     right: 0;
     bottom: 0;
-    background: var(--bg-card);
+    background: var(--bg-element);
     width: 100%;
     height: 100vh;
 }
@@ -628,15 +604,19 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 @media (prefers-color-scheme: dark) {
     /* Base typography & elements */
     body, h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6, p, .lead, label, .panel-title {
-        color: var(--text-main);
+        color: var(--text-primary);
     }
 
     a { color: var(--link-color); }
     a:hover, a:focus { color: var(--link-hover-color); }
+    .dropdown-menu>li>a { color: var(--link-color); }
+    .dropdown-menu>li>a:hover, .dropdown-menu>li>a:focus { background-color: var(--text-muted); color: var(--link-hover-color); }
+    .navbar-default .navbar-nav>li>a { color: var(--text-muted); }
+    .navbar-default .navbar-nav>li>a:hover, .navbar-default .navbar-nav>li>a:focus { color: var(--text-primary); }
 
     /* Tables */
     table, .table {
-        color: var(--text-main);
+        color: var(--text-primary);
         background-color: transparent;
     }
     .table > thead > tr > th, .table > tbody > tr > th, .table > tfoot > tr > th,
@@ -666,60 +646,74 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     [style*="background: white"], [style*="background: #ffffff"], [style*="background: #fff"],
     [style*="background-color:white"], [style*="background-color:#ffffff"], [style*="background-color:#fff"],
     [style*="background:white"], [style*="background:#ffffff"], [style*="background:#fff"] {
-        background-color: var(--bg-card) !important;
+        background-color: var(--bg-element) !important;
         border-color: var(--border-color) !important;
-        color: var(--text-main) !important;
+        color: var(--text-primary) !important;
     }
 
     .panel-footer {
-        background-color: var(--bg-subtle);
+        background-color: var(--bg-body);
         border-color: var(--border-color);
     }
     a.list-group-item {
-        color: var(--text-main);
+        color: var(--text-primary);
     }
-    a.list-group-item:hover, a.list-group-item:focus,
+    /*a.list-group-item:hover, a.list-group-item:focus,
     button.list-group-item:hover, button.list-group-item:focus,
     .list-group-item:hover, .list-group-item:focus {
-        background-color: var(--bg-subtle) !important;
-        color: var(--text-main) !important;
-    }
+        background-color: var(--bg-body) !important;
+        color: var(--text-primary) !important;
+    }*/
 
     /* Buttons */
     .btn-default {
-        color: var(--text-main);
-        background-color: var(--bg-card);
+        color: var(--text-primary);
+        background-color: var(--bg-element);
         border-color: var(--border-color);
     }
     .btn-default:hover, .btn-default:focus, .btn-default:active, .btn-default.active, .open > .dropdown-toggle.btn-default {
-        color: var(--text-main);
-        background-color: var(--bg-subtle);
-        border-color: #52525b;
+        color: var(--text-primary);
+        background-color: var(--bg-body);
+        border-color: #525252;
     }
+    .btn-primary {
+        color: var(--bg-element);
+        background-color: var(--link-color);
+        border-color: var(--link-color);
+    }
+    .btn-primary:hover, .btn-primary:focus, .btn-primary:active, .btn-primary.active, .open > .dropdown-toggle.btn-primary {
+        color: var(--bg-body);
+        background-color: var(--link-hover-color);
+        border-color: var(--link-hover-color);
+    }
+
     .btn-link { color: var(--link-color); }
     .btn-link:hover, .btn-link:focus { color: var(--link-hover-color); }
 
     /* Form elements inherited from Bootstrap */
     .form-control, select {
-        color: var(--text-main);
-        background-color: var(--input-bg);
+        color: var(--text-primary);
+        background-color: var(--bg-input);
         border-color: var(--border-color);
     }
     .form-control[disabled], .form-control[readonly], fieldset[disabled] .form-control {
-        background-color: var(--bg-subtle);
+        background-color: var(--bg-body);
         opacity: 1;
     }
 
     /* Editor backgrounds */
     .ace_editor {
-        background-color: var(--input-bg);
-        color: var(--text-main);
+        background-color: var(--bg-input);
+        color: var(--text-primary);
+    }
+    .ace-tm .ace_marker-layer .ace_selection {
+        background-color: var(--bg-body);
     }
 
     /* MathJax & SVGs */
     .math svg, .display.math svg {
         fill: currentColor !important;
-        color: var(--text-main);
+        color: var(--text-primary);
     }
 
     /* Folder icon for categories */
@@ -729,8 +723,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
     /* Syntax Highlighting for code blocks */
     code, pre {
-        color: var(--text-main);
-        background-color: var(--bg-subtle);
+        color: var(--text-primary);
+        background-color: var(--bg-body);
         border-color: var(--border-color);
     }
     code span.al { color: #f44747; font-weight: bold; } /* Alert */
