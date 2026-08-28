@@ -274,7 +274,7 @@ shareWidget = do
                     {api: `mailto:?subject=${shareText}&body=${shareUrl}`, name: "Email", icon: "@{StaticR icons_envelope_svg}"},
                     {api: `https://mathstodon.xyz/share?text=${shareText}&url=${shareUrl}`,  name: "Mathstodon", icon: "@{StaticR icons_mathstodon_logo_svg}"},
                     {api: `https://www.reddit.com/submit?title=${shareText}&url=${shareUrl}&type=LINK`,  name: "Reddit", icon: "@{StaticR icons_reddit_logo_svg}"},
-                    {api: `https://www.linkedin.com/shareArticle?url=${shareUrl}&title=${shareText}`,  name: "LinkedIn", icon: "@{StaticR icons_linkedin_logo_svg}"},
+                    //{api: `https://www.linkedin.com/shareArticle?url=${shareUrl}&title=${shareText}`,  name: "LinkedIn", icon: "@{StaticR icons_linkedin_logo_svg}"},
                     {api: `https://x.com/intent/post?text=${shareText}&url=${shareUrl}`,  name: "X", icon: "@{StaticR icons_twitter_logo_svg}"},
                     {api: `https://www.blogger.com/blog-this.g?n=${shareText}&u=${shareUrl}`,  name: "Blogger", icon: "@{StaticR icons_blogger_logo_svg}"},
                     {api: `https://wordpress.com/press-this.php?u=${shareUrl}&t=${shareText}`,  name: "WordPress", icon: "@{StaticR icons_wordpress_logo_svg}"}

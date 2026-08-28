@@ -121,6 +121,9 @@ getUserHomeR authorId = do
             },
             grid: {
                 display: false
+            },
+            border: {
+                color: '#666'
             }
           },
           x: {
@@ -130,6 +133,9 @@ getUserHomeR authorId = do
             },
             grid: {
                 display: false
+            },
+            border: {
+                color: '#666'
             }
           }
         }

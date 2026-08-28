@@ -1,11 +1,11 @@
 :root {
-    --link-color: #333;
-    --link-hover-color: #0d0d0d;
+    --link: #333;
+    --link-hover: #0d0d0d;
     --bg-body: #f4f4f4;
     --bg-element: #fff;
     --text-primary: #333;
     --text-muted: #666;
-    --border-color: #ccc;
+    --border: #ccc;
     --bg-input: #fff;
     --bg-table-striped: #fff;
     --bg-table-hover: #f4f4f4;
@@ -13,20 +13,21 @@
 
 @media (prefers-color-scheme: dark) {
     :root {
-        --link-color: #ccc;
-        --link-hover-color: #f4f4f4;
+        --link: #ddd;
+        --link-hover: #f4f4f4;
         --bg-body: #141414;
         --bg-element: #242424;
-        --text-primary: #ccc;
+        --text-primary: #ddd;
         --text-muted: #999;
-        --border-color: #555;
+        --border: #555;
         --bg-input: #242424;
         --bg-table-striped: #242424;
         --bg-table-hover: #282828;
     }
 }
 blockquote {border-left-color: var(--text-muted);}
-hr { border-top-color: var(--border-color); }
+hr { border-top-color: var(--border); }
+.text-muted { color: var(--text-muted); }
 a {
     text-decoration: underline;
 }
@@ -75,12 +76,12 @@ caption{
 
 .alert.alert-info {
     background-color: var(--bg-element);
-    border-color: var(--border-color);
+    border-color: var(--border);
     color: var(--text-primary);
 }
-.alert.alert-info a {
-    color: var(--link-color);
-    font-weight:inherit;
+.alert .alert-link {
+    color: inherit;
+    font-weight: inherit;
 }
 .tabs-title {
     pointer-events:none;
@@ -100,7 +101,7 @@ caption{
   margin-top:2.5em;
   background-color:transparent;
   border: none;
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid var(--border);
 }
 
 textarea{
@@ -232,8 +233,6 @@ textarea{
 
 .navbar-nav a span svg, .entry-meta>ul>li>span:first-child {
     vertical-align: -0.125em;
-    width: 1em;
-    height:1em;
 }
 ul.category-list>li::marker {
     vertical-align: -0.125em;
@@ -274,7 +273,7 @@ ul.category-list{
 }
 .category{
     margin-bottom:1em;
-    border-bottom:1px solid var(--border-color);
+    border-bottom:1px solid var(--border);
 }
 .category form{
     padding-bottom:0.25em;
@@ -404,7 +403,7 @@ div.csl-indent {
 .or{
     text-align:center;
     margin:1em 0 1.5em;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border);
     line-height: 1px;
 }
 
@@ -423,7 +422,7 @@ body, .or span, .modal-content{
         /*border: 1px solid #ccc;*/
     }
     .editor-preview{
-        border: 1px solid var(--border-color);
+        border: 1px solid var(--border);
     }
     .entry-body {
         padding: 1em 0.5em 0.5em;
@@ -479,7 +478,7 @@ select[name="format"]{
 
 .ace_editor{
     height:16em;
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--border);
 }
 
 .ace_mobile-menu{
@@ -516,13 +515,13 @@ html:has(.editor-full-screen){
 .editor-full-screen .editor-preview{
     grid-area: preview;
     overflow-y: auto;
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--border);
 }
 
 .form-control:focus,
 .editor-focus{
-    border-color: var(--link-color);
-    outline: 1px solid var(--link-color);/*-webkit-focus-ring-color auto 1px;*/
+    border-color: var(--link);
+    outline: 1px solid var(--link);/*-webkit-focus-ring-color auto 1px;*/
     -webkit-box-shadow: none;/*inset 0 3px 5px rgba(0, 0, 0, 0.125);*/
     box-shadow: none;/*inset 0 3px 5px rgba(0, 0, 0, 0.125);*/
 }
@@ -607,10 +606,10 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
         color: var(--text-primary);
     }
 
-    a { color: var(--link-color); }
-    a:hover, a:focus { color: var(--link-hover-color); }
-    .dropdown-menu>li>a { color: var(--link-color); }
-    .dropdown-menu>li>a:hover, .dropdown-menu>li>a:focus { background-color: var(--text-muted); color: var(--link-hover-color); }
+    a { color: var(--link); }
+    a:hover, a:focus { color: var(--link-hover); }
+    .dropdown-menu>li>a { color: var(--link); }
+    .dropdown-menu>li>a:hover, .dropdown-menu>li>a:focus { background-color: var(--text-muted); color: var(--link-hover); }
     .navbar-default .navbar-nav>li>a { color: var(--text-muted); }
     .navbar-default .navbar-nav>li>a:hover, .navbar-default .navbar-nav>li>a:focus { color: var(--text-primary); }
 
@@ -621,17 +620,17 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     }
     .table > thead > tr > th, .table > tbody > tr > th, .table > tfoot > tr > th,
     .table > thead > tr > td, .table > tbody > tr > td, .table > tfoot > tr > td {
-        border-top-color: var(--border-color);
+        border-top-color: var(--border);
     }
     .table > thead > tr > th {
-        border-bottom-color: var(--border-color);
+        border-bottom-color: var(--border);
     }
     .table-bordered {
-        border-color: var(--border-color);
+        border-color: var(--border);
     }
     .table-bordered > thead > tr > th, .table-bordered > tbody > tr > th, .table-bordered > tfoot > tr > th,
     .table-bordered > thead > tr > td, .table-bordered > tbody > tr > td, .table-bordered > tfoot > tr > td {
-        border-color: var(--border-color);
+        border-color: var(--border);
     }
     .table-striped > tbody > tr:nth-of-type(odd) {
         background-color: var(--bg-table-striped);
@@ -641,35 +640,37 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     }
 
     /* Force dark mode on specific hardcoded inner containers without touching transparent outer wrappers */
-    .thumbnail, .panel, .panel-default > .panel-heading, .list-group-item, .well, .jumbotron, .modal-content, .popover, .dropdown-menu, .entry-body, .editor-preview, .entry-content, .entry-content-wrapper, div.mark, .bg-white,
+    .thumbnail, .panel, .panel-default > .panel-heading, .list-group-item, .well, .jumbotron, .modal-content, .popover, .dropdown-menu, .entry-body, .editor-preview, .entry-content, .entry-content-wrapper, div.mark/*, .bg-white,
     [style*="background-color: white"], [style*="background-color: #ffffff"], [style*="background-color: #fff"],
     [style*="background: white"], [style*="background: #ffffff"], [style*="background: #fff"],
     [style*="background-color:white"], [style*="background-color:#ffffff"], [style*="background-color:#fff"],
-    [style*="background:white"], [style*="background:#ffffff"], [style*="background:#fff"] {
-        background-color: var(--bg-element) !important;
-        border-color: var(--border-color) !important;
-        color: var(--text-primary) !important;
+    [style*="background:white"], [style*="background:#ffffff"], [style*="background:#fff"]*/ {
+        background-color: var(--bg-element);
+        border-color: var(--border);
+        color: var(--text-primary);
+    }
+    .editor-preview {
+        border-color: transparent;
     }
 
     .panel-footer {
         background-color: var(--bg-body);
-        border-color: var(--border-color);
+        border-color: var(--border);
     }
     a.list-group-item {
-        color: var(--text-primary);
+        color: var(--link);
     }
-    /*a.list-group-item:hover, a.list-group-item:focus,
-    button.list-group-item:hover, button.list-group-item:focus,
-    .list-group-item:hover, .list-group-item:focus {
-        background-color: var(--bg-body) !important;
-        color: var(--text-primary) !important;
-    }*/
+    a.list-group-item:hover, a.list-group-item:focus
+    {
+        background-color: var(--bg-body);
+        color: var(--link-hover);
+    }
 
     /* Buttons */
     .btn-default {
         color: var(--text-primary);
         background-color: var(--bg-element);
-        border-color: var(--border-color);
+        border-color: var(--border);
     }
     .btn-default:hover, .btn-default:focus, .btn-default:active, .btn-default.active, .open > .dropdown-toggle.btn-default {
         color: var(--text-primary);
@@ -678,23 +679,31 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     }
     .btn-primary {
         color: var(--bg-element);
-        background-color: var(--link-color);
-        border-color: var(--link-color);
+        background-color: var(--link);
+        border-color: var(--link);
     }
     .btn-primary:hover, .btn-primary:focus, .btn-primary:active, .btn-primary.active, .open > .dropdown-toggle.btn-primary {
         color: var(--bg-body);
-        background-color: var(--link-hover-color);
-        border-color: var(--link-hover-color);
+        background-color: var(--link-hover);
+        border-color: var(--link-hover);
+    }
+    a.list-group-item.active {
+        color: var(--bg-element);
+        background-color: var(--link);
+    }
+    a.list-group-item.active:hover, a.list-group-item.active:focus {
+        color: var(--bg-body);
+        background-color: var(--link-hover);
     }
 
-    .btn-link { color: var(--link-color); }
-    .btn-link:hover, .btn-link:focus { color: var(--link-hover-color); }
+    .btn-link { color: var(--link); }
+    .btn-link:hover, .btn-link:focus { color: var(--link-hover); }
 
     /* Form elements inherited from Bootstrap */
     .form-control, select {
         color: var(--text-primary);
         background-color: var(--bg-input);
-        border-color: var(--border-color);
+        border-color: var(--border);
     }
     .form-control[disabled], .form-control[readonly], fieldset[disabled] .form-control {
         background-color: var(--bg-body);
@@ -707,9 +716,11 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
         color: var(--text-primary);
     }
     .ace-tm .ace_marker-layer .ace_selection {
-        background-color: var(--bg-body);
+        background-color: highlight;
     }
-
+    .ace-tm .ace_indent-guide {
+        opacity: 0.2;
+    }
     /* MathJax & SVGs */
     .math svg, .display.math svg {
         fill: currentColor !important;
@@ -725,7 +736,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     code, pre {
         color: var(--text-primary);
         background-color: var(--bg-body);
-        border-color: var(--border-color);
+        border-color: var(--border);
     }
     code span.al { color: #f44747; font-weight: bold; } /* Alert */
     code span.an { color: #4ec9b0; font-weight: bold; font-style: italic; } /* Annotation */
