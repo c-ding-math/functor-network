@@ -717,7 +717,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     }
 
     /* Editor backgrounds */
-    .ace_editor {
+    .ace-tm {
         background-color: var(--bg-input);
         color: var(--text-primary);
     }
@@ -726,6 +726,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     }
     .ace-tm .ace_indent-guide {
         opacity: 0.2;
+    }
+    .ace-tm .ace_search {
+        filter: invert(1) hue-rotate(180deg);
     }
     /* MathJax & SVGs */
     .math svg, .display.math svg {
