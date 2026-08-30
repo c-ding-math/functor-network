@@ -249,3 +249,8 @@ Submit: Submit
 
 SignUp: Sign Up
 SignIn: Sign In
+
+Appearance: Appearance
+Light: Light
+Dark: Dark
+System: System

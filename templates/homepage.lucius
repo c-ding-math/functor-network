@@ -3,16 +3,20 @@
     margin-top: -111px;
     padding-top: 111px;
     background-color: #080808!important;
-    color: #fff;
+    color: #f4f4f4;
 }
 .jumbotron h2 {
     margin-top: 0;
     margin-bottom: 32px;
     /*font-family: Georgia, "Times New Roman", Times, serif;*/
 }
-
-.jumbotron .btn-default{
-    filter: invert(100%);
+.jumbotron .btn.btn-lg {
+    background-color: #f4f4f4;
+    color: #333;
+}
+.jumbotron .btn.btn-lg:hover, .jumbotron .btn.btn-lg:active {
+    background-color: #ccc;
+    color: #080808
 }
 .bs-docs-section{
     padding-top: 2em;

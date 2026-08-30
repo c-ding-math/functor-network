@@ -21,16 +21,38 @@
             
                 <ul .nav.navbar-nav.navbar-right>
                     $forall MenuItem label route _ <- navbarRightFilteredMenuItems
-                        <li :Just route == mcurrentRoute:.active>
-                            <a href=@{route}>#{preEscapedToMarkup label}
+                        $if route == PageR "#"
+                            <li.dropdown>
+                                <a.dropdown-toggle data-toggle=dropdown role=button aria-expanded=false href=#>#{preEscapedToMarkup label}
+                                <ul.dropdown-menu>
+                                    <li>
+                                        <a href=# data-appearance-value=light>_{MsgLight}
+                                    <li>
+                                        <a href=# data-appearance-value=dark>_{MsgDark}
+                                    <li>
+                                        <a href=# data-appearance-value=system>_{MsgSystem}
+                        $else
+                            <li :Just route == mcurrentRoute:.active>
+                                <a href=@{route}>#{preEscapedToMarkup label}
 
         $else
             <div .navbar-header style="width:100%;">
                 <a .navbar-brand href=@{homeRoute}>#{homeTitle}
                 <ul .nav.navbar-nav.navbar-right style="float:right;">
                     $forall MenuItem label route _ <- navbarRightFilteredMenuItems
-                        <li :Just route == mcurrentRoute:.active>
-                            <a href=@{route}>#{preEscapedToMarkup label}
+                        $if route == PageR "#"
+                            <li.dropdown>
+                                <a.dropdown-toggle data-toggle=dropdown role=button aria-expanded=false href=#>#{preEscapedToMarkup label}
+                                <ul.dropdown-menu>
+                                    <li>
+                                        <a href=# data-appearance-value=light>_{MsgLight}
+                                    <li>
+                                        <a href=# data-appearance-value=dark>_{MsgDark}
+                                    <li>
+                                        <a href=# data-appearance-value=system>_{MsgSystem}
+                        $else
+                            <li :Just route == mcurrentRoute:.active>
+                                <a href=@{route}>#{preEscapedToMarkup label}
 
 <!-- Page Contents -->
 

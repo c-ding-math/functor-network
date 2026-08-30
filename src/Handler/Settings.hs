@@ -271,6 +271,23 @@ getSettingsR = do
                         ^{citationWidget}
                         <button .btn .btn-default type=submit name=setting value=citation>_{MsgSave}
                     <p>
+            <section.appearance-setting>
+                <h2>_{MsgAppearance}
+                <div.panel>
+                 <div.panel-body>
+                    <div.radio>
+                        <label>
+                            <input type=radio name=appearance value=light>
+                            _{MsgLight}
+                    <div.radio>
+                        <label>
+                            <input type=radio name=appearance value=dark>
+                            _{MsgDark}
+                    <div.radio>
+                        <label>
+                            <input type=radio name=appearance value=system>
+                            _{MsgSystem}
+                        <p>
             <section .data-setting>
                 <h2>_{MsgData}
                 <div.panel>
