@@ -24,10 +24,11 @@ html[data-appearance="dark"]
         --bg-table-striped: #202020;
         --bg-table-hover: #282828;
     }
+html {
 input[type=radio] { accent-color: var(--link-hover); }
 blockquote {border-left-color: var(--text-muted);}
 hr { border-top-color: var(--border); }
-
+.text-muted, a.text-muted { color: var(--text-muted); }
 a.text-muted:hover {
     color:var(--text-primary);
 }
@@ -607,7 +608,7 @@ code span.st { color: #4070a0; } /* String */
 code span.va { color: #19177c; } /* Variable */
 code span.vs { color: #4070a0; } /* VerbatimString */
 code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
-
+}
 /* System Dark Mode Adjustments for Base Elements & Overrides */
 [data-appearance="dark"] {
     /* Base typography & elements */
@@ -775,6 +776,3 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     code span.va { color: #9cdcfe; } /* Variable */
     code span.wa { color: #4ec9b0; font-weight: bold; font-style: italic; } /* Warning */
 }
-
-
-.text-muted, a.text-muted { color: var(--text-muted); }
