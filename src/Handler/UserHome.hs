@@ -98,7 +98,7 @@ getUserHomeR authorId = do
         shareWidget
         addScript $ StaticR js_chart_min_js
         toWidget [julius|
-    var themeColor = $('body').css("color");
+    var themeColor = "#333";
     const chartOptions = {
           responsive: true,
           maintainAspectRatio: true,
@@ -121,9 +121,6 @@ getUserHomeR authorId = do
             },
             grid: {
                 display: false
-            },
-            border: {
-                color: '#666'
             }
           },
           x: {
@@ -133,9 +130,6 @@ getUserHomeR authorId = do
             },
             grid: {
                 display: false
-            },
-            border: {
-                color: '#666'
             }
           }
         }

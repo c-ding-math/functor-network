@@ -731,6 +731,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     .ace-tm .ace_search {
         filter: invert(1) hue-rotate(180deg);
     }
+    .charts canvas {
+        filter: invert(1) hue-rotate(180deg);
+    }
     /* MathJax & SVGs */
     .math svg, .display.math svg {
         fill: currentColor !important;
