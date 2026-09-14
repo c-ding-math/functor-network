@@ -4,19 +4,35 @@
     padding-top: 111px;
     background-color: #080808!important;
     color: #f4f4f4;
+    background-image: linear-gradient(rgba(0, 0, 0, 1.0), rgba(0, 0, 0, 0.6)), 
+        url(@{StaticR icons_feature_webp});
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 .jumbotron h2 {
     margin-top: 0;
     margin-bottom: 32px;
     /*font-family: Georgia, "Times New Roman", Times, serif;*/
 }
-.jumbotron .btn.btn-lg {
+.jumbotron .btn.btn-primary.btn-lg {
     background-color: #f4f4f4;
     color: #333;
 }
-.jumbotron .btn.btn-lg:hover, .jumbotron .btn.btn-lg:active {
+.jumbotron .btn.btn-primary.btn-lg:hover, .jumbotron .btn.btn-primary.btn-lg:active {
     background-color: #ccc;
     color: #080808
+}
+.jumbotron .btn.btn-default.btn-lg {
+    background-color: #080808;
+    background-color: transparent;
+    color: #f4f4f4;
+    border-color: #f4f4f4;
+}
+.jumbotron .btn.btn-default.btn-lg:hover, .jumbotron .btn.btn-default.btn-lg:active {
+    background-color: #333;
+    color: #f4f4f4;
+    border-color: #f4f4f4;
 }
 .bs-docs-section{
     padding-top: 2em;
@@ -25,7 +41,55 @@
     max-width: 768px;
     margin: auto;
 }
+.bs-docs-section h2 {
+    margin-bottom: 1.5em;
+}
+.bs-docs-section .btn {
+    margin-top: 1em;
+}
 .alert-info {
     position: relative;
     z-index: 1;
+}
+
+.fade-in-box {
+    opacity: 0;
+    margin-bottom:1.75em;
+    transform: translateY(50px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.fade-in-box.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.scroll-box-x {
+  overflow: hidden;    /* 超出隐藏 */
+  display: flex;
+  align-items: flex-end;
+}
+
+.scroll-list-x {
+  display: flex;       /* 改为 flex 布局 */
+  align-items: flex-end; /* 核心：让所有子项(li)在底部对齐 */
+  margin-left:0;
+  margin-right:0;
+  padding: 0;
+  list-style: none;
+  will-change: transform;
+}
+
+.scroll-list-x li {
+  flex-shrink: 0; 
+  margin-right: 10px;
+}
+.scroll-list-x li .panel {
+    margin-bottom: 0;
+    margin-top:1em;
+}
+.scroll-list-x li .panel-body {
+      width: 10em; 
+      height: 15em;
+      line-height: 1.75em;
 }

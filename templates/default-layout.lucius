@@ -420,21 +420,7 @@ div.csl-indent {
 body, .or span, .modal-content{
     background-color: var(--bg-element);
 }
-@media screen and (min-width: 574px){
-    body, .or span, .modal-content{
-        background-color: var(--bg-body);
-    }
-    .entry-body, .editor-preview{
-        background-color: var(--bg-element);
-        /*border: 1px solid #ccc;*/
-    }
-    .editor-preview{
-        border: 1px solid var(--border);
-    }
-    .entry-body {
-        padding: 1em 0.5em 0.5em;
-    }
-}
+
 
 /* modal */
 .modal.flex-center {
@@ -552,13 +538,7 @@ pre > code.sourceCode > span:empty { height: 1.2em; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
 div.sourceCode { margin: 1em 0; }
 pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
+
 pre.numberSource code
     { counter-reset: source-line 0; }
 pre.numberSource code > span
@@ -576,9 +556,7 @@ pre.numberSource code > span > a:first-child::before
 pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
 div.sourceCode
     {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
-}
+
 code span.al { color: #ff0000; font-weight: bold; } /* Alert */
 code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
 code span.at { color: #7d9029; } /* Attribute */
@@ -609,13 +587,41 @@ code span.va { color: #19177c; } /* Variable */
 code span.vs { color: #4070a0; } /* VerbatimString */
 code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
 }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+@media screen and (min-width: 574px){
+  html{
+    body, .or span, .modal-content{
+        background-color: var(--bg-body);
+    }
+    .entry-body, .editor-preview{
+        background-color: var(--bg-element);
+        /*border: 1px solid #ccc;*/
+    }
+    .editor-preview{
+        border: 1px solid var(--border);
+        border-color: transparent;
+    }
+    .entry-body {
+        padding: 1em 0.5em 0.5em;
+    }
+  }
+}
 /* System Dark Mode Adjustments for Base Elements & Overrides */
 [data-appearance="dark"] {
-    /* Base typography & elements */
+    /* Base typography & elements 
     body, h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6, p, .lead, label, .panel-title {
         color: var(--text-primary);
-    }
-
+    } */
+    body { color: var(--text-primary); }
     a { color: var(--link); }
     a:hover, a:focus { color: var(--link-hover); }
     .dropdown-menu>li>a { color: var(--link); }
@@ -659,7 +665,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
         border-color: var(--border);
         color: var(--text-primary);
     }
-
+    .editor-preview {
+        border-color: transparent;
+    }
     .panel-footer {
         background-color: var(--bg-body);
         border-color: var(--border);

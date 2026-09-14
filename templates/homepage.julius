@@ -1,0 +1,63 @@
+$(document).ready(function() {
+      // 检查元素是否进入视口的函数
+      function checkPosition() {
+        var windowHeight = $(window).height(); // 浏览器视口高度
+        var scrollTop = $(window).scrollTop();   // 滚动的距离
+
+        $('.fade-in-box').each(function() {
+          var elementTop = $(this).offset().top; // 元素距离页面顶部的距离
+
+          // 当元素顶部进入视口下方 100px 范围时触发显示
+          if (scrollTop + windowHeight - 100 > elementTop) {
+            $(this).addClass('visible');
+          }
+        });
+      }
+
+      // 页面加载完先执行一次（防止刷新页面时元素已经在视口中）
+      checkPosition();
+
+      // 监听窗口滚动事件
+      $(window).on('scroll', checkPosition);
+    });
+
+$(function() {
+  var $box = $(".scroll-box-x");
+  var $list = $(".scroll-list-x");
+  
+  // 1. 克隆一份列表内容拼接到后面，实现无缝对接
+  $list.html($list.html() + $list.html());
+  
+  var currentLeft = 0;
+  var speed = 1; // 每次移动的像素数（值越小越慢，例如 0.5 甚至更慢）
+  var timer = null;
+  
+  // 2. 动态计算单组内容的实际总宽度（包含外边距）
+  var singleWidth = 0;
+  var $items = $list.find("li");
+  var halfCount = $items.length / 2;
+  
+  for (var i = 0; i < halfCount; i++) {
+    singleWidth += $($items[i]).outerWidth(true);
+  }
+  
+  // 3. 滚动核心函数
+  function move() {
+    currentLeft -= speed;
+    // 当滚动的距离达到一半（即原始数据走完）时，瞬间拉回起点 0
+    if (Math.abs(currentLeft) >= singleWidth) {
+      currentLeft = 0;
+    }
+    $list.css({ transform: "translateX(" + currentLeft + "px)" });
+  }
+  
+  // 4. 启动定时器（20毫秒执行一次，约50帧，非常丝滑）
+  timer = setInterval(move, 20);
+  
+  // 5. 鼠标悬停停止，移开继续
+  $box.hover(function() {
+    clearInterval(timer);
+  }, function() {
+    timer = setInterval(move, 20);
+  });
+});
