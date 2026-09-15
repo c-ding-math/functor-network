@@ -4,7 +4,7 @@
     padding-top: 111px;
     background-color: #080808!important;
     color: #f4f4f4;
-    background-image: linear-gradient(rgba(0, 0, 0, 1.0), rgba(0, 0, 0, 0.6)), 
+    background-image: linear-gradient(rgba(0, 0, 0, 1.0), rgba(0, 0, 0, 0.65)), 
         url(@{StaticR icons_feature_webp});
     background-size: cover;
     background-position: center;

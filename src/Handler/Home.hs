@@ -15,7 +15,7 @@ getHomeR :: Handler Html
 getHomeR = do
     maybeUserId<-maybeAuthId
     --maybeIntroduction<-runDB $ selectFirst [EntryTitle==."What is Functor Network",EntryType==.Page0,EntryStatus==.Draft] [Desc EntryInserted]
-    (maybeFeatures',maybeScreenshots',maybeComparison')<-runDB $ do
+    {-(maybeFeatures',maybeScreenshots',maybeComparison')<-runDB $ do
         maybeFeatures<-selectFirst [EntryTitle==."Features",EntryType==.Page,EntryStatus==.Draft] [Desc EntryInserted]
         maybeScreenshots<-selectFirst [EntryTitle==."Screenshots",EntryType==.Page,EntryStatus==.Draft] [Desc EntryInserted]
         maybeComparison<-selectFirst [EntryTitle==."Comparison",EntryType==.Page,EntryStatus==.Draft] [Desc EntryInserted]
@@ -34,7 +34,7 @@ getHomeR = do
         Just (Entity entryId _) -> do 
             bodyHtml <- entryBodyHtmlCache entryId
             return $ Just bodyHtml
-        Nothing -> return Nothing
+        Nothing -> return Nothing-}
     defaultLayout $ do  
         --aDomId <- newIdent
         setTitle $ toHtml $ appName
