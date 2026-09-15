@@ -88,6 +88,7 @@ getEditHelpR "syntax" = do
                 ^{entryWidget}  
         |]
         editorWidget format
+        preambleTooltip
 
 getEditHelpR "editor" = do
     let title="Editor Help" :: Text
@@ -131,6 +132,7 @@ getEditHelpR "editor" = do
                 ^{entryWidget}  
         |]
         editorWidget format
+        preambleTooltip
 
 getEditHelpR "format" = do
     let title="Format Comparison" :: Text
@@ -177,3 +179,26 @@ getEditHelpR "shortcuts" = do
         |]
 
 getEditHelpR _ = notFound
+
+preambleTooltip :: Widget
+preambleTooltip = toWidget [julius|
+                $(document).ready(function(){
+                    
+                    const popoverElement = $('.editor-toolbar>ul>li:contains("Meta")')
+
+                    popoverElement.popover({
+                        html:true,
+                        placement:'bottom',
+                        content:'Click <code>meta</code>, then select <code>latex preamble</code> from the menu to add custom LaTeX commands or packages.</a>',
+                        trigger: 'manual'
+                    });
+                    popoverElement.popover('show');
+                    popoverElement.click(function(){
+                            popoverElement.popover('destroy');
+                    });
+                    $(window).click(function(){
+                            popoverElement.popover('destroy');
+                    });
+
+                });
+|]

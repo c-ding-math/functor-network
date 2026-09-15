@@ -148,18 +148,17 @@ cacheEntryPdf entryAuthor (Entity entryId entry) titleHtml bodyHtml = do
 <article .entry :entryStatus entry == Draft:.draft #entry-#{toPathPiece entryId}>
 
   <div .entry-meta>
-    <a .stretch-link href=@{UserEntryR (entryUserId entry) entryId}>
-        <h1 .entry-title>#{preEscapedToMarkup(scaleHeader 1 titleHtml)}
+    <h1 .entry-title>#{preEscapedToMarkup(scaleHeader 1 titleHtml)}
     <ul.list-inline>
       <li .by>
-        
-        <a href=@{UserHomeR (entryUserId entry)}>#{userName entryAuthor}
+        #{userName entryAuthor}
       <li>
         <span>
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-dot" viewBox="0 0 16 16"><path d="M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3"/>
       <li .at>
-        
         #{utcToDate (entryInserted entry)}
+    <div>
+      <a.text-muted href=@{UserEntryR (entryUserId entry) entryId}>@{UserEntryR (entryUserId entry) entryId}
   <div .entry-body>
       
         $if (entryBody entry) /= Nothing

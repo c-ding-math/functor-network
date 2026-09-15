@@ -98,6 +98,7 @@ getUserHomeR authorId = do
         shareWidget
         addScript $ StaticR js_chart_min_js
         toWidget [julius|
+    var themeColor = "#333";
     const chartOptions = {
           responsive: true,
           maintainAspectRatio: true,
@@ -143,9 +144,9 @@ getUserHomeR authorId = do
         datasets: [{
           //label: 'total posts',
           data: postData,
-          pointBackgroundColor: '#333',
-          pointBorderColor: '#333',
-          borderColor: '#333',
+          pointBackgroundColor: themeColor,
+          pointBorderColor: themeColor,
+          borderColor: themeColor,
           borderWidth: 1,
           //backgroundColor: 'rgba(75, 192, 192, 0.2)',
           //tension: 0.3, 
@@ -165,9 +166,9 @@ getUserHomeR authorId = do
         datasets: [{
           //label: 'total comments',
           data: commentData,
-          pointBackgroundColor: '#333',
-          pointBorderColor: '#333',
-          borderColor: '#333',
+          pointBackgroundColor: themeColor,
+          pointBorderColor: themeColor,
+          borderColor: themeColor,
           borderWidth: 1,
           //backgroundColor: 'rgba(75, 192, 192, 0.2)',
           //tension: 0.3, 
@@ -215,6 +216,7 @@ getUserHomeR authorId = do
                 column-gap: 2px;
                 justify-content: space-between;
             }
+            .charts .panel { margin-bottom: 0; }
             .charts canvas {
                 margin: auto;
                 width: 300px;

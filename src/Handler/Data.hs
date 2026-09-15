@@ -50,7 +50,7 @@ getDataR = do
 
         return (entryList, fileList, emailList, loginList, voteList, categoryTreeList ++ otherTreeList)
 
-    let dataVersion = "4.1.0" 
+    let dataVersion = "4.2.0" 
     let userData = UserData
             { version = dataVersion
             , user = Entity userId u

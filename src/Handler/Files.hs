@@ -67,7 +67,7 @@ getFilesR = do
         -- message style
         --toWidget [lucius|.message { padding: 10px 0; background: #ffffed; } |]
         toWidget[lucius|
-            table input[type=text]{width:100%;}
+            table input[type=text]{width:100%;background-color:var(--bg-element);}
             table .actions a {padding-right:1em;}
             table .actions a:last-child {padding-right:0;}
         |]

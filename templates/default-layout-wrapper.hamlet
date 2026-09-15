@@ -22,6 +22,7 @@ $newline never
     \<![endif]-->
     <script type="text/javascript" src=@{StaticR js_jquery_min_js}>
     <script type="text/javascript" src=@{StaticR js_js_cookie_min_js}>
+    <script type="text/javascript" src=@{StaticR js_bootstrap_theme_js}>
 
     <script>
       /* The `defaultCsrfMiddleware` Middleware added in Foundation.hs adds a CSRF token to the request cookies. */
