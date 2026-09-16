@@ -1,4 +1,6 @@
-
+html body .container {
+    min-width: unset;
+}
 .jumbotron {
     margin-top: -111px;
     padding-top: 111px;
@@ -44,9 +46,7 @@
 .bs-docs-section h2 {
     margin-bottom: 1.5em;
 }
-.bs-docs-section .btn {
-    margin-top: 1em;
-}
+
 .alert-info {
     position: relative;
     z-index: 1;
@@ -65,14 +65,12 @@
 }
 
 .scroll-box-x {
-  overflow: hidden;    /* 超出隐藏 */
-  display: flex;
-  align-items: flex-end;
+  overflow: hidden; 
+  max-width: 100vw;
 }
-
 .scroll-list-x {
-  display: flex;       /* 改为 flex 布局 */
-  align-items: flex-end; /* 核心：让所有子项(li)在底部对齐 */
+  display: flex;
+  align-items: flex-end; 
   margin-left:0;
   margin-right:0;
   padding: 0;
@@ -82,7 +80,7 @@
 
 .scroll-list-x li {
   flex-shrink: 0; 
-  margin-right: 10px;
+  margin-right: 2em;
 }
 .scroll-list-x li .panel {
     margin-bottom: 0;
