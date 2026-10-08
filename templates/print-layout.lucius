@@ -110,4 +110,7 @@
   .math{
     overflow:visible;
   }
+  .entry-title, .entry-body {
+    font-family: Georgia, "Times New Roman", Times, serif;
+  }
 }

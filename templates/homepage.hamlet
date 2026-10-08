@@ -4,7 +4,7 @@
             <h1 .header>
                 #{appName}
             <h2>
-                a blog platform for mathematicians
+                a blog platform for mathematical writing
                 
             $maybe uid <- maybeUserId
                 <a href=@{UserHomeR uid} .btn.btn-primary.btn-lg>

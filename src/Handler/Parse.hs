@@ -180,10 +180,9 @@ printLayout widget = do
 
     pc <- widgetToPageContent $ do
         addStylesheet $ StaticR css_bootstrap_min_css
-        addStylesheet $ StaticR css_bootstrap_theme_css
+        --addStylesheet $ StaticR css_bootstrap_theme_css
         addScript $ StaticR js_bootstrap_min_js
         addScript $ StaticR js_bootstrap_theme_js
-
         $(widgetFile "print-layout")
     withUrlRenderer $(hamletFile "templates/print-layout-wrapper.hamlet")
 

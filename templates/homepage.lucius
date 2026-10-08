@@ -17,6 +17,13 @@ html body .container {
     margin-bottom: 32px;
     /*font-family: Georgia, "Times New Roman", Times, serif;*/
 }
+@media (max-width: 767px) {
+    .jumbotron h2 {
+        max-width: 13em;
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
 .jumbotron .btn.btn-primary.btn-lg {
     background-color: #f4f4f4;
     color: #333;
