@@ -7,7 +7,7 @@
 module Handler.Home where
 
 import Import
-import Handler.Parse
+--import Handler.Parse
 --import Yesod.Form.Bootstrap3 (BootstrapFormLayout (..), renderBootstrap3)
 --import Text.Julius (RawJS (..))
 

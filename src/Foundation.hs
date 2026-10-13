@@ -528,7 +528,7 @@ instance YesodAuth App where
                                     ,userLogged=currentTime
                                     --,userAvatar=Nothing
                                     ,userEmail=Nothing
-                                    ,userDefaultFormat=Format "md"
+                                    ,userDefaultFormat=Format "tex"
                                     ,userDefaultPreamble=Just (Textarea "\\usepackage{amsmath, amssymb, amsfonts}\n\\newcommand{\\NN}{\\mathbb{N}}")
                                     ,userDefaultCitation=Nothing
                                     }

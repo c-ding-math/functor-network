@@ -101,7 +101,7 @@ getNewUserEntryR =  do
             Just "tex" -> Format "tex"
             Just "md" -> Format "md"
             _->userDefaultFormat user
-    mEntry <- runDB $ selectFirst [EntryUserId ==.userId,EntryType==.UserPost] [Desc EntryInserted]
+    mEntry <- runDB $ selectFirst [EntryUserId ==.userId,EntryType==.UserPost,EntryFormat==.format] [Desc EntryInserted]
     entryInput <- runDB $ do 
         mSamplePost<- case mEntry of
             Just _ -> return Nothing
@@ -183,13 +183,8 @@ getNewUserEntryR =  do
                         },
                         {
                             element: $('.editor-toolbar>ul>li:contains("Meta")'),
-                            content: 'Click here to include your latex preamble and citation. You can also set defaults at the <a target=\"_blank\" href=\"@{SettingsR}#editor-setting\">settings page</a>.',
+                            content: 'Click here to add your latex preamble and citation. You can also set defaults at the <a target=\"_blank\" href=\"@{SettingsR}#editor-setting\">settings page</a>.',
                             //content: 'Click the "meta" menu to include your latex preamble and citation data.',
-                            placement: 'bottom'
-                        },
-                        {
-                            element: $('.ace_editor'),
-                            content: 'The main content of your document goes here. The shortcut for preview refresh is Ctrl+Enter (on Windows) or Cmd+Enter (on Mac).',
                             placement: 'bottom'
                         },
                         {

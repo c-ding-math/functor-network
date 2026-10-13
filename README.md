@@ -1,43 +1,44 @@
 ## About the project
 
-This is the source code for the [Functor Network](https://functor.network) - a blog platform for mathematicians. The term "mathematician" here is used in a broad sense, encompassing people studying math at any level, as well as professionals in related fields. While we provide special support for mathematicians, anyone can register a blog site on our platform and express themselves on a variety of topics, whether they're related to math or not.
+This is the source code for the [Functor Network](https://functor.network) — a blogging platform for mathematicians
 
-## Features
+## What Is Functor Network?
 
-In a word, every feature on our platform is thoughtfully designed for mathematicians.
+Functor Network is a ready-to-use blogging platform built specifically for mathematicians.
 
-- **Effortless Typesetting.** Typesetting math on the web can be exhausting and time-consuming. On our platform, you focus on the content—we’ll take care of the typesetting.
+* **Ready to Use:** No software to install, no servers to maintain, and no configuration files to manage. Simply sign up and start writing on a fully managed platform.
 
-- **Powered by a Real TeX Engine.** We might be the only blogging platform that renders mathematical content using a full TeX Live system. Enjoy complete LaTeX compatibility—import packages, use math environments, or even paste existing LaTeX documents directly.  
+* **Blog:** Express your ideas, share in-depth insights, and build a personal space to document your mathematical journey.
 
-- **Flexible Writing Formats.** Write in *Pure LaTeX* or *Markdown with LaTeX*—your choice. Either way, you retain powerful features like cross-referencing, bibliographies, and theorem environments.  
+* **Mathematician:** The term *mathematician* here is in a broad sense, including people studying math at any level as well as professionals in related fields. While we offer special support for mathematicians, anyone can register a blog site on our platform and express themselves on a variety of topics, whether they're related to math or not. 
 
-- **PDF Export.** Need an offline copy? Download any post as a beautifully typeset PDF with one click.  
+* **Network:** Write as part of an interconnected community rather than in isolation. Connect with other writers, reach new audiences, and discover related mathematical topics across the network.
 
-- **Minimalist & Focused.** No clutter. No distractions. Just a clean, efficient, and secure space for your mathematical thoughts.  
+## Key Feature
 
-Other small yet useful features include syntax highlighting for Lean and integration with social platforms popular among mathematicians.
+To the best of our knowledge, Functor Network is the only blogging platform built around a full **TeX Live distribution**, bringing the full power of LaTeX to your writing. This enables you to:
 
+* **Use LaTeX Packages:** Import your favorite LaTeX packages without being limited to a small, predefined subset.
 
-## Comparison
+* **Define Custom Commands:** Create your own macros to suit your workflow and reuse them throughout your posts.
 
-We make a comparison with other blog platform to clarify our features:
+* **Write with Theorem Environments:** Structure your theorems, lemmas, and proofs using LaTeX theorem environments.
 
-| Feature                          | Our Platform                                              | Other Platforms                                            |
-|----------------------------------|------------------------------------------------------------|------------------------------------------------------------|
-| Write posts directly in LaTeX    | Supported                                                  | Not supported                                              |
-| Math formula rendering           | Built-in support                                           | Not supported or requires add-ons                         |
-| Preserve LaTeX code              | Yes                                                        | May corrupt backslashes or encode symbols like `<`, `&`, etc. |
-| LaTeX packages                   | Supported — different packages can be used per post        | Not supported                                              |
-| Automated numbering and referencing | Supported                                               | Not supported or only partially supported                 |
-| Custom LaTeX commands            | Supported                                                  | Possibly supported                                         |
-| Theorem-like environments        | Supported                                                  | Not supported                                              |
-| Bibliography                     | Supported                                                  | Possibly supported                                         |
-| Markdown with math features      | Supported                                                  | Possibly supported but limited                             |
-| PDF export                       | Supported                                                  | Not supported                                              |
-| Syntax highlight for Lean        | Supported                                                  | Possibly supported                                              |
-| Design philosophy                | Pure simplicity                | Often cluttered with unnecessary features                  |
-| Editor                           | Plain text editor with live preview — focuses on content   | WYSIWYG editor — may be problematic for math content       |
+* **Cross-Reference with Ease:** Reference equations, theorems, bibliographic citations, and other elements throughout your posts.
+
+* **Reuse Existing TeX Documents:** Bring your existing `.tex` source files into your blog posts with minimal, if any, modifications.
+
+## More Features
+
+* **One-Click PDF Export:** Readers who prefer reading on paper can export any blog post as a PDF with a single click.
+
+* **Lean Syntax Highlighting:** In addition to syntax highlighting for common programming languages, we also support syntax highlighting for the Lean theorem prover.
+
+* **Style-Decoupled Editing:** Focus on your content while writing; presentation and styling are handled separately.
+
+* **Math-Aware Dark Mode:** Mathematical symbols automatically adapt to the active theme, ensuring optimal clarity and readability in both light and dark modes.
+
+* **Minimalist by Design:** No clutter. No distractions. Just a clean, efficient, and secure space for your thoughts.
 
 
 ## Credits
